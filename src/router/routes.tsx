@@ -99,12 +99,18 @@ const QuillEditor = lazy(() => import('../pages/Forms/QuillEditor'));
 const MarkDownEditor = lazy(() => import('../pages/Forms/MarkDownEditor'));
 const DateRangePicker = lazy(() => import('../pages/Forms/DateRangePicker'));
 const Clipboard = lazy(() => import('../pages/Forms/Clipboard'));
-
+import ProtectedRoute from './protectedRoute';
+import Buenavista from '../pages/DataTables/Buenavista_table';
+import Carmen from '../pages/DataTables/Carmen_table';
 const routes = [
     // dashboard
     {
         path: '/',
-        element: <Index />,
+        element: (
+            <ProtectedRoute>
+                <Index />
+            </ProtectedRoute>
+        ),
     },
     // {
     //     path: '/index',
@@ -113,17 +119,29 @@ const routes = [
     // analytics page
     {
         path: '/analytics',
-        element: <Analytics />,
+        element: (
+            <ProtectedRoute>
+                <Analytics />
+            </ProtectedRoute>
+        ),
     },
     // finance page
     {
         path: '/finance',
-        element: <Finance />,
+        element: (
+            <ProtectedRoute>
+                <Finance />
+            </ProtectedRoute>
+        ),
     },
     // crypto page
     {
         path: '/crypto',
-        element: <Crypto />,
+        element: (
+            <ProtectedRoute>
+                <Crypto />
+            </ProtectedRoute>
+        ),
     },
     {
         path: '/apps/todolist',
@@ -370,7 +388,27 @@ const routes = [
     },
     {
         path: '/datatables/column-chooser',
-        element: <ColumnChooser />,
+        element: (
+            <ProtectedRoute>
+                <ColumnChooser />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/datatables/buenavista_tables',
+        element: (
+            <ProtectedRoute>
+                <Buenavista />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/datatables/carmen_tables',
+        element: (
+            <ProtectedRoute>
+                <Carmen />
+            </ProtectedRoute>
+        ),
     },
     // Users page
     {

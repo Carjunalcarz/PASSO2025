@@ -20,7 +20,7 @@ import IconBolt from '../components/Icon/IconBolt';
 import IconCaretDown from '../components/Icon/IconCaretDown';
 import IconPlus from '../components/Icon/IconPlus';
 import IconMultipleForwardRight from '../components/Icon/IconMultipleForwardRight';
-
+import { useNavigate } from 'react-router-dom';
 const Index = () => {
     const dispatch = useDispatch();
     useEffect(() => {

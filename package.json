@@ -15,6 +15,7 @@
         "@fullcalendar/interaction": "^6.0.0",
         "@fullcalendar/react": "^6.1.4",
         "@fullcalendar/timegrid": "^6.0.0",
+        "@hookform/resolvers": "^5.0.1",
         "@mantine/core": "^5.10.5",
         "@mantine/hooks": "^5.10.5",
         "@popperjs/core": "^2.11.6",
@@ -29,6 +30,7 @@
         "@types/react-text-mask": "^5.4.11",
         "@x1mrdonut1x/nouislider-react": "^3.4.3",
         "apexcharts": "^3.54.0",
+        "axios": "^1.8.4",
         "easymde": "^2.18.0",
         "formik": "^2.2.9",
         "highlight.js": "^11.6.0",
@@ -43,6 +45,7 @@
         "react-dom": "^18.3.1",
         "react-export-table-to-excel": "^1.0.6",
         "react-flatpickr": "^3.10.13",
+        "react-hook-form": "^7.56.1",
         "react-images-uploading": "^3.1.7",
         "react-popper": "^2.3.0",
         "react-quill": "^2.0.0",
@@ -57,7 +60,7 @@
         "sweetalert2-react-content": "^5.0.7",
         "swiper": "^11.1.9",
         "web-vitals": "^4.2.3",
-        "yup": "^1.4.0"
+        "yup": "^1.6.1"
     },
     "devDependencies": {
         "@headlessui/react": "^2.1.9",

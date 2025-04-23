@@ -1,19 +1,19 @@
 {
-  "short_name": "VRISTO - Multipurpose Tailwind Dashboard Template",
-  "name": "VRISTO - Multipurpose Tailwind Dashboard Template",
+  "short_name": "PGAN",
+  "name": "Provinve of Agusan del Norte",
   "icons": [
     {
-      "src": "favicon.ico",
+      "src": "/mun_logo/pgan.webp",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     },
     {
-      "src": "logo192.png",
+      "src": "/mun_logo/pgan.webp",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "logo512.png",
+      "src": "/mun_logo/pgan.webp",
       "type": "image/png",
       "sizes": "512x512"
     }

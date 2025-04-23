@@ -8,7 +8,7 @@ import { setPageTitle } from '../../store/themeConfigSlice';
 import IconCaretDown from '../../components/Icon/IconCaretDown';
 import axios from 'axios';
 
-const ColumnChooser = () => {
+const Carmen = () => {
     const token = localStorage.getItem('token');
     const dispatch = useDispatch();
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl';
@@ -46,7 +46,7 @@ const ColumnChooser = () => {
     ];
 
     useEffect(() => {
-        dispatch(setPageTitle('Column Chooser Table'));
+        dispatch(setPageTitle('Carmen'));
     }, [dispatch]);
 
     useEffect(() => {
@@ -93,7 +93,7 @@ const ColumnChooser = () => {
     return (
         <div className="panel">
             <div className="flex md:items-center md:flex-row flex-col mb-5 gap-5">
-                <h5 className="font-semibold text-lg dark:text-white-light">Assessment Data-2025</h5>
+                <h5 className="font-semibold text-lg dark:text-white-light">Carmen Assessment Data-2025</h5>
                 <div className="flex items-center gap-5 ltr:ml-auto rtl:mr-auto">
                     <Dropdown
                         placement={isRtl ? 'bottom-end' : 'bottom-start'}
@@ -155,4 +155,4 @@ const ColumnChooser = () => {
     );
 };
 
-export default ColumnChooser;
+export default Carmen;
