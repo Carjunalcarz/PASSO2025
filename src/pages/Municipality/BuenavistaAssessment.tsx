@@ -15,7 +15,7 @@ import { toast } from 'react-toastify';
 
 // Define column interface
 interface Column {
-    accessor: string;
+    accessor: keyof Assessment | 'actions';
     title: string;
     render?: (record: Assessment) => React.ReactNode;
 }
@@ -46,7 +46,7 @@ const formatCurrency = (amount: number) => {
     }).format(amount)}`;
 };
 
-const Carmen = () => {
+const BuenavistaAssessment = () => {
     const token = localStorage.getItem('token');
     const dispatch = useDispatch();
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl';
@@ -117,11 +117,11 @@ const Carmen = () => {
     ];
 
     useEffect(() => {
-        dispatch(setPageTitle('Carmen'));
+        dispatch(setPageTitle('Buenavista'));
     }, [dispatch]);
 
     const fetchAssessments = async (): Promise<Assessment[]> => {
-        const response = await axios.get('http://localhost:8000/assessments?municipality=carmen&skip=0&limit=300000', {
+        const response = await axios.get('http://localhost:8000/assessments?municipality=buenavista&skip=0&limit=300000', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -130,7 +130,7 @@ const Carmen = () => {
     };
 
     const { data: rowData = [], isLoading: queryLoading, refetch } = useQuery<Assessment[]>({
-        queryKey: ['assessments', 'carmen'],
+        queryKey: ['assessments', 'buenavista'],
         queryFn: fetchAssessments,
         refetchOnWindowFocus: false,
         refetchOnMount: false,
@@ -142,7 +142,7 @@ const Carmen = () => {
         cols.some((col) => {
             if (col.accessor === 'actions') return false;
             const value = item[col.accessor as keyof Assessment];
-            return value?.toString().toLowerCase().includes(search.toLowerCase()) ?? false;
+            return (value?.toString() ?? '').toLowerCase().includes(search.toLowerCase());
         })
     );
 
@@ -248,7 +248,7 @@ const Carmen = () => {
     return (
         <div className="panel">
             <div className="flex md:items-center md:flex-row flex-col mb-5 gap-5">
-                <h5 className="font-semibold text-lg dark:text-white-light">Carmen Assessment Data-2025</h5>
+                <h5 className="font-semibold text-lg dark:text-white-light">Buenavista Assessment Data-2025</h5>
                 <div className="flex items-center gap-5 ltr:ml-auto rtl:mr-auto">
                     <Dropdown
                         placement={isRtl ? 'bottom-end' : 'bottom-start'}
@@ -529,4 +529,4 @@ const Carmen = () => {
     );
 };
 
-export default Carmen;
+export default BuenavistaAssessment;

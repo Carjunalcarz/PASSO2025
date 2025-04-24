@@ -1,15 +1,14 @@
 // components/ProtectedRoute.tsx
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-    const token = localStorage.getItem('token');
-    const navigate = useNavigate();
 
+const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+    const [isLoading, setIsLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const verifyToken = async () => {
             const token = localStorage.getItem('token');
-            console.log("Token:", token);
 
             if (!token) {
                 navigate('/auth/boxed-signin');
@@ -17,17 +16,26 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
             }
 
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
                 const response = await fetch(`http://localhost:8000/verify-token`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
                     },
+                    signal: controller.signal
                 });
+
+                clearTimeout(timeoutId);
 
                 if (!response.ok) {
                     throw new Error('Token verification failed');
                 }
-                console.log(response);
+
+                // Token is valid
+                setIsLoading(false);
             } catch (error) {
                 console.error("Token verification failed:", error);
                 localStorage.removeItem('token');
@@ -38,7 +46,9 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
         verifyToken();
     }, [navigate]);
 
-
+    if (isLoading) {
+        return <div>Loading...</div>; // Or your custom loading component
+    }
 
     return children;
 };

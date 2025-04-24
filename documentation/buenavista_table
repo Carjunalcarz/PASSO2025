@@ -1,0 +1,159 @@
+# Buenavista Assessment Data Table Documentation
+
+## Overview
+The Buenavista table component is a comprehensive data table implementation for managing and displaying assessment data. It utilizes Mantine DataTable with TanStack Query for efficient data fetching and state management.
+
+## Features
+
+### 1. Data Fetching
+- Uses TanStack Query for efficient data management
+- Configured with optimized fetching strategy:
+  ```typescript
+  const { data, isLoading, refetch } = useQuery({
+      queryKey: ['assessments', 'buenavista'],
+      queryFn: fetchAssessments,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      staleTime: Infinity,
+  });
+  ```
+- Manual refetch only on CRUD operations for optimal performance
+
+### 2. Column Configuration
+Available columns include:
+- TDN (Tax Declaration Number)
+- Market Value
+- Assessment Value
+- Sub Class
+- Effective Date
+- Classification
+- Assessment Level
+- Area
+- Taxability
+- GR Code
+- GR
+- Municipality Code
+- Municipality
+- Barangay Code
+- Barangay
+
+### 3. Column Management
+- Dynamic column visibility toggle
+- Default hidden columns:
+  ```typescript
+  ['barangay_code', 'mun_code', 'gr_code', 'eff_date']
+  ```
+- Column visibility persists during session
+
+### 4. Pagination Features
+- Configurable page sizes: [10, 20, 30, 50, 100]
+- Custom pagination text showing current range and total
+- Page navigation controls
+
+### 5. Search Functionality
+- Global search across all columns
+- Case-insensitive search
+- Real-time filtering
+
+### 6. Sorting
+- Sortable columns
+- Default sort by TDN in ascending order
+- Toggle between ascending and descending
+
+## API Integration
+
+### Authentication
+```typescript
+// Token-based authentication
+const token = localStorage.getItem('token');
+// Used in API requests headers
+headers: {
+    Authorization: `Bearer ${token}`,
+}
+```
+
+### Endpoints
+- GET: `http://localhost:8000/assessments?municipality=buenavista&skip=0&limit=300000`
+  - Returns assessment data for Buenavista municipality
+  - Parameters:
+    - municipality: 'buenavista'
+    - skip: pagination offset
+    - limit: maximum records to fetch
+
+## State Management
+
+### Local State
+```typescript
+const [page, setPage] = useState(1);
+const [pageSize, setPageSize] = useState(10);
+const [search, setSearch] = useState('');
+const [hideCols, setHideCols] = useState<string[]>([...]);
+const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({...});
+```
+
+### Redux Integration
+- Uses Redux for theme configuration
+- RTL support through theme config state
+
+## Usage Example
+
+```typescript
+import Buenavista from './pages/DataTables/Buenavista_table';
+
+// Basic implementation
+const MyComponent = () => {
+    return <Buenavista />;
+};
+
+// The component will automatically:
+// 1. Fetch assessment data
+// 2. Handle pagination
+// 3. Manage column visibility
+// 4. Process search queries
+// 5. Handle sorting
+```
+
+## Performance Considerations
+
+1. **Data Fetching**
+   - Optimized to prevent unnecessary refetches
+   - Manual refetch only on data mutations
+   - Uses TanStack Query for efficient caching
+
+2. **Search Performance**
+   - Client-side filtering for quick response
+   - Debounced search implementation
+
+3. **Pagination**
+   - Client-side pagination for smooth user experience
+   - Configurable page sizes for different data volumes
+
+## Styling
+
+- Uses Mantine DataTable's built-in styling
+- Responsive design with mobile considerations
+- Dark mode support through theme configuration
+- Custom class names for table hover and whitespace handling
+
+## Error Handling
+
+- Loading states handled through `isLoading` flag
+- Data fetching errors managed by TanStack Query
+- Fallback empty array for null data
+
+## Security
+
+- Token-based authentication
+- Secure API endpoints
+- No sensitive data exposure in client-side code
+
+## Dependencies
+
+- Mantine DataTable
+- TanStack Query
+- Redux
+- Axios
+- Lodash (for sorting)
+
+This documentation provides a comprehensive overview of the Buenavista table component. For any modifications or additional features, please ensure to maintain the existing patterns and performance considerations.

@@ -78,8 +78,8 @@ const Sidebar = () => {
                 <div className="bg-white dark:bg-black h-full">
                     <div className="flex justify-between items-center px-4 py-3">
                         <NavLink to="/" className="main-logo flex items-center shrink-0">
-                            <img className="w-8 ml-[5px] flex-none" src="/mun_logo/pgan.webp" alt="logo" />
-                            <span className="text-2xl ltr:ml-1.5 rtl:mr-1.5 font-semibold align-middle lg:inline dark:text-white-light">{t('PASSO-RPTASS')}</span>
+                            <img className="w-8  flex-none" src="/mun_logo/RPT.png" alt="logo" />
+                            <span className="text-xl ltr:ml-1.5 rtl:mr-1.5 font-semibold align-middle lg:inline dark:text-white-light">{t('PASSO-RPTASS')}</span>
                         </NavLink>
 
                         <button
@@ -133,7 +133,7 @@ const Sidebar = () => {
                                     <li className="menu nav-item">
                                         <button type="button" className={`${currentMenu === 'dashboard' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('Tables')}>
                                             <div className="flex items-center">
-                                                <IconMenuDashboard
+                                                <IconMenuDocumentation
                                                     className="group-hover:!text-primary shrink-0" />
                                                 <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Municipality')}</span>
                                             </div>
@@ -146,7 +146,7 @@ const Sidebar = () => {
                                         <AnimateHeight duration={300} height={currentMenu === 'Tables' ? 'auto' : 0}>
                                             <ul className="sub-menu text-gray-500" >
                                                 <li>
-                                                    <NavLink to="/datatables/buenavista_tables" className="flex items-center gap-2">
+                                                    <NavLink to="/assessment/buenavista" className="flex items-center gap-2">
                                                         <img src="/mun_logo/buenavista.jpg" alt="Buenavista Logo" className="w-5 h-5" />
                                                         {t('Buenavista')}
                                                     </NavLink>

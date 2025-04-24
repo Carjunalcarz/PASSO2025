@@ -102,6 +102,7 @@ const Clipboard = lazy(() => import('../pages/Forms/Clipboard'));
 import ProtectedRoute from './protectedRoute';
 import Buenavista from '../pages/DataTables/Buenavista_table';
 import Carmen from '../pages/DataTables/Carmen_table';
+import BuenavistaAssessment from '../pages/Municipality/BuenavistaAssessment';
 const routes = [
     // dashboard
     {
@@ -579,6 +580,14 @@ const routes = [
         path: '*',
         element: <Error />,
         layout: 'blank',
+    },
+    {
+        path: '/assessment/buenavista',
+        element: (
+            <ProtectedRoute>
+                <BuenavistaAssessment />
+            </ProtectedRoute>
+        ),
     },
 ];
 
