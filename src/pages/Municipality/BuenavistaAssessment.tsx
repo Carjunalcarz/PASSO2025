@@ -17,6 +17,7 @@ import { toast } from 'react-toastify';
 interface Column {
     accessor: keyof Assessment | 'actions';
     title: string;
+    sortable: boolean;
     render?: (record: Assessment) => React.ReactNode;
 }
 
@@ -59,7 +60,9 @@ const BuenavistaAssessment = () => {
     const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
         columnAccessor: 'tdn',
         direction: 'asc',
+
     });
+
     const [editingRecord, setEditingRecord] = useState<Assessment | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -67,31 +70,35 @@ const BuenavistaAssessment = () => {
     const [deletingTdn, setDeletingTdn] = useState<string | null>(null);
 
     const cols: Column[] = [
-        { accessor: 'tdn', title: 'TDN' },
+        { accessor: 'tdn', title: 'TDN', sortable: true },
         {
             accessor: 'market_val',
             title: 'Market Value',
-            render: (record: Assessment) => <div>{formatCurrency(record.market_val)}</div>
+            render: (record: Assessment) => <div>{formatCurrency(record.market_val)}</div>,
+            sortable: true
         },
         {
             accessor: 'ass_value',
             title: 'Assessment Value',
-            render: (record: Assessment) => <div>{formatCurrency(record.ass_value)}</div>
+            render: (record: Assessment) => <div>{formatCurrency(record.ass_value)}</div>,
+            sortable: true
         },
-        { accessor: 'sub_class', title: 'Sub Class' },
-        { accessor: 'eff_date', title: 'Effective Date' },
-        { accessor: 'classification', title: 'Classification' },
-        { accessor: 'ass_level', title: 'Assessment Level' },
-        { accessor: 'area', title: 'Area' },
-        { accessor: 'taxability', title: 'Taxability' },
-        { accessor: 'gr_code', title: 'GR Code' },
-        { accessor: 'gr', title: 'GR' },
-        { accessor: 'mun_code', title: 'Municipality Code' },
-        { accessor: 'municipality', title: 'Municipality' },
-        { accessor: 'barangay_code', title: 'Barangay Code' },
-        { accessor: 'barangay', title: 'Barangay' },
+
+        { accessor: 'sub_class', title: 'Sub Class', sortable: true },
+        { accessor: 'eff_date', title: 'Effective Date', sortable: true },
+        { accessor: 'classification', title: 'Classification', sortable: true },
+        { accessor: 'ass_level', title: 'Assessment Level', sortable: true },
+        { accessor: 'area', title: 'Area', sortable: true },
+        { accessor: 'taxability', title: 'Taxability', sortable: true },
+        { accessor: 'gr_code', title: 'GR Code', sortable: true },
+        { accessor: 'gr', title: 'GR', sortable: true },
+        { accessor: 'mun_code', title: 'Municipality Code', sortable: true },
+        { accessor: 'municipality', title: 'Municipality', sortable: true },
+        { accessor: 'barangay_code', title: 'Barangay Code', sortable: true },
+        { accessor: 'barangay', title: 'Barangay', sortable: true },
         {
             accessor: 'actions',
+            sortable: false,
             title: 'Actions',
             render: (record: Assessment) => (
                 <div className="flex items-center gap-2">
@@ -300,7 +307,7 @@ const BuenavistaAssessment = () => {
                     onSortStatusChange={setSortStatus}
                     minHeight={200}
                     paginationText={({ from, to, totalRecords }) => `Showing ${from} to ${to} of ${totalRecords} entries`}
-                    fetching={isLoading}
+                    fetching={false}
                 />
             </div>
             <Modal
@@ -314,13 +321,13 @@ const BuenavistaAssessment = () => {
             >
                 {editingRecord && (
                     <form onSubmit={handleEditSubmit} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-4" >
                             <div className="form-group">
                                 <label htmlFor="tdn">TDN</label>
                                 <input
                                     type="text"
                                     id="tdn"
-                                    className="form-input"
+                                    className="form-input dark:bg-white text-black"
                                     value={editingRecord.tdn}
                                     readOnly
                                 />
@@ -330,7 +337,7 @@ const BuenavistaAssessment = () => {
                                 <input
                                     type="number"
                                     id="market_val"
-                                    className="form-input"
+                                    className="form-input dark:bg-white text-black"
                                     value={editingRecord.market_val}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev!, market_val: parseFloat(e.target.value) }))}
                                 />
@@ -340,7 +347,7 @@ const BuenavistaAssessment = () => {
                                 <input
                                     type="number"
                                     id="ass_value"
-                                    className="form-input"
+                                    className="form-input dark:bg-white text-black"
                                     value={editingRecord.ass_value}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev!, ass_value: parseFloat(e.target.value) }))}
                                 />
@@ -350,7 +357,7 @@ const BuenavistaAssessment = () => {
                                 <input
                                     type="text"
                                     id="sub_class"
-                                    className="form-input"
+                                    className="form-input dark:bg-white text-black"
                                     value={editingRecord.sub_class}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev!, sub_class: e.target.value }))}
                                 />
@@ -359,7 +366,7 @@ const BuenavistaAssessment = () => {
                                 <label htmlFor="classification">Classification</label>
                                 <select
                                     id="classification"
-                                    className="form-select"
+                                    className="form-input dark:bg-white text-black"
                                     value={editingRecord.classification}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev!, classification: e.target.value }))}
                                 >
@@ -374,7 +381,7 @@ const BuenavistaAssessment = () => {
                                 <input
                                     type="number"
                                     id="area"
-                                    className="form-input"
+                                    className="form-input dark:bg-white text-black"
                                     value={editingRecord.area}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev!, area: parseFloat(e.target.value) }))}
                                 />
@@ -384,7 +391,7 @@ const BuenavistaAssessment = () => {
                                 <input
                                     type="text"
                                     id="taxability"
-                                    className="form-input"
+                                    className="form-input dark:bg-white text-black"
                                     value={editingRecord.taxability}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev!, taxability: e.target.value }))}
                                 />
@@ -394,7 +401,7 @@ const BuenavistaAssessment = () => {
                                 <input
                                     type="text"
                                     id="gr_code"
-                                    className="form-input"
+                                    className="form-input dark:bg-white text-black"
                                     value={editingRecord.gr_code}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev!, gr_code: e.target.value }))}
                                 />
@@ -404,7 +411,7 @@ const BuenavistaAssessment = () => {
                                 <input
                                     type="text"
                                     id="gr"
-                                    className="form-input"
+                                    className="form-input dark:bg-white text-black"
                                     value={editingRecord.gr}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev!, gr: e.target.value }))}
                                 />
@@ -414,7 +421,7 @@ const BuenavistaAssessment = () => {
                                 <input
                                     type="text"
                                     id="mun_code"
-                                    className="form-input"
+                                    className="form-input dark:bg-white text-black"
                                     value={editingRecord.mun_code}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev!, mun_code: e.target.value }))}
                                 />
@@ -424,7 +431,7 @@ const BuenavistaAssessment = () => {
                                 <input
                                     type="text"
                                     id="municipality"
-                                    className="form-input"
+                                    className="form-input dark:bg-white text-black"
                                     value={editingRecord.municipality}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev!, municipality: e.target.value }))}
                                 />
@@ -434,7 +441,7 @@ const BuenavistaAssessment = () => {
                                 <input
                                     type="text"
                                     id="barangay_code"
-                                    className="form-input"
+                                    className="form-input dark:bg-white text-black"
                                     value={editingRecord.barangay_code}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev!, barangay_code: e.target.value }))}
                                 />
@@ -444,7 +451,7 @@ const BuenavistaAssessment = () => {
                                 <input
                                     type="text"
                                     id="barangay"
-                                    className="form-input"
+                                    className="form-input dark:bg-white text-black"
                                     value={editingRecord.barangay}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev!, barangay: e.target.value }))}
                                 />
@@ -454,7 +461,7 @@ const BuenavistaAssessment = () => {
                                 <input
                                     type="date"
                                     id="eff_date"
-                                    className="form-input"
+                                    className="form-input dark:bg-white text-black"
                                     value={editingRecord.eff_date}
                                     onChange={(e) => setEditingRecord(prev => ({ ...prev!, eff_date: e.target.value }))}
                                 />
@@ -479,7 +486,13 @@ const BuenavistaAssessment = () => {
                                 disabled={updateMutation.isPending}
                             >
                                 {updateMutation.isPending ? (
-                                    <span>Saving...</span>
+                                    <div className="flex items-center gap-2">
+                                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>Saving...</span>
+                                    </div>
                                 ) : (
                                     <span>Save Changes</span>
                                 )}
@@ -507,6 +520,7 @@ const BuenavistaAssessment = () => {
                                 setIsDeleteModalOpen(false);
                                 setDeletingTdn(null);
                             }}
+                            disabled={deleteMutation.isPending}
                         >
                             Cancel
                         </button>
@@ -517,7 +531,13 @@ const BuenavistaAssessment = () => {
                             disabled={deleteMutation.isPending}
                         >
                             {deleteMutation.isPending ? (
-                                <span>Deleting...</span>
+                                <div className="flex items-center gap-2">
+                                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span>Deleting...</span>
+                                </div>
                             ) : (
                                 <span>Delete</span>
                             )}

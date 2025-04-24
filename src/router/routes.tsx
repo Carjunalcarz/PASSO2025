@@ -103,6 +103,7 @@ import ProtectedRoute from './protectedRoute';
 import Buenavista from '../pages/DataTables/Buenavista_table';
 import Carmen from '../pages/DataTables/Carmen_table';
 import BuenavistaAssessment from '../pages/Municipality/BuenavistaAssessment';
+import CarmenAssessment from '../pages/Municipality/CarmenAssessment';
 const routes = [
     // dashboard
     {
@@ -586,6 +587,14 @@ const routes = [
         element: (
             <ProtectedRoute>
                 <BuenavistaAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/carmen',
+        element: (
+            <ProtectedRoute>
+                <CarmenAssessment />
             </ProtectedRoute>
         ),
     },

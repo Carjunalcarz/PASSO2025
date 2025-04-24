@@ -17,6 +17,7 @@ import { toast } from 'react-toastify';
 interface Column {
     accessor: keyof Assessment | 'actions';
     title: string;
+    sortable: boolean;
     render?: (record: Assessment) => React.ReactNode;
 }
 
@@ -46,7 +47,7 @@ const formatCurrency = (amount: number) => {
     }).format(amount)}`;
 };
 
-const Buenavista = () => {
+const CarmenAssessment = () => {
     const token = localStorage.getItem('token');
     const dispatch = useDispatch();
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl';
@@ -59,41 +60,44 @@ const Buenavista = () => {
     const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
         columnAccessor: 'tdn',
         direction: 'asc',
+
     });
+
     const [editingRecord, setEditingRecord] = useState<Assessment | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletingTdn, setDeletingTdn] = useState<string | null>(null);
 
     const cols: Column[] = [
-        { accessor: 'tdn', title: 'TDN' },
-
+        { accessor: 'tdn', title: 'TDN', sortable: true },
         {
             accessor: 'market_val',
             title: 'Market Value',
-            render: (record: Assessment) => <div>{formatCurrency(record.market_val)}</div>
+            render: (record: Assessment) => <div>{formatCurrency(record.market_val)}</div>,
+            sortable: true
         },
         {
             accessor: 'ass_value',
             title: 'Assessment Value',
-            render: (record: Assessment) => <div>{formatCurrency(record.ass_value)}</div>
+            render: (record: Assessment) => <div>{formatCurrency(record.ass_value)}</div>,
+            sortable: true
         },
 
-        { accessor: 'sub_class', title: 'Sub Class' },
-        { accessor: 'eff_date', title: 'Effective Date' },
-        { accessor: 'classification', title: 'Classification' },
-        { accessor: 'ass_level', title: 'Assessment Level' },
-        { accessor: 'area', title: 'Area' },
-        { accessor: 'taxability', title: 'Taxability' },
-        { accessor: 'gr_code', title: 'GR Code' },
-        { accessor: 'gr', title: 'GR' },
-        { accessor: 'mun_code', title: 'Municipality Code' },
-        { accessor: 'municipality', title: 'Municipality' },
-        { accessor: 'barangay_code', title: 'Barangay Code' },
-        { accessor: 'barangay', title: 'Barangay' },
+        { accessor: 'sub_class', title: 'Sub Class', sortable: true },
+        { accessor: 'eff_date', title: 'Effective Date', sortable: true },
+        { accessor: 'classification', title: 'Classification', sortable: true },
+        { accessor: 'ass_level', title: 'Assessment Level', sortable: true },
+        { accessor: 'area', title: 'Area', sortable: true },
+        { accessor: 'taxability', title: 'Taxability', sortable: true },
+        { accessor: 'gr_code', title: 'GR Code', sortable: true },
+        { accessor: 'gr', title: 'GR', sortable: true },
+        { accessor: 'mun_code', title: 'Municipality Code', sortable: true },
+        { accessor: 'municipality', title: 'Municipality', sortable: true },
+        { accessor: 'barangay_code', title: 'Barangay Code', sortable: true },
+        { accessor: 'barangay', title: 'Barangay', sortable: true },
         {
             accessor: 'actions',
+            sortable: false,
             title: 'Actions',
             render: (record: Assessment) => (
                 <div className="flex items-center gap-2">
@@ -119,11 +123,11 @@ const Buenavista = () => {
     ];
 
     useEffect(() => {
-        dispatch(setPageTitle('Buenavista'));
+        dispatch(setPageTitle('Carmen'));
     }, [dispatch]);
 
     const fetchAssessments = async (): Promise<Assessment[]> => {
-        const response = await axios.get('http://localhost:8000/assessments?municipality=buenavista&skip=0&limit=300000', {
+        const response = await axios.get('http://localhost:8000/assessments?municipality=carmen&skip=0&limit=300000', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -132,7 +136,7 @@ const Buenavista = () => {
     };
 
     const { data: rowData = [], isLoading: queryLoading, refetch } = useQuery<Assessment[]>({
-        queryKey: ['assessments', 'buenavista'],
+        queryKey: ['assessments', 'carmen'],
         queryFn: fetchAssessments,
         refetchOnWindowFocus: false,
         refetchOnMount: false,
@@ -148,7 +152,44 @@ const Buenavista = () => {
         })
     );
 
-    const sortedData = sortBy(filteredData, sortStatus.columnAccessor);
+    const sortedData = sortBy(filteredData, (item) => {
+        const value = item[sortStatus.columnAccessor as keyof Assessment];
+
+        // Handle different data types based on column
+        switch (sortStatus.columnAccessor) {
+            // Numeric columns
+            case 'market_val':
+            case 'ass_value':
+            case 'area':
+                return Number(value) || 0; // Return 0 if value is invalid number
+
+            // Date columns
+            case 'eff_date':
+                return new Date(value as string).getTime() || 0; // Return 0 if invalid date
+
+            // Code columns (should be case-sensitive)
+            case 'gr_code':
+            case 'mun_code':
+            case 'barangay_code':
+            case 'tdn':
+                return String(value);
+
+            // Text columns (case-insensitive)
+            case 'sub_class':
+            case 'classification':
+            case 'ass_level':
+            case 'taxability':
+            case 'gr':
+            case 'municipality':
+            case 'barangay':
+                return String(value).toLowerCase();
+
+            // Default case for any other columns
+            default:
+                return String(value).toLowerCase();
+        }
+    });
+
     const finalData = sortStatus.direction === 'desc' ? sortedData.reverse() : sortedData;
 
     const from = (page - 1) * pageSize;
@@ -250,7 +291,7 @@ const Buenavista = () => {
     return (
         <div className="panel">
             <div className="flex md:items-center md:flex-row flex-col mb-5 gap-5">
-                <h5 className="font-semibold text-lg dark:text-white-light">Buenavista Assessment Data-2025</h5>
+                <h5 className="font-semibold text-lg dark:text-white-light">Carmen Assessment Data-2025</h5>
                 <div className="flex items-center gap-5 ltr:ml-auto rtl:mr-auto">
                     <Dropdown
                         placement={isRtl ? 'bottom-end' : 'bottom-start'}
@@ -302,7 +343,7 @@ const Buenavista = () => {
                     onSortStatusChange={setSortStatus}
                     minHeight={200}
                     paginationText={({ from, to, totalRecords }) => `Showing ${from} to ${to} of ${totalRecords} entries`}
-                    fetching={isLoading}
+                    fetching={false}
                 />
             </div>
             <Modal
@@ -531,4 +572,4 @@ const Buenavista = () => {
     );
 };
 
-export default Buenavista;
+export default CarmenAssessment;

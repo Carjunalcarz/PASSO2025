@@ -85,14 +85,17 @@ const UnlockBox = () => {
                             </div>
                         </div>
                         <div className="mx-auto w-full max-w-[440px]">
-                            <div className="mb-10 flex items-center">
-                                <div className="flex h-16 w-16 items-end justify-center overflow-hidden rounded-full bg-[#00AB55] ltr:mr-4 rtl:ml-4">
-                                    <img src="/assets/images/auth/user.png" className="w-full object-cover" alt="images" />
+                            <div className="mb-10 flex items-center justify-center">
+                                <div className="flex h-100 w-100 items-end justify-center overflow-hidden rounded-full bg-[#00AB55] ltr:mr-4 rtl:ml-4">
+                                    <img src="/mun_logo/RPT.png" className="w-full object-cover" alt="images" width={500} height={500} />
                                 </div>
-                                <div className="flex-1">
-                                    <h4 className="text-2xl dark:text-white">Shaun Park</h4>
-                                    <p className="text-white-dark">Enter your password to unlock your ID</p>
-                                </div>
+
+                            </div>
+                            <div className="flex-1 m-4">
+                                <h5 className="text-xl dark:text-white">Real Property Tax Assessment System</h5>
+
+                                <p className="text-white-dark">Enter your password to unlock your ID</p>
+
                             </div>
                             <form className="space-y-5" onSubmit={submitForm}>
                                 <div>

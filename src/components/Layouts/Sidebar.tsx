@@ -128,45 +128,47 @@ const Sidebar = () => {
                                 <span>{t('apps')}</span>
                             </h2>
 
-                            <li className="nav-item">
-                                <ul>
-                                    <li className="menu nav-item">
-                                        <button type="button" className={`${currentMenu === 'dashboard' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('Tables')}>
-                                            <div className="flex items-center">
-                                                <IconMenuDocumentation
-                                                    className="group-hover:!text-primary shrink-0" />
-                                                <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Municipality')}</span>
-                                            </div>
+                            <li className="menu nav-item">
+                                <button type="button" className={`${currentMenu === 'Municipality' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('Municipality')}>
+                                    <div className="flex items-center">
+                                        <IconMenuDocumentation
+                                            className="group-hover:!text-primary shrink-0" />
+                                        <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Municipality')}</span>
+                                    </div>
 
-                                            <div className={currentMenu !== 'Tables' ? 'rtl:rotate-90 -rotate-90' : ''}>
-                                                <IconCaretDown />
-                                            </div>
-                                        </button>
+                                    <div className={currentMenu !== 'Tables' ? 'rtl:rotate-90 -rotate-90' : ''}>
+                                        <IconCaretDown />
+                                    </div>
+                                </button>
 
-                                        <AnimateHeight duration={300} height={currentMenu === 'Tables' ? 'auto' : 0}>
-                                            <ul className="sub-menu text-gray-500" >
-                                                <li>
-                                                    <NavLink to="/assessment/buenavista" className="flex items-center gap-2">
-                                                        <img src="/mun_logo/buenavista.jpg" alt="Buenavista Logo" className="w-5 h-5" />
-                                                        {t('Buenavista')}
-                                                    </NavLink>
-                                                </li>
-                                                <li>
-                                                    <NavLink to="/datatables/carmen_tables" className="flex items-center gap-2">
-                                                        <img src="/mun_logo/carmen.jpg" alt="Buenavista Logo" className="w-5 h-5" />
-                                                        {t('Carmen')}
-                                                    </NavLink>
-                                                </li>
-                                                <li>
-                                                    <NavLink to="/finance">{t('finance')}</NavLink>
-                                                </li>
-                                                <li>
-                                                    <NavLink to="/crypto">{t('crypto')}</NavLink>
-                                                </li>
-                                            </ul>
-                                        </AnimateHeight>
-                                    </li>
-                                </ul>
+                                <AnimateHeight duration={300} height={currentMenu === 'Municipality' ? 'auto' : 0}>
+                                    <div className="sub-menu text-gray-500 px-4 ml-4">
+                                        <div className="py-2 -mx-4">
+                                            <NavLink to="/assessment/buenavista" className="flex items-center gap-2">
+                                                <img src="/mun_logo/buenavista.jpg" alt="Buenavista Logo" className="w-5 h-5" />
+                                                {t('Buenavista')}
+                                            </NavLink>
+                                        </div>
+                                        <div className="py-2 -mx-4">
+                                            <NavLink to="/assessment/carmen" className="flex items-center gap-2">
+                                                <img src="/mun_logo/carmen.jpg" alt="Carmen Logo" className="w-5 h-5" />
+                                                {t('Carmen')}
+                                            </NavLink>
+                                        </div>
+                                        <div className="py-2 -mx-4">
+                                            <NavLink to="/assessment/buenavista" className="flex items-center gap-2">
+                                                <img src="/mun_logo/buenavista.jpg" alt="Buenavista Logo" className="w-5 h-5" />
+                                                {t('Buenavista')}
+                                            </NavLink>
+                                        </div>
+                                        <div className="py-2 -mx-4">
+                                            <NavLink to="/assessment/carmen" className="flex items-center gap-2">
+                                                <img src="/mun_logo/carmen.jpg" alt="Carmen Logo" className="w-5 h-5" />
+                                                {t('Carmen')}
+                                            </NavLink>
+                                        </div>
+                                    </div>
+                                </AnimateHeight>
                             </li>
 
                         </ul>
