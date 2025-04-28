@@ -31,6 +31,7 @@ import IconMenuUsers from '../Icon/Menu/IconMenuUsers';
 import IconMenuPages from '../Icon/Menu/IconMenuPages';
 import IconMenuAuthentication from '../Icon/Menu/IconMenuAuthentication';
 import IconMenuDocumentation from '../Icon/Menu/IconMenuDocumentation';
+import IconPlus from '../Icon/IconPlus';
 
 const Sidebar = () => {
     const [currentMenu, setCurrentMenu] = useState<string>('');
@@ -171,8 +172,35 @@ const Sidebar = () => {
                                 </AnimateHeight>
                             </li>
 
+
+                            <li className="menu nav-item">
+                                <button type="button" className={`${currentMenu === 'Assessment' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('Assessment')}>
+                                    <div className="flex items-center">
+                                        <IconMenuPages
+                                            className="group-hover:!text-primary shrink-0" />
+                                        <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Assessment')}</span>
+                                    </div>
+
+                                    <div className={currentMenu !== 'Tables' ? 'rtl:rotate-90 -rotate-90' : ''}>
+                                        <IconCaretDown />
+                                    </div>
+                                </button>
+
+                                <AnimateHeight duration={300} height={currentMenu === 'Assessment' ? 'auto' : 0}>
+                                    <div className="sub-menu text-gray-500 px-4 ml-4">
+                                        <div className="py-2 -mx-4">
+                                            <NavLink to="/assessment/add_assessment" className="flex items-center gap-2">
+                                                <IconPlus className="w-5 h-5" />
+                                                {t('Add Assessment')}
+                                            </NavLink>
+                                        </div>
+                                    </div>
+                                </AnimateHeight>
+                            </li>
+
                         </ul>
                     </PerfectScrollbar>
+
                 </div>
             </nav>
         </div>

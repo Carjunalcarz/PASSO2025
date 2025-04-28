@@ -104,6 +104,8 @@ import Buenavista from '../pages/DataTables/Buenavista_table';
 import Carmen from '../pages/DataTables/Carmen_table';
 import BuenavistaAssessment from '../pages/Municipality/BuenavistaAssessment';
 import CarmenAssessment from '../pages/Municipality/CarmenAssessment';
+import EditAssessment from '../pages/Municipality/EditAssessment';
+import AddAssessment from '../pages/Assessment/AddAssessment';
 const routes = [
     // dashboard
     {
@@ -597,6 +599,24 @@ const routes = [
                 <CarmenAssessment />
             </ProtectedRoute>
         ),
+    },
+    {
+        path: '/assessment/edit/:tdn',
+        element: (
+            <ProtectedRoute>
+                <EditAssessment />
+            </ProtectedRoute>
+        ),
+
+    },
+    {
+        path: '/assessment/add_assessment',
+        element: (
+            <ProtectedRoute>
+                <AddAssessment />
+            </ProtectedRoute>
+        ),
+
     },
 ];
 

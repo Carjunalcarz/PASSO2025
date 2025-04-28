@@ -28,7 +28,7 @@ const InputField = ({
                 className={`ltr:mr-2 rtl:ml-2 ${labelClassName} mb-0`}
             >
                 {label}
-                {required && <span className="text-red-500">*</span>}
+                {required && <span className="text-red-500"></span>}
             </label>
             <input
                 id={id}

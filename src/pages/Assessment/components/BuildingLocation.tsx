@@ -39,7 +39,7 @@ const BuildingLocation = ({
         <div className="px-10">
             <h2 className='text-xl px-5 text-wrap text-left mb-8'>BUILDING LOCATION</h2>
 
-            <div className="flex justify-between lg:flex-row flex-col">
+            <div className="mt-5 flex justify-between lg:flex-row flex-col">
                 <div className="lg:w-1/2 w-full ltr:lg:mr-6 rtl:lg:ml-6 mb-6">
                     <SuggestionInput
                         id="address_municipality"
