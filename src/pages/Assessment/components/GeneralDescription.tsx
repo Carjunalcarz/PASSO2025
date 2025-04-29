@@ -40,14 +40,15 @@ interface FormValues {
 
 // Define input field props
 interface InputFieldProps {
-    label?: string;
+    label: string;
     id: string;
     type: string;
-    placeholder?: string;
-    value: string;
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    placeholder: string;
+    value?: string;
+    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     className?: string;
     labelClassName?: string;
+    required?: boolean;
 }
 
 const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
@@ -91,6 +92,7 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
         placeholder: string = ''
     ) => (
         <InputField
+            label={label}
             id={id}
             type={type}
             placeholder={placeholder}
@@ -110,13 +112,13 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                     <tbody>
                         {/* Building Information */}
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 p-3 w-1/3">Kind of Bldg</td>
+                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3 w-1/3">Kind of Bldg</td>
                             <td className="border border-gray-300 p-3">
                                 {renderInputField('kind_of_bldg', 'Kind of Bldg', 'text', 'Enter Kind of Bldg')}
                             </td>
                         </tr>
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 p-3">Structural Type</td>
+                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Structural Type</td>
                             <td className="border border-gray-300 p-3">
                                 {renderInputField('structural_type', 'Structural Type', 'text', 'Enter Structural Type')}
                             </td>
@@ -124,7 +126,7 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
 
                         {/* Building Details */}
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 p-3">Building Permit No.</td>
+                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Building Permit No.</td>
                             <td className="border border-gray-300 p-3">
                                 {renderInputField('building_permit_no', 'Building Permit No.', 'text', 'Enter Building Permit No.')}
                             </td>
@@ -132,7 +134,7 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
 
                         {/* Certificates */}
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 p-3">Condominium Certificate of Title (CCT)</td>
+                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Condominium Certificate of Title (CCT)</td>
                             <td className="border border-gray-300 p-3">
                                 <ImageUploading
                                     multiple={false}
@@ -184,14 +186,14 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
 
                         {/* Dates */}
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 p-3">Certificate of Completion Issued On</td>
+                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Certificate of Completion Issued On</td>
                             <td className="border border-gray-300 p-3">
                                 {renderInputField('certificate_of_completion_issued_on', 'Certificate of Completion', 'date')}
                             </td>
                         </tr>
 
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 p-3">Certificate of Occupancy Issued On</td>
+                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Certificate of Occupancy Issued On</td>
                             <td className="border border-gray-300 p-3">
                                 {renderInputField('certificate_of_occupancy_issued_on', 'Certificate of Occupancy', 'date')}
                             </td>
@@ -199,14 +201,14 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
 
                         {/* Building Areas */}
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 p-3">Building Age</td>
+                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Building Age</td>
                             <td className="border border-gray-300 p-3">
                                 {renderInputField('bldg_age', 'Building Age', 'number', 'Enter Building Age')}
                             </td>
                         </tr>
 
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 p-3">Number of Storeys</td>
+                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Number of Storeys</td>
                             <td className="border border-gray-300 p-3">
                                 {renderInputField('no_of_storeys', 'Number of Storeys', 'number', 'Enter Number of Storeys')}
                             </td>
@@ -214,7 +216,7 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
 
                         {/* Floor Areas */}
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 p-3">Floor Areas (sqm)</td>
+                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Floor Areas (sqm)</td>
                             <td className="border border-gray-300 p-3">
                                 <div className="space-y-2">
                                     {renderInputField('area_of_1st_floor', '1st Floor', 'number', '1st Floor')}
@@ -226,7 +228,7 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                         </tr>
 
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 p-3">Total Floor Area</td>
+                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Total Floor Area</td>
                             <td className="border border-gray-300 p-3">
                                 {renderInputField('total_floor_area', 'Total Floor Area', 'number', 'Total Floor Area')}
                             </td>
@@ -234,7 +236,7 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
 
                         {/* Floor Plan Upload */}
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 p-3">Floor Plan
+                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Floor Plan
                                 <p className='text-xs text-gray-500'>Note : Attached the building plan/sketch of floor plan . A photograph may also be attached if necessary.</p>
                             </td>
                             <td className="border border-gray-300 p-3">
