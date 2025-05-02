@@ -16,6 +16,8 @@ import LandReference from './components/LandReference';
 import GeneralDescription from './components/GeneralDescription';
 import StructuralMaterialChecklist from './components/StructuralMaterialChecklist';
 import PropertyAppraisal from './components/PropertyAppraisal';
+import PropertyAssessment from './components/PropertyAssessment';
+import Memoranda from './components/memoranda';
 
 // Type definitions
 type BarangayData = {
@@ -312,14 +314,24 @@ const Add = () => {
     const [showGeneralDescription, setShowGeneralDescription] = useState(false);
     const [showStructuralMaterial, setShowStructuralMaterial] = useState(false);
     const [showPropertyAppraisal, setShowPropertyAppraisal] = useState(false);
+    const [showPropertyAssessment, setShowPropertyAssessment] = useState(false);
+
+    // Add this state in your Add component
+    const [showMemorada, setShowMemorada] = useState(false);
+
+    // Add this handler in your Add component
+    const handleMemorandaChange = (memoranda: any[]) => {
+        console.log('Memoranda updated:', memoranda);
+        // Handle the memoranda data as needed
+    };
 
     return (
         <div className="panel p-0 border rounded-lg bg-white dark:bg-black-dark-2 shadow-[4px_6px_10px_-3px_#bfc9d4] dark:shadow-[4px_6px_10px_-3px_#1b2e4b]">
-            <div className="flex xl:flex-row flex-col gap-2.5 w-[1300px]">
+            <div className="flex xl:flex-row flex-col gap-2.5 w-[1200px]">
                 <div className="panel px-0 ltr:xl:mr-10 rtl:xl:ml-10">
                     <Header />
-                    <div className="mt-8 px-20">
-                        <div className="flex justify-between lg:flex-row flex-col">
+                    <div className="mt-8 px-10">
+                        <div className="p-10 flex justify-between lg:flex-row flex-col border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
                             <div className="lg:w-1/2 w-full ltr:lg:mr-6 rtl:lg:ml-6 mb-6">
                                 <div className="flex items-center">
                                     <label htmlFor="reciever-email" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
@@ -394,7 +406,6 @@ const Add = () => {
                         </div>
                     </div>
                     {/* ###########ENTRY############## */}
-                    <hr className="border-white-light dark:border-[#1b2e4b] my-6" />
 
                     <div className="mt-8 px-10">
                         <BuildingLocation
@@ -417,14 +428,12 @@ const Add = () => {
                     </div>
                     {/* ##########END############### */}
                     {/* ##########ENTRY############### */}
-                    <hr className="border-white-light dark:border-[#1b2e4b] my-6" />
                     <div className="px-10">
                         <LandReference onInputChange={handleLandReferenceChange} />
                     </div>
 
                     {/* ###########END############## */}
                     {/* ##########ENTRY############### */}
-                    <hr className="border-white-light dark:border-[#1b2e4b] my-6" />
 
                     {/* General Description Section - Collapsible */}
                     <div className="px-10">
@@ -459,7 +468,7 @@ const Add = () => {
                     {/* ###########END############## */}
 
                     {/* Structural Material Checklist Section - Collapsible */}
-                    <div className="px-10">
+                    <div className="px-10 mt-">
                         <button
                             type="button"
                             className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
@@ -505,69 +514,121 @@ const Add = () => {
                             </div>
                         )}
                     </div>
-                </div>
 
-                <div className="xl:w-96 w-full xl:mt-0 mt-6 lg:block md:w-full">
-                    <div className="panel mb-5">
-                        <label htmlFor="currency">Currency</label>
-                        <select id="currency" name="currency" className="form-select">
-                            {currencyList.map((i) => (
-                                <option key={i}>{i}</option>
-                            ))}
-                        </select>
-                        <div className="mt-4">
-                            <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
-                                <div>
-                                    <label htmlFor="tax">Tax(%) </label>
-                                    <input id="tax" type="number" name="tax" className="form-input" defaultValue={0} placeholder="Tax" />
+                    {/* Property Assessment Section - Collapsible */}
+                    <div className="px-10">
+                        <button
+                            type="button"
+                            className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
+                            onClick={() => setShowPropertyAssessment(!showPropertyAssessment)}
+                        >
+                            <span className="flex items-center">
+                                <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
+                                <span className="text-black dark:text-white-dark font-medium">Property Assessment</span>
+                            </span>
+                            <span className={`transform transition-transform duration-300 ${showPropertyAssessment ? 'rotate-180' : ''}`}>
+                                <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </span>
+                        </button>
+                        {showPropertyAssessment && (
+                            <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
+                                <PropertyAssessment />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Approval Section */}
+                    <div className="px-10 mt-8">
+                        <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-6 bg-white dark:bg-[#0e1726]">
+                            <div className="grid grid-cols-3 gap-6">
+                                {/* Appraised/Assessed by */}
+                                <div className="flex flex-col">
+                                    <label className="mb-2 font-semibold text-center">Appraised/Assessed by:</label>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        placeholder="Enter name"
+                                    />
+                                    <label className="mb-2 font-semibold text-center">Appraised/Assessed by:</label>
+                                    <div className="mt-2">
+                                        <input
+                                            type="date"
+                                            className="form-input"
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label htmlFor="discount">Discount(%) </label>
-                                    <input id="discount" type="number" name="discount" className="form-input" defaultValue={0} placeholder="Discount" />
+
+                                {/* Recommending Approval */}
+                                <div className="flex flex-col">
+                                    <label className="mb-2 font-semibold text-center">Recommending Approval:</label>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        placeholder="Enter name"
+                                    />
+                                    <label className="mb-2 font-semibold text-center">Municipality Assessor</label>
+                                    <div className="mt-2">
+                                        <input
+                                            type="date"
+                                            className="form-input"
+                                        />
+                                    </div>
                                 </div>
+
+                                {/* Approved by */}
+                                <div className="flex flex-col">
+                                    <label className="mb-2 font-semibold text-center">Approved by:</label>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        placeholder="Enter name"
+                                    />
+                                    <label className="mb-2 font-semibold text-center">Provincial Assessor</label>
+                                    <div className="mt-2">
+                                        <input
+                                            type="date"
+                                            className="form-input"
+                                        />
+                                    </div>
+
+
+                                </div>
+
                             </div>
                         </div>
-                        <div className="mt-4">
-                            <div>
-                                <label htmlFor="shipping-charge">Shipping Charge($) </label>
-                                <input id="shipping-charge" type="number" name="shipping-charge" className="form-input" defaultValue={0} placeholder="Shipping Charge" />
+                    </div>
+
+                    {/* Memoranda Section - Collapsible */}
+                    <div className="px-10 mt-8">
+                        <button
+                            type="button"
+                            className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
+                            onClick={() => setShowMemorada(!showMemorada)}
+                        >
+                            <span className="flex items-center">
+                                <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
+                                <span className="text-black dark:text-white-dark font-medium">Memoranda</span>
+                            </span>
+                            <span className={`transform transition-transform duration-300 ${showMemorada ? 'rotate-180' : ''}`}>
+                                <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </span>
+                        </button>
+                        {showMemorada && (
+                            <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
+                                <Memoranda onMemorandaChange={handleMemorandaChange} />
                             </div>
-                        </div>
-                        <div className="mt-4">
-                            <label htmlFor="payment-method">Accept Payment Via</label>
-                            <select id="payment-method" name="payment-method" className="form-select">
-                                <option value=" ">Select Payment</option>
-                                <option value="bank">Bank Account</option>
-                                <option value="paypal">Paypal</option>
-                                <option value="upi">UPI Transfer</option>
-                            </select>
-                        </div>
+                        )}
                     </div>
-                    <div className="panel">
-                        <div className="grid xl:grid-cols-1 lg:grid-cols-4 sm:grid-cols-2 grid-cols-1 gap-4">
-                            <button type="button" className="btn btn-success w-full gap-2">
-                                <IconSave className="ltr:mr-2 rtl:ml-2 shrink-0" />
-                                Save
-                            </button>
 
-                            <button type="button" className="btn btn-info w-full gap-2">
-                                <IconSend className="ltr:mr-2 rtl:ml-2 shrink-0" />
-                                Send Invoice
-                            </button>
 
-                            <Link to="/apps/invoice/preview" className="btn btn-primary w-full gap-2">
-                                <IconEye className="ltr:mr-2 rtl:ml-2 shrink-0" />
-                                Preview
-                            </Link>
-
-                            <button type="button" className="btn btn-secondary w-full gap-2">
-                                <IconDownload className="ltr:mr-2 rtl:ml-2 shrink-0" />
-                                Download
-                            </button>
-                        </div>
-                    </div>
                 </div>
+
             </div>
+
 
             {previewImage && (
                 <ImagePreviewModal

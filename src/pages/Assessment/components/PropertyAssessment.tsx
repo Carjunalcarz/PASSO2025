@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import IconX from '../../../components/Icon/IconX';
 
-interface PropertyAppraisalItem {
+interface PropertyAssessmentItem {
     id: string;
     area: number;
     unitValue: number;
@@ -23,12 +23,12 @@ interface BuildingType {
     name: string;
 }
 
-interface PropertyAppraisalProps {
+interface PropertyAssessmentProps {
     // Add any props you need to pass to the component
 }
 
-const PropertyAppraisal: React.FC<PropertyAppraisalProps> = () => {
-    const [items, setItems] = useState<PropertyAppraisalItem[]>([]);
+const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
+    const [items, setItems] = useState<PropertyAssessmentItem[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [selectedType, setSelectedType] = useState<string>('');
 
@@ -49,7 +49,10 @@ const PropertyAppraisal: React.FC<PropertyAppraisalProps> = () => {
     ];
 
     const addItem = () => {
-        const newItem: PropertyAppraisalItem = {
+        if (items.length >= 1) {
+            return; // Don't add more items if we already have one
+        }
+        const newItem: PropertyAssessmentItem = {
             id: (Math.random() + 1).toString(36).substring(7),
             area: 0,
             unitValue: 0,
@@ -62,11 +65,11 @@ const PropertyAppraisal: React.FC<PropertyAppraisalProps> = () => {
         setItems([...items, newItem]);
     };
 
-    const removeItem = (item: PropertyAppraisalItem) => {
+    const removeItem = (item: PropertyAssessmentItem) => {
         setItems(items.filter((i) => i.id !== item.id));
     };
 
-    const updateItemValue = (field: keyof PropertyAppraisalItem, value: string, id: string) => {
+    const updateItemValue = (field: keyof PropertyAssessmentItem, value: string, id: string) => {
         const numValue = parseFloat(value) || 0;
         setItems(
             items.map((item) => {
@@ -89,18 +92,17 @@ const PropertyAppraisal: React.FC<PropertyAppraisalProps> = () => {
 
     return (
         <div className="px-10">
-            <h2 className='text-xl px-5 text-wrap text-left mb-6'>PROPERTY APPRAISAL</h2>
+            <h2 className='text-xl px-5 text-wrap text-left mb-6'>PROPERTY ASSESSMENT</h2>
             <div className="table-responsive">
                 <table className="w-full">
                     <thead>
                         <tr>
-                            <th className="w-[20%]">Area</th>
-                            <th className="w-[20%]">Unit Value</th>
-                            <th className="w-[20%]">SMV</th>
-                            <th className="w-[20%]">Base Market Value</th>
-                            <th className="w-[20%]">% Depn</th>
-                            <th className="w-[20%]">Depreciator Cost (PHP)</th>
+                            <th className="w-[20%]">Actual Use</th>
                             <th className="w-[20%]">Market Value</th>
+                            <th className="w-[20%]">Assessment Level(%)</th>
+                            <th className="w-[20%]">Assessment Value(PHP)</th>
+                            <th className="w-[20%]">Effectivity of Assessment/Revision Date</th>
+                            <th className="w-[20%]"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -111,7 +113,7 @@ const PropertyAppraisal: React.FC<PropertyAppraisalProps> = () => {
                                 </td>
                             </tr>
                         )}
-                        {items.map((item: PropertyAppraisalItem) => (
+                        {items.map((item: PropertyAssessmentItem) => (
                             <React.Fragment key={item.id}>
                                 {/* First row with building category and type */}
                                 <tr>
@@ -176,22 +178,22 @@ const PropertyAppraisal: React.FC<PropertyAppraisalProps> = () => {
                                         />
                                     </td>
                                     <td>
-                                        <div>{item.baseMarketValue.toFixed(2)}</div>
-                                    </td>
-                                    <td>
                                         <input
-                                            type="number"
+                                            type="text"
                                             className="form-input w-full"
-                                            placeholder="% Depn"
-                                            value={item.depreciationPercentage}
-                                            onChange={(e) => updateItemValue('depreciationPercentage', e.target.value, item.id)}
+                                            placeholder="SMV"
+                                            value={item.smv}
+                                            onChange={(e) => updateItemValue('smv', e.target.value, item.id)}
                                         />
                                     </td>
                                     <td>
-                                        <div>{item.depreciatorCost.toFixed(2)}</div>
-                                    </td>
-                                    <td>
-                                        <div>{item.marketValue.toFixed(2)}</div>
+                                        <input
+                                            type="date"
+                                            className="form-input w-full"
+                                            placeholder="SMV"
+                                            value={item.smv}
+                                            onChange={(e) => updateItemValue('smv', e.target.value, item.id)}
+                                        />
                                     </td>
                                     <td>
                                         <button type="button" onClick={() => removeItem(item)}>
@@ -218,7 +220,12 @@ const PropertyAppraisal: React.FC<PropertyAppraisalProps> = () => {
             </div>
             <div className="flex justify-between sm:flex-row flex-col mt-6 px-4">
                 <div className="sm:mb-0 mb-6">
-                    <button type="button" className="btn btn-primary" onClick={addItem}>
+                    <button
+                        type="button"
+                        className={`btn btn-primary ${items.length >= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={addItem}
+                        disabled={items.length >= 1}
+                    >
                         Add Item
                     </button>
                 </div>
@@ -227,4 +234,4 @@ const PropertyAppraisal: React.FC<PropertyAppraisalProps> = () => {
     );
 };
 
-export default PropertyAppraisal;
+export default PropertyAssessment;

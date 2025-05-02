@@ -10,7 +10,7 @@ interface LandReferenceProps {
 
 const LandReference = ({ onInputChange }: LandReferenceProps) => {
     return (
-        <div className="px-10">
+        <div className="px-10 border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
             <h2 className='text-xl px-5 text-wrap text-left'>LAND REFERENCE</h2>
             <div className="flex justify-between lg:flex-row flex-col">
                 {/* Left Column */}

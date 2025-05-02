@@ -1,0 +1,61 @@
+<div className="px-4">
+    <h2 className="text-lg font-bold mb-4">Structural Material Checklist</h2>
+    
+    <div className="flex flex-wrap gap-4">
+        {/* Walls and Partition */}
+        <div className="mb-6 w-[calc(50%-1rem)]">
+            <h3 className="font-semibold mb-2">Walls and Partition</h3>
+            <table className="w-full border-collapse">
+                {/* ... existing table content ... */}
+            </table>
+        </div>
+
+        {/* Foundation */}
+        <div className="mb-6 w-[calc(50%-1rem)]">
+            <h3 className="font-semibold mb-2">Foundation</h3>
+            <table className="w-full border-collapse">
+                {/* ... existing table content ... */}
+            </table>
+        </div>
+
+        {/* Columns */}
+        <div className="mb-6 w-[calc(50%-1rem)]">
+            <h3 className="font-semibold mb-2">Columns</h3>
+            <table className="w-full border-collapse">
+                {/* ... existing table content ... */}
+            </table>
+        </div>
+
+        {/* Beams */}
+        <div className="mb-6 w-[calc(50%-1rem)]">
+            <h3 className="font-semibold mb-2">Beams</h3>
+            <table className="w-full border-collapse">
+                {/* ... existing table content ... */}
+            </table>
+        </div>
+
+        {/* Floor */}
+        <div className="mb-6 w-[calc(50%-1rem)]">
+            <h3 className="font-semibold mb-2">Floor</h3>
+            <table className="w-full border-collapse">
+                {/* ... existing table content ... */}
+            </table>
+        </div>
+
+        {/* Truss Framing */}
+        <div className="mb-6 w-[calc(50%-1rem)]">
+            <h3 className="font-semibold mb-2">Truss Framing</h3>
+            <table className="w-full border-collapse">
+                {/* ... existing table content ... */}
+            </table>
+        </div>
+
+        {/* Roof */}
+        <div className="mb-6 w-[calc(50%-1rem)]">
+            <h3 className="font-semibold mb-2">Roof</h3>
+            <table className="w-full border-collapse">
+                {/* ... existing table content ... */}
+            </table>
+        </div>
+    </div>
+</div> 

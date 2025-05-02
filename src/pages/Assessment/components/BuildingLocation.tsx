@@ -36,7 +36,7 @@ const BuildingLocation = ({
     setShowBarangaySuggestions,
 }: BuildingLocationProps) => {
     return (
-        <div className="px-10">
+        <div className="px-10 border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
             <h2 className='text-xl px-5 text-wrap text-left mb-8'>BUILDING LOCATION</h2>
 
             <div className="mt-5 flex justify-between lg:flex-row flex-col">

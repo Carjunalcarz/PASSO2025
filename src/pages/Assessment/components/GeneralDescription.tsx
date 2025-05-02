@@ -104,7 +104,7 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
     );
 
     return (
-        <div className="px-10">
+        <div className="px-10 w-full">
             <h2 className='text-xl px-5 text-wrap text-left mb-6'>GENERAL DESCRIPTION</h2>
 
             <div className="overflow-x-auto">
