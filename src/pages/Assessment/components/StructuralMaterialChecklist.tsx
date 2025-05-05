@@ -1,19 +1,10 @@
 import React, { useState } from 'react';
 
 interface StructuralMaterialChecklistProps {
-    onInputChange: (field: string, value: boolean | string) => void;
+    register: any;
 }
 
-const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = ({ onInputChange }) => {
-    const [otherValues, setOtherValues] = useState({
-        foundation_other: '',
-        columns_other: '',
-        beams_other: '',
-        floor_other: '',
-        truss_other: '',
-        roof_other: '',
-        walls_other: ''
-    });
+const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = ({ register }) => {
     const [additionalFloors, setAdditionalFloors] = useState<{ [key: string]: number[] }>({
         walls_rc: [],
         walls_pc: [],
@@ -53,75 +44,31 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
         roof_nipa: [],
         roof_other: []
     });
-
-    const handleOtherChange = (field: string, value: string) => {
-        setOtherValues(prev => ({
-            ...prev,
-            [field]: value
-        }));
-        onInputChange(field, value);
-    };
+    const [mainChecked, setMainChecked] = useState<{ [key: string]: boolean }>({});
 
     const handleAddFloor = (section: string) => {
         setAdditionalFloors(prev => {
-            // Get current additional floors
             const currentFloors = prev[section] || [];
-
-            // Check if we've reached the maximum of 8 floors total (4 default + 4 additional)
-            if (currentFloors.length >= 4) {
-                return prev; // Don't add more if we've reached the limit
-            }
-
-            const nextFloor = (currentFloors.length > 0
-                ? Math.max(...currentFloors)
-                : 4) + 1;
-
-            // Only add if we haven't reached the limit
+            if (currentFloors.length >= 4) return prev;
+            const nextFloor = (currentFloors.length > 0 ? Math.max(...currentFloors) : 4) + 1;
             if (nextFloor <= 8) {
-                return {
-                    ...prev,
-                    [section]: [...currentFloors, nextFloor]
-                };
+                return { ...prev, [section]: [...currentFloors, nextFloor] };
             }
             return prev;
         });
     };
 
-    const renderFloorCheckboxes = (section: string) => {
-        if (!additionalFloors[section]) {
-            console.warn(`Section ${section} not found in additionalFloors`);
-            return null;
-        }
-
+    const renderFloorCheckboxes = (section: string, mainField: string) => {
+        if (!mainChecked[mainField]) return null;
         const hasReachedLimit = additionalFloors[section].length >= 4;
-
         return (
             <div className="flex flex-col gap-2">
-                {/* First row - default floors 1-4 */}
                 <div className="flex items-center gap-4">
-                    <input
-                        type="checkbox"
-                        className="form-checkbox h-4 w-4"
-                        onChange={(e) => onInputChange(`${section}_1st`, e.target.checked)}
-                    />
-                    <input
-                        type="checkbox"
-                        className="form-checkbox h-4 w-4"
-                        onChange={(e) => onInputChange(`${section}_2nd`, e.target.checked)}
-                    />
-                    <input
-                        type="checkbox"
-                        className="form-checkbox h-4 w-4"
-                        onChange={(e) => onInputChange(`${section}_3rd`, e.target.checked)}
-                    />
-                    <input
-                        type="checkbox"
-                        className="form-checkbox h-4 w-4"
-                        onChange={(e) => onInputChange(`${section}_4th`, e.target.checked)}
-                    />
+                    <input type="checkbox" className="form-checkbox h-4 w-4" {...register(`${section}_1st`)} />
+                    <input type="checkbox" className="form-checkbox h-4 w-4" {...register(`${section}_2nd`)} />
+                    <input type="checkbox" className="form-checkbox h-4 w-4" {...register(`${section}_3rd`)} />
+                    <input type="checkbox" className="form-checkbox h-4 w-4" {...register(`${section}_4th`)} />
                 </div>
-
-                {/* Second row - additional floors 5-8 */}
                 {additionalFloors[section].length > 0 && (
                     <div className="flex items-center gap-4 mt-2">
                         {additionalFloors[section].map((floorNum) => (
@@ -129,13 +76,11 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                 key={floorNum}
                                 type="checkbox"
                                 className="form-checkbox h-4 w-4"
-                                onChange={(e) => onInputChange(`${section}_${floorNum}th`, e.target.checked)}
+                                {...register(`${section}_${floorNum}th`)}
                             />
                         ))}
                     </div>
                 )}
-
-                {/* Add Floor button */}
                 <button
                     type="button"
                     onClick={() => handleAddFloor(section)}
@@ -151,7 +96,6 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
         );
     };
 
-    // Modify the table header to show only 4 floors
     const renderTableHeader = () => (
         <thead>
             <tr>
@@ -171,7 +115,6 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
     return (
         <div className="px-4">
             <h2 className="text-lg font-bold mb-4">Structural Material Checklist</h2>
-
             <div className="flex flex-wrap -mx-2">
                 {/* First Column */}
                 <div className="w-1/2 px-2">
@@ -187,13 +130,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('walls_reinforced_concrete', e.target.checked)}
+                                                {...register('walls_reinforced_concrete')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, walls_reinforced_concrete: e.target.checked }))}
                                             />
                                             <span className="ml-2">Reinforced Concrete</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('walls_rc')}
+                                        {renderFloorCheckboxes('walls_rc', 'walls_reinforced_concrete')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -202,13 +146,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('walls_plain_concrete', e.target.checked)}
+                                                {...register('walls_plain_concrete')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, walls_plain_concrete: e.target.checked }))}
                                             />
                                             <span className="ml-2">Plain Concrete</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('walls_pc')}
+                                        {renderFloorCheckboxes('walls_pc', 'walls_plain_concrete')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -217,13 +162,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('walls_chpb', e.target.checked)}
+                                                {...register('walls_chpb')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, walls_chpb: e.target.checked }))}
                                             />
                                             <span className="ml-2">CHPB</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('walls_chpb')}
+                                        {renderFloorCheckboxes('walls_chpb', 'walls_chpb')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -232,13 +178,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('walls_gi', e.target.checked)}
+                                                {...register('walls_gi')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, walls_gi: e.target.checked }))}
                                             />
                                             <span className="ml-2">G.I</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('walls_gi')}
+                                        {renderFloorCheckboxes('walls_gi', 'walls_gi')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -247,13 +194,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('walls_build_wall', e.target.checked)}
+                                                {...register('walls_build_wall')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, walls_build_wall: e.target.checked }))}
                                             />
                                             <span className="ml-2">Build a Wall</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('walls_build_wall')}
+                                        {renderFloorCheckboxes('walls_build_wall', 'walls_build_wall')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -262,13 +210,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('walls_sawali', e.target.checked)}
+                                                {...register('walls_sawali')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, walls_sawali: e.target.checked }))}
                                             />
                                             <span className="ml-2">Sawali</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('walls_sawali')}
+                                        {renderFloorCheckboxes('walls_sawali', 'walls_sawali')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -277,13 +226,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('walls_bamboo', e.target.checked)}
+                                                {...register('walls_bamboo')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, walls_bamboo: e.target.checked }))}
                                             />
                                             <span className="ml-2">Bamboo</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('walls_bamboo')}
+                                        {renderFloorCheckboxes('walls_bamboo', 'walls_bamboo')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -292,25 +242,25 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('walls_other_checked', e.target.checked)}
+                                                {...register('walls_other_checked')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, walls_other_checked: e.target.checked }))}
                                             />
                                             <span>Other:</span>
                                             <input
                                                 type="text"
                                                 className="form-input text-sm w-24"
                                                 placeholder="Specify"
-                                                onChange={(e) => handleOtherChange('walls_other', e.target.value)}
+                                                {...register('walls_other')}
                                             />
                                         </div>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('walls_other')}
+                                        {renderFloorCheckboxes('walls_other', 'walls_other_checked')}
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-
                     {/* Foundation */}
                     <div className="mb-6">
                         <h3 className="font-semibold mb-2">Foundation</h3>
@@ -323,13 +273,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('foundation_reinforced_concrete', e.target.checked)}
+                                                {...register('foundation_reinforced_concrete')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, foundation_reinforced_concrete: e.target.checked }))}
                                             />
                                             <span className="ml-2">Reinforced Concrete</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('foundation_rc')}
+                                        {renderFloorCheckboxes('foundation_rc', 'foundation_reinforced_concrete')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -338,13 +289,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('foundation_plain_concrete', e.target.checked)}
+                                                {...register('foundation_plain_concrete')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, foundation_plain_concrete: e.target.checked }))}
                                             />
                                             <span className="ml-2">Plain Concrete</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('foundation_pc')}
+                                        {renderFloorCheckboxes('foundation_pc', 'foundation_plain_concrete')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -353,25 +305,25 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('foundation_other_checked', e.target.checked)}
+                                                {...register('foundation_other_checked')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, foundation_other_checked: e.target.checked }))}
                                             />
                                             <span>Other:</span>
                                             <input
                                                 type="text"
                                                 className="form-input text-sm w-24"
                                                 placeholder="Specify"
-                                                onChange={(e) => handleOtherChange('foundation_other', e.target.value)}
+                                                {...register('foundation_other')}
                                             />
                                         </div>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('foundation_other')}
+                                        {renderFloorCheckboxes('foundation_other', 'foundation_other_checked')}
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-
                     {/* Columns */}
                     <div className="mb-6">
                         <h3 className="font-semibold mb-2">Columns</h3>
@@ -384,13 +336,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('columns_steel', e.target.checked)}
+                                                {...register('columns_steel')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, columns_steel: e.target.checked }))}
                                             />
                                             <span className="ml-2">Steel</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('columns_steel')}
+                                        {renderFloorCheckboxes('columns_steel', 'columns_steel')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -399,13 +352,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('columns_concrete', e.target.checked)}
+                                                {...register('columns_concrete')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, columns_concrete: e.target.checked }))}
                                             />
                                             <span className="ml-2">Reinforced Concrete</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('columns_concrete')}
+                                        {renderFloorCheckboxes('columns_concrete', 'columns_concrete')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -414,13 +368,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('columns_wood', e.target.checked)}
+                                                {...register('columns_wood')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, columns_wood: e.target.checked }))}
                                             />
                                             <span className="ml-2">Wood</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('columns_wood')}
+                                        {renderFloorCheckboxes('columns_wood', 'columns_wood')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -429,26 +384,26 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('columns_other_checked', e.target.checked)}
+                                                {...register('columns_other_checked')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, columns_other_checked: e.target.checked }))}
                                             />
                                             <span>Other:</span>
                                             <input
                                                 type="text"
                                                 className="form-input text-sm w-24"
                                                 placeholder="Specify"
-                                                onChange={(e) => handleOtherChange('columns_other', e.target.value)}
+                                                {...register('columns_other')}
                                             />
                                         </div>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('columns_other')}
+                                        {renderFloorCheckboxes('columns_other', 'columns_other_checked')}
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
-
                 {/* Second Column */}
                 <div className="w-1/2 px-2">
                     {/* Beams */}
@@ -463,13 +418,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('beams_steel', e.target.checked)}
+                                                {...register('beams_steel')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, beams_steel: e.target.checked }))}
                                             />
                                             <span className="ml-2">Steel</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('beams_steel')}
+                                        {renderFloorCheckboxes('beams_steel', 'beams_steel')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -478,13 +434,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('beams_concrete', e.target.checked)}
+                                                {...register('beams_concrete')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, beams_concrete: e.target.checked }))}
                                             />
                                             <span className="ml-2">Reinforced Concrete</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('beams_concrete')}
+                                        {renderFloorCheckboxes('beams_concrete', 'beams_concrete')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -493,13 +450,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('beams_wood', e.target.checked)}
+                                                {...register('beams_wood')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, beams_wood: e.target.checked }))}
                                             />
                                             <span className="ml-2">Wood</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('beams_wood')}
+                                        {renderFloorCheckboxes('beams_wood', 'beams_wood')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -508,25 +466,25 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('beams_other_checked', e.target.checked)}
+                                                {...register('beams_other_checked')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, beams_other_checked: e.target.checked }))}
                                             />
                                             <span>Other:</span>
                                             <input
                                                 type="text"
                                                 className="form-input text-sm w-24"
                                                 placeholder="Specify"
-                                                onChange={(e) => handleOtherChange('beams_other', e.target.value)}
+                                                {...register('beams_other')}
                                             />
                                         </div>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('beams_other')}
+                                        {renderFloorCheckboxes('beams_other', 'beams_other_checked')}
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-
                     {/* Floor */}
                     <div className="mb-6">
                         <h3 className="font-semibold mb-2">Floor</h3>
@@ -539,13 +497,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('floor_reinforced_concrete', e.target.checked)}
+                                                {...register('floor_reinforced_concrete')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, floor_reinforced_concrete: e.target.checked }))}
                                             />
                                             <span className="ml-2">Reinforced Concrete for Upper Floor</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('floor_rc')}
+                                        {renderFloorCheckboxes('floor_rc', 'floor_reinforced_concrete')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -554,13 +513,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('floor_plain_cement', e.target.checked)}
+                                                {...register('floor_plain_cement')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, floor_plain_cement: e.target.checked }))}
                                             />
                                             <span className="ml-2">Plain Cement</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('floor_rc')}
+                                        {renderFloorCheckboxes('floor_rc', 'floor_plain_cement')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -569,13 +529,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('floor_marble', e.target.checked)}
+                                                {...register('floor_marble')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, floor_marble: e.target.checked }))}
                                             />
                                             <span className="ml-2">Marble</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('floor_rc')}
+                                        {renderFloorCheckboxes('floor_rc', 'floor_marble')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -584,13 +545,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('floor_wood', e.target.checked)}
+                                                {...register('floor_wood')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, floor_wood: e.target.checked }))}
                                             />
                                             <span className="ml-2">Wood</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('floor_rc')}
+                                        {renderFloorCheckboxes('floor_rc', 'floor_wood')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -599,13 +561,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('floor_tiles', e.target.checked)}
+                                                {...register('floor_tiles')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, floor_tiles: e.target.checked }))}
                                             />
                                             <span className="ml-2">Tiles</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('floor_rc')}
+                                        {renderFloorCheckboxes('floor_rc', 'floor_tiles')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -614,25 +577,25 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('floor_other_checked', e.target.checked)}
+                                                {...register('floor_other_checked')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, floor_other_checked: e.target.checked }))}
                                             />
                                             <span>Other:</span>
                                             <input
                                                 type="text"
                                                 className="form-input text-sm w-24"
                                                 placeholder="Specify"
-                                                onChange={(e) => handleOtherChange('floor_other', e.target.value)}
+                                                {...register('floor_other')}
                                             />
                                         </div>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('floor_rc')}
+                                        {renderFloorCheckboxes('floor_rc', 'floor_other_checked')}
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-
                     {/* Truss Framing */}
                     <div className="mb-6">
                         <h3 className="font-semibold mb-2">Truss Framing</h3>
@@ -645,13 +608,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('truss_steel', e.target.checked)}
+                                                {...register('truss_steel')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, truss_steel: e.target.checked }))}
                                             />
                                             <span className="ml-2">Steel</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('truss_steel')}
+                                        {renderFloorCheckboxes('truss_steel', 'truss_steel')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -660,13 +624,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('truss_wood', e.target.checked)}
+                                                {...register('truss_wood')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, truss_wood: e.target.checked }))}
                                             />
                                             <span className="ml-2">Wood</span>
                                         </label>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('truss_wood')}
+                                        {renderFloorCheckboxes('truss_wood', 'truss_wood')}
                                     </td>
                                 </tr>
                                 <tr className="border-b">
@@ -675,19 +640,20 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                             <input
                                                 type="checkbox"
                                                 className="form-checkbox"
-                                                onChange={(e) => onInputChange('truss_other_checked', e.target.checked)}
+                                                {...register('truss_other_checked')}
+                                                onChange={e => setMainChecked(prev => ({ ...prev, truss_other_checked: e.target.checked }))}
                                             />
                                             <span>Other:</span>
                                             <input
                                                 type="text"
                                                 className="form-input text-sm w-24"
                                                 placeholder="Specify"
-                                                onChange={(e) => handleOtherChange('truss_other', e.target.value)}
+                                                {...register('truss_other')}
                                             />
                                         </div>
                                     </td>
                                     <td className="py-2">
-                                        {renderFloorCheckboxes('truss_other')}
+                                        {renderFloorCheckboxes('truss_other', 'truss_other_checked')}
                                     </td>
                                 </tr>
                             </tbody>
@@ -695,7 +661,6 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                     </div>
                 </div>
             </div>
-
             {/* Move Roof section outside the columns and make it full width */}
             <div className="px-2">
                 {/* Roof */}
@@ -710,13 +675,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                         <input
                                             type="checkbox"
                                             className="form-checkbox"
-                                            onChange={(e) => onInputChange('roof_reinforced_concrete', e.target.checked)}
+                                            {...register('roof_reinforced_concrete')}
+                                            onChange={e => setMainChecked(prev => ({ ...prev, roof_reinforced_concrete: e.target.checked }))}
                                         />
                                         <span className="ml-2">Reinforced Concrete</span>
                                     </label>
                                 </td>
                                 <td className="py-2">
-                                    {renderFloorCheckboxes('roof_rc')}
+                                    {renderFloorCheckboxes('roof_rc', 'roof_reinforced_concrete')}
                                 </td>
                             </tr>
                             <tr className="border-b">
@@ -725,13 +691,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                         <input
                                             type="checkbox"
                                             className="form-checkbox"
-                                            onChange={(e) => onInputChange('roof_tiles', e.target.checked)}
+                                            {...register('roof_tiles')}
+                                            onChange={e => setMainChecked(prev => ({ ...prev, roof_tiles: e.target.checked }))}
                                         />
                                         <span className="ml-2">Tiles</span>
                                     </label>
                                 </td>
                                 <td className="py-2">
-                                    {renderFloorCheckboxes('roof_tiles')}
+                                    {renderFloorCheckboxes('roof_tiles', 'roof_tiles')}
                                 </td>
                             </tr>
                             <tr className="border-b">
@@ -740,13 +707,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                         <input
                                             type="checkbox"
                                             className="form-checkbox"
-                                            onChange={(e) => onInputChange('roof_gi_sheet', e.target.checked)}
+                                            {...register('roof_gi_sheet')}
+                                            onChange={e => setMainChecked(prev => ({ ...prev, roof_gi_sheet: e.target.checked }))}
                                         />
                                         <span className="ml-2">G.I Sheet</span>
                                     </label>
                                 </td>
                                 <td className="py-2">
-                                    {renderFloorCheckboxes('roof_tiles')}
+                                    {renderFloorCheckboxes('roof_tiles', 'roof_gi_sheet')}
                                 </td>
                             </tr>
                             <tr className="border-b">
@@ -755,13 +723,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                         <input
                                             type="checkbox"
                                             className="form-checkbox"
-                                            onChange={(e) => onInputChange('roof_aluminum', e.target.checked)}
+                                            {...register('roof_aluminum')}
+                                            onChange={e => setMainChecked(prev => ({ ...prev, roof_aluminum: e.target.checked }))}
                                         />
                                         <span className="ml-2">Aluminum</span>
                                     </label>
                                 </td>
                                 <td className="py-2">
-                                    {renderFloorCheckboxes('roof_tiles')}
+                                    {renderFloorCheckboxes('roof_tiles', 'roof_aluminum')}
                                 </td>
                             </tr>
                             <tr className="border-b">
@@ -770,13 +739,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                         <input
                                             type="checkbox"
                                             className="form-checkbox"
-                                            onChange={(e) => onInputChange('roof_asbestos', e.target.checked)}
+                                            {...register('roof_asbestos')}
+                                            onChange={e => setMainChecked(prev => ({ ...prev, roof_asbestos: e.target.checked }))}
                                         />
                                         <span className="ml-2">Asbestos</span>
                                     </label>
                                 </td>
                                 <td className="py-2">
-                                    {renderFloorCheckboxes('roof_tiles')}
+                                    {renderFloorCheckboxes('roof_tiles', 'roof_asbestos')}
                                 </td>
                             </tr>
                             <tr className="border-b">
@@ -785,13 +755,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                         <input
                                             type="checkbox"
                                             className="form-checkbox"
-                                            onChange={(e) => onInputChange('roof_long_span', e.target.checked)}
+                                            {...register('roof_long_span')}
+                                            onChange={e => setMainChecked(prev => ({ ...prev, roof_long_span: e.target.checked }))}
                                         />
                                         <span className="ml-2">Long Span</span>
                                     </label>
                                 </td>
                                 <td className="py-2">
-                                    {renderFloorCheckboxes('roof_tiles')}
+                                    {renderFloorCheckboxes('roof_tiles', 'roof_long_span')}
                                 </td>
                             </tr>
                             <tr className="border-b">
@@ -800,13 +771,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                         <input
                                             type="checkbox"
                                             className="form-checkbox"
-                                            onChange={(e) => onInputChange('roof_concrete_desk', e.target.checked)}
+                                            {...register('roof_concrete_desk')}
+                                            onChange={e => setMainChecked(prev => ({ ...prev, roof_concrete_desk: e.target.checked }))}
                                         />
                                         <span className="ml-2">Concrete Desk</span>
                                     </label>
                                 </td>
                                 <td className="py-2">
-                                    {renderFloorCheckboxes('roof_tiles')}
+                                    {renderFloorCheckboxes('roof_tiles', 'roof_concrete_desk')}
                                 </td>
                             </tr>
                             <tr className="border-b">
@@ -815,13 +787,14 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                         <input
                                             type="checkbox"
                                             className="form-checkbox"
-                                            onChange={(e) => onInputChange('roof_nipa', e.target.checked)}
+                                            {...register('roof_nipa')}
+                                            onChange={e => setMainChecked(prev => ({ ...prev, roof_nipa: e.target.checked }))}
                                         />
                                         <span className="ml-2">Nipa/Anahaw/Cogon</span>
                                     </label>
                                 </td>
                                 <td className="py-2">
-                                    {renderFloorCheckboxes('roof_tiles')}
+                                    {renderFloorCheckboxes('roof_tiles', 'roof_nipa')}
                                 </td>
                             </tr>
                             <tr className="border-b">
@@ -830,19 +803,20 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                         <input
                                             type="checkbox"
                                             className="form-checkbox"
-                                            onChange={(e) => onInputChange('roof_other_checked', e.target.checked)}
+                                            {...register('roof_other_checked')}
+                                            onChange={e => setMainChecked(prev => ({ ...prev, roof_other_checked: e.target.checked }))}
                                         />
                                         <span>Other:</span>
                                         <input
                                             type="text"
                                             className="form-input text-sm w-24"
                                             placeholder="Specify"
-                                            onChange={(e) => handleOtherChange('roof_other', e.target.value)}
+                                            {...register('roof_other')}
                                         />
                                     </div>
                                 </td>
                                 <td className="py-2">
-                                    {renderFloorCheckboxes('roof_tiles')}
+                                    {renderFloorCheckboxes('roof_tiles', 'roof_other_checked')}
                                 </td>
                             </tr>
                         </tbody>

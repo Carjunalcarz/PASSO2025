@@ -1,6 +1,7 @@
 import SuggestionInput from './shared/SuggestionInput';
 
 interface BuildingLocationProps {
+    register: any;
     municipalitySuggestions: string[];
     provinceSuggestions: string[];
     barangaySuggestions: string[];
@@ -19,6 +20,7 @@ interface BuildingLocationProps {
 }
 
 const BuildingLocation = ({
+    register,
     municipalitySuggestions,
     provinceSuggestions,
     barangaySuggestions,
@@ -62,6 +64,7 @@ const BuildingLocation = ({
                         onSuggestionClick={handleSuggestionClickBarangay}
                         setShowSuggestions={setShowBarangaySuggestions}
                         labelClassName="w-1/4"
+
                     />
 
                     <div className="mt-4 flex items-center">
@@ -73,6 +76,7 @@ const BuildingLocation = ({
                             name="street"
                             className="form-textarea flex-1 resize-none rounded-lg border border-[#e0e6ed] bg-white px-4 py-2 text-sm font-normal text-black focus:border-primary focus:outline-none dark:border-[#17263c] dark:bg-[#121e32] dark:text-white-dark"
                             placeholder="Enter No. / Street"
+                            {...register("street")}
                         ></textarea>
                     </div>
                 </div>

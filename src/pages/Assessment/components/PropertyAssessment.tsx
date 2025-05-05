@@ -93,16 +93,16 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
     return (
         <div className="px-10">
             <h2 className='text-xl px-5 text-wrap text-left mb-6'>PROPERTY ASSESSMENT</h2>
-            <div className="table-responsive">
+            <div className="table-container">
                 <table className="w-full">
                     <thead>
                         <tr>
-                            <th className="w-[20%]">Actual Use</th>
-                            <th className="w-[20%]">Market Value</th>
-                            <th className="w-[20%]">Assessment Level(%)</th>
-                            <th className="w-[20%]">Assessment Value(PHP)</th>
-                            <th className="w-[20%]">Effectivity of Assessment/Revision Date</th>
-                            <th className="w-[20%]"></th>
+                            <th style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Actual Use</th>
+                            <th style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Market Value</th>
+                            <th style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Assessment Level(%)</th>
+                            <th style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Assessment Value(PHP)</th>
+                            <th style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Effectivity of Assessment/Revision Date</th>
+                            <th style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -117,7 +117,7 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
                             <React.Fragment key={item.id}>
                                 {/* First row with building category and type */}
                                 <tr>
-                                    <td colSpan={3}>
+                                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} colSpan={3}>
                                         <select
                                             id={`buildingCategory-${item.id}`}
                                             className="form-select w-full"
@@ -132,7 +132,7 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
                                             ))}
                                         </select>
                                     </td>
-                                    <td colSpan={4}>
+                                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} colSpan={4}>
                                         <select
                                             id={`buildingType-${item.id}`}
                                             className="form-select w-full"
@@ -150,7 +150,7 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
                                 </tr>
                                 {/* Second row with all other fields */}
                                 <tr>
-                                    <td>
+                                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                         <input
                                             type="number"
                                             className="form-input w-full"
@@ -159,7 +159,7 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
                                             onChange={(e) => updateItemValue('area', e.target.value, item.id)}
                                         />
                                     </td>
-                                    <td>
+                                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                         <input
                                             type="number"
                                             className="form-input w-full"
@@ -168,7 +168,7 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
                                             onChange={(e) => updateItemValue('unitValue', e.target.value, item.id)}
                                         />
                                     </td>
-                                    <td>
+                                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                         <input
                                             type="number"
                                             className="form-input w-full"
@@ -177,7 +177,7 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
                                             onChange={(e) => updateItemValue('smv', e.target.value, item.id)}
                                         />
                                     </td>
-                                    <td>
+                                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                         <input
                                             type="text"
                                             className="form-input w-full"
@@ -186,7 +186,7 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
                                             onChange={(e) => updateItemValue('smv', e.target.value, item.id)}
                                         />
                                     </td>
-                                    <td>
+                                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                         <input
                                             type="date"
                                             className="form-input w-full"
@@ -195,7 +195,7 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
                                             onChange={(e) => updateItemValue('smv', e.target.value, item.id)}
                                         />
                                     </td>
-                                    <td>
+                                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                         <button type="button" onClick={() => removeItem(item)}>
                                             <IconX className="w-5 h-5" />
                                         </button>
@@ -204,16 +204,16 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
                             </React.Fragment>
                         ))}
                     </tbody>
-                    <tfoot>
+                    <tfoot className="mt-8">
                         <h2 className='px-10 text-wrap text-left'>Sub Total</h2>
-                        <tr className="border-t-2">
-                            <td className="font-semibold p-2">{items.reduce((sum, item) => sum + item.area, 0).toFixed(2)}</td>
-                            <td className="font-semibold p-2">-</td>
-                            <td className="font-semibold p-2">-</td>
-                            <td className="font-semibold p-2">{items.reduce((sum, item) => sum + item.baseMarketValue, 0).toFixed(2)}</td>
-                            <td className="font-semibold p-2">-</td>
-                            <td className="font-semibold p-2">{items.reduce((sum, item) => sum + item.depreciatorCost, 0).toFixed(2)}</td>
-                            <td className="font-semibold p-2">{items.reduce((sum, item) => sum + item.marketValue, 0).toFixed(2)}</td>
+                        <tr className="border-t-2 mb-[200px]">
+                            <td className="pt-8 font-semibold p-2">{items.reduce((sum, item) => sum + item.area, 0).toFixed(2)}</td>
+                            <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} className="font-semibold p-2">-</td>
+                            <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} className="font-semibold p-2">-</td>
+                            <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} className="font-semibold p-2">{items.reduce((sum, item) => sum + item.baseMarketValue, 0).toFixed(2)}</td>
+                            <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} className="font-semibold p-2">-</td>
+                            <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} className="font-semibold p-2">{items.reduce((sum, item) => sum + item.depreciatorCost, 0).toFixed(2)}</td>
+                            <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} className="font-semibold p-2">{items.reduce((sum, item) => sum + item.marketValue, 0).toFixed(2)}</td>
                         </tr>
                     </tfoot>
                 </table>

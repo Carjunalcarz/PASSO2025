@@ -17,7 +17,11 @@ import GeneralDescription from './components/GeneralDescription';
 import StructuralMaterialChecklist from './components/StructuralMaterialChecklist';
 import PropertyAppraisal from './components/PropertyAppraisal';
 import PropertyAssessment from './components/PropertyAssessment';
-import Memoranda from './components/memoranda';
+import Memoranda from './components/Memoranda';
+import RecordOfSupersededAssessment from './components/RecordOfSupersededAssessment';
+import OwnerDetailsForm from './components/OwnerDetailsForm';
+import { useForm } from 'react-hook-form';
+import { UseFormRegister, FieldValues } from 'react-hook-form';
 
 // Type definitions
 type BarangayData = {
@@ -31,15 +35,11 @@ export interface GeneralDescriptionData {
     building_permit_date: string;
 }
 
-interface StructuralMaterialChecklistProps {
-    onInputChange: (field: string, value: boolean | string) => void;
-}
-
 const Add = () => {
     const dispatch = useDispatch();
     useEffect(() => {
         dispatch(setPageTitle('Invoice Add'));
-    });
+    }, [dispatch]);
 
     const currencyList = ['USD - US Dollar', 'GBP - British Pound', 'IDR - Indonesian Rupiah', 'INR - Indian Rupee', 'BRL - Brazilian Real', 'EUR - Germany (Euro)', 'TRY - Turkish Lira'];
 
@@ -122,11 +122,15 @@ const Add = () => {
         const barangayInput = document.getElementById('address_barangay') as HTMLInputElement;
         if (input) {
             input.value = suggestion;
+
+
             // Clear barangay when municipality changes
             if (barangayInput) {
                 barangayInput.value = '';
             }
         }
+        // 🔥 Update react-hook-form values
+        setValue('address_municipality', suggestion); // ← very important
         setShowMunicipalitySuggestions(false);
         setBarangaySuggestions([]); // Clear barangay suggestions
     };
@@ -136,6 +140,8 @@ const Add = () => {
             input.value = suggestion;
         }
         setShowProvinceSuggestions(false);
+        // 🔥 Update react-hook-form values
+        setValue('address_province', suggestion); // ← very important
     };
 
     const addItem = () => {
@@ -256,13 +262,14 @@ const Add = () => {
         if (input) {
             input.value = suggestion;
         }
+        // 🔥 Update react-hook-form values
+        setValue('address_barangay', suggestion); // ← very important
         setShowBarangaySuggestions(false);
     };
 
     // Add these state declarations at the beginning of your component
     const [images1, setImages1] = useState<ImageListType>([]);
     const [images2, setImages2] = useState<ImageListType>([]);
-    const [images3, setImages3] = useState<any>([]);
     const maxNumber = 1; // Maximum number of images allowed per upload
 
     // Add these handlers
@@ -272,10 +279,6 @@ const Add = () => {
 
     const onChange2 = (imageList: ImageListType) => {
         setImages2(imageList as never[]);
-    };
-
-    const onChange3 = (imageList: ImageListType) => {
-        setImages3(imageList as never[]);
     };
 
     // Add this with your other state declarations
@@ -325,90 +328,36 @@ const Add = () => {
         // Handle the memoranda data as needed
     };
 
+    // Add this state for the new section
+    const [showSuperseded, setShowSuperseded] = useState(false);
+
+    // Add this handler if you want to manage data for this section
+    const handleSupersededChange = (data: any) => {
+        console.log('Superseded record updated:', data);
+        // Handle the data as needed
+    };
+
+    const { register, handleSubmit, watch, setValue, ...rest } = useForm();
+
+    // Real-time logging
+    const allValues = watch();
+    useEffect(() => {
+        console.log("OwnerDetailsForm values:", allValues);
+    }, [allValues]);
+
     return (
         <div className="panel p-0 border rounded-lg bg-white dark:bg-black-dark-2 shadow-[4px_6px_10px_-3px_#bfc9d4] dark:shadow-[4px_6px_10px_-3px_#1b2e4b]">
             <div className="flex xl:flex-row flex-col gap-2.5 w-[1200px]">
                 <div className="panel px-0 ltr:xl:mr-10 rtl:xl:ml-10">
                     <Header />
-                    <div className="mt-8 px-10">
-                        <div className="p-10 flex justify-between lg:flex-row flex-col border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-                            <div className="lg:w-1/2 w-full ltr:lg:mr-6 rtl:lg:ml-6 mb-6">
-                                <div className="flex items-center">
-                                    <label htmlFor="reciever-email" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                                        TD / ARP NO. :
-                                    </label>
-                                    <input id="reciever-email" type="email" name="reciever-email" className="form-input flex-1" placeholder="Enter TD / ARP NO." />
-                                </div>
-                                <div className="mt-4 flex items-center">
-                                    <label htmlFor="reciever-email" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                                        OWNER :
-                                    </label>
-                                    <input id="reciever-email" type="email" name="reciever-email" className="form-input flex-1" placeholder="Enter Owner" />
-                                </div>
-                                <div className="mt-4 flex items-center">
-                                    <label htmlFor="reciever-address" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                                        Address
-                                    </label>
-                                    <textarea
-                                        id="paragraph"
-                                        name="paragraph"
-                                        className="form-textarea flex-1 resize-none rounded-lg border border-[#e0e6ed] bg-white px-4 py-2 text-sm font-normal text-black focus:border-primary focus:outline-none dark:border-[#17263c] dark:bg-[#121e32] dark:text-white-dark"
-                                        placeholder="Enter address here..."
-                                    ></textarea>
-                                </div>
-
-
-
-                                <div className="mt-4 flex items-center">
-                                    <label htmlFor="reciever-number" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                                        Administrator / Benificial User :
-                                    </label>
-                                    <input id="reciever-number" type="text" name="reciever-number" className="form-input flex-1" placeholder="Enter Administrator / Benificial User" />
-                                </div>
-                                <div className="mt-4 flex items-center">
-                                    <label htmlFor="reciever-number" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                                        Address:
-                                    </label>
-                                    <textarea
-                                        id="paragraph"
-                                        name="paragraph"
-                                        className="form-textarea flex-1 resize-none rounded-lg border border-[#e0e6ed] bg-white px-4 py-2 text-sm font-normal text-black focus:border-primary focus:outline-none dark:border-[#17263c] dark:bg-[#121e32] dark:text-white-dark"
-                                        placeholder="Enter address here..."
-                                    ></textarea>
-                                </div>
-                            </div>
-                            <div className="lg:w-1/2 w-full">
-                                <div className="flex items-center ">
-                                    <label htmlFor="acno" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                                        TRANSACTION CODE :
-                                    </label>
-                                    <input id="acno" type="text" name="acno" className="form-input flex-1" placeholder="Enter  Transaction Code" />
-                                </div>
-                                <div className="flex items-center mt-4">
-                                    <label htmlFor="acno" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                                        PIN:
-                                    </label>
-                                    <input id="acno" type="text" name="acno" className="form-input flex-1" placeholder="Enter PIN" />
-                                </div>
-                                <div className="flex items-center mt-4">
-                                    <label htmlFor="bank-name" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                                        TIN
-                                    </label>
-                                    <input id="bank-name" type="text" name="bank-name" className="form-input flex-1" placeholder="Enter TIN" />
-                                </div>
-                                <div className="flex items-center mt-4">
-                                    <label htmlFor="swift-code" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                                        Tel No.
-                                    </label>
-                                    <input id="swift-code" type="text" name="swift-code" className="form-input flex-1" placeholder="Enter Tel No." />
-                                </div>
-                            </div>
-                        </div>
+                    <div className="p-10">
+                        <OwnerDetailsForm register={register} />
                     </div>
                     {/* ###########ENTRY############## */}
 
-                    <div className="mt-8 px-10">
+                    <div className="px-10">
                         <BuildingLocation
+                            register={register}
                             municipalitySuggestions={municipalitySuggestions}
                             provinceSuggestions={provinceSuggestions}
                             barangaySuggestions={barangaySuggestions}
@@ -428,15 +377,15 @@ const Add = () => {
                     </div>
                     {/* ##########END############### */}
                     {/* ##########ENTRY############### */}
-                    <div className="px-10">
-                        <LandReference onInputChange={handleLandReferenceChange} />
+                    <div className="px-10 mt-4">
+                        <LandReference register={register} />
                     </div>
 
                     {/* ###########END############## */}
                     {/* ##########ENTRY############### */}
 
                     {/* General Description Section - Collapsible */}
-                    <div className="px-10">
+                    <div className="px-10 mt-4">
                         <button
                             type="button"
                             className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
@@ -455,10 +404,12 @@ const Add = () => {
                         {showGeneralDescription && (
                             <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
                                 <GeneralDescription
+                                    register={register}
+                                    control={rest.control}
                                     images1={images1}
                                     images2={images2}
-                                    onChange1={(imageList) => setImages1(imageList)}
-                                    onChange2={(imageList) => setImages2(imageList)}
+                                    onChange1={setImages1}
+                                    onChange2={setImages2}
                                     onInputChange={(field, value) => handleGeneralDescriptionChange(field as keyof GeneralDescriptionData, value)}
                                     onPreviewImage={setPreviewImage}
                                 />
@@ -468,7 +419,7 @@ const Add = () => {
                     {/* ###########END############## */}
 
                     {/* Structural Material Checklist Section - Collapsible */}
-                    <div className="px-10 mt-">
+                    <div className="px-10 mt-4">
                         <button
                             type="button"
                             className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
@@ -486,13 +437,13 @@ const Add = () => {
                         </button>
                         {showStructuralMaterial && (
                             <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-                                <StructuralMaterialChecklist onInputChange={handleStructuralMaterialChange} />
+                                <StructuralMaterialChecklist register={register} />
                             </div>
                         )}
                     </div>
 
                     {/* Property Appraisal Section - Collapsible */}
-                    <div className="px-10">
+                    <div className="mt-4 px-10">
                         <button
                             type="button"
                             className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
@@ -510,13 +461,13 @@ const Add = () => {
                         </button>
                         {showPropertyAppraisal && (
                             <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-                                <PropertyAppraisal />
+                                <PropertyAppraisal register={register} />
                             </div>
                         )}
                     </div>
 
                     {/* Property Assessment Section - Collapsible */}
-                    <div className="px-10">
+                    <div className="mt-4 px-10">
                         <button
                             type="button"
                             className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
@@ -624,6 +575,29 @@ const Add = () => {
                         )}
                     </div>
 
+                    {/* Record of Superseded Section - Collapsible */}
+                    <div className="px-10 mt-8">
+                        <button
+                            type="button"
+                            className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
+                            onClick={() => setShowSuperseded(!showSuperseded)}
+                        >
+                            <span className="flex items-center">
+                                <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
+                                <span className="text-black dark:text-white-dark font-medium">Record of Superseded</span>
+                            </span>
+                            <span className={`transform transition-transform duration-300 ${showSuperseded ? 'rotate-180' : ''}`}>
+                                <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </span>
+                        </button>
+                        {showSuperseded && (
+                            <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
+                                <RecordOfSupersededAssessment />
+                            </div>
+                        )}
+                    </div>
 
                 </div>
 
