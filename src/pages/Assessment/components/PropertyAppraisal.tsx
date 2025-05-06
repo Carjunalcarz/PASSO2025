@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import IconX from '../../../components/Icon/IconX';
+import { useFormContext } from 'react-hook-form';
 
 interface PropertyAppraisalItem {
     id: string;
@@ -198,12 +199,16 @@ const constructionCosts: Record<string, Record<string, number | null>> = {
     }
 };
 
+interface PropertyAppraisalProps {
+    register: any
+    setValue: any
+    watch: any
+}
 const formatPHP = (value: number) =>
     new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value);
 
-const PropertyAppraisal: React.FC = () => {
+const PropertyAppraisal: React.FC<PropertyAppraisalProps> = ({ register, setValue, watch }) => {
     const [items, setItems] = useState<PropertyAppraisalItem[]>([]);
-
     const constructionTypes = Object.keys(constructionCosts);
 
     const addItem = () => {
@@ -222,29 +227,74 @@ const PropertyAppraisal: React.FC = () => {
                 usage: ''
             }
         ]);
+        const idx = items.length;
+        setValue(`propertyAppraisal.${idx}.constructionType`, '');
+        setValue(`propertyAppraisal.${idx}.usage`, '');
     };
 
     const removeItem = (id: string) => {
-        setItems(items.filter(item => item.id !== id));
+        const newItems = items.filter(item => item.id !== id);
+        setItems(newItems);
+        setValue('propertyAppraisal', newItems);
+        if (newItems.length === 0) {
+            setValue('propertyAppraisalTotal.area', 0);
+            setValue('propertyAppraisalTotal.unitValue', 0);
+            setValue('propertyAppraisalTotal.baseMarketValue', 0);
+            setValue('propertyAppraisalTotal.depreciatorCost', 0);
+            setValue('propertyAppraisalTotal.marketValue', 0);
+        }
     };
 
-    const updateItemValue = (field: keyof PropertyAppraisalItem, value: string, id: string) => {
-        let numValue = parseFloat(value) || 0;
-        if (field === 'depreciationPercentage') {
-            if (numValue < 0) numValue = 0;
-            if (numValue > 100) numValue = 100;
-        }
-        setItems(items.map(item => {
-            if (item.id === id) {
-                const updatedItem = { ...item, [field]: numValue };
-                updatedItem.baseMarketValue = updatedItem.area * updatedItem.unitValue;
-                updatedItem.depreciatorCost = updatedItem.baseMarketValue * (updatedItem.depreciationPercentage / 100);
-                updatedItem.marketValue = updatedItem.baseMarketValue - updatedItem.depreciatorCost;
-                return updatedItem;
-            }
-            return item;
-        }));
-    };
+    const propertyAppraisalRows = watch('propertyAppraisal') || [];
+    const totalBaseMarketValue = propertyAppraisalRows.reduce(
+        (sum: number, row: any) => sum + ((Number(row.area) || 0) * (Number(row.unitValue) || 0)),
+        0
+    );
+
+    const totalDepreciatorCost = propertyAppraisalRows.reduce(
+        (sum: number, row: any) => {
+            const area = Number(row.area) || 0;
+            const unitValue = Number(row.unitValue) || 0;
+            const depn = Number(row.depreciationPercentage) || 0;
+            const baseMarketValue = area * unitValue;
+            return sum + (baseMarketValue * (depn / 100));
+        },
+        0
+    );
+
+    const totalMarketValue = propertyAppraisalRows.reduce(
+        (sum: number, row: any) => {
+            const area = Number(row.area) || 0;
+            const unitValue = Number(row.unitValue) || 0;
+            const depn = Number(row.depreciationPercentage) || 0;
+            const baseMarketValue = area * unitValue;
+            const depreciatorCost = baseMarketValue * (depn / 100);
+            return sum + (baseMarketValue - depreciatorCost);
+        },
+        0
+    );
+
+    const totalArea = propertyAppraisalRows.reduce(
+        (sum: number, row: any) => sum + (Number(row.area) || 0),
+        0
+    );
+
+    const totalUnitValue = propertyAppraisalRows.reduce(
+        (sum: number, row: any) => sum + (Number(row.unitValue) || 0),
+        0
+    );
+
+    // Add this useEffect to sync totals with form state
+    useEffect(() => {
+        setValue('propertyAppraisalTotal.area', totalArea);
+        setValue('propertyAppraisalTotal.unitValue', totalUnitValue);
+        setValue('propertyAppraisalTotal.baseMarketValue', totalBaseMarketValue);
+        setValue('propertyAppraisalTotal.depreciatorCost', totalDepreciatorCost);
+        setValue('propertyAppraisalTotal.marketValue', totalMarketValue);
+    }, [totalArea, totalUnitValue, totalBaseMarketValue, totalDepreciatorCost, totalMarketValue, setValue]);
+
+    const subtotal = items.reduce((sum, item) => sum + (item.area * item.unitValue), 0);
+    const total = subtotal;
 
     return (
         <div className="px-10">
@@ -253,16 +303,13 @@ const PropertyAppraisal: React.FC = () => {
                 <table className="w-full">
                     <thead>
                         <tr>
-                            <th className="p-2 text-right font-semibold w-[10%]">Construction Type</th>
-                            <th className="p-2 text-right font-semibold w-[10%]">Usage</th>
-                            <th className="p-2 text-right font-semibold w-[10%]">Area</th>
-                            <th className="p-2 text-right font-semibold w-[10%]">Unit Value</th>
-                            <th className="p-2 text-center font-semibold w-[10%]">SMV</th>
-                            <th className="p-2 text-right font-semibold w-[10%]">Base Market Value</th>
-                            <th className="p-2 text-center font-semibold w-[10%]">% Depn</th>
-                            <th className="p-2 text-right font-semibold w-[10%]">Depreciator Cost (PHP)</th>
-                            <th className="p-2 text-right font-semibold w-[10%]">Market Value</th>
-                            <th></th>
+                            <th colSpan={1} className="text-center font-semibold ">Area</th>
+                            <th colSpan={2} className="text-center font-semibold ">Unit Value</th>
+                            <th colSpan={2} className="text-center font-semibold ">SMV</th>
+                            <th colSpan={2} className="text-center font-semibold ">Base Market Value</th>
+                            <th colSpan={1} className="text-center font-semibold ">% Depn</th>
+                            <th colSpan={2} className="text-center font-semibold ">Depreciator Cost (PHP)</th>
+                            <th colSpan={2} className="text-center font-semibold ">Market Value</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -273,135 +320,172 @@ const PropertyAppraisal: React.FC = () => {
                                 </td>
                             </tr>
                         )}
-                        {items.map((item, idx) => (
-                            <tr key={item.id}>
-                                <td>
-                                    <select
-                                        className="form-select w-full"
-                                        value={item.constructionType || ''}
-                                        onChange={e => {
-                                            const newType = e.target.value;
-                                            setItems(items.map((it, i) =>
-                                                i === idx
-                                                    ? { ...it, constructionType: newType, usage: '', unitValue: 0 }
-                                                    : it
-                                            ));
-                                        }}
-                                    >
-                                        <option value="">Select Construction Type</option>
-                                        {constructionTypes.map(type => (
-                                            <option key={type} value={type}>{type}</option>
-                                        ))}
-                                    </select>
-                                </td>
-                                <td>
-                                    <select
-                                        className="form-select w-full"
-                                        value={item.usage || ''}
-                                        onChange={e => {
-                                            const usage = e.target.value;
-                                            let unitValue = 0;
-                                            if (item.constructionType && constructionCosts[item.constructionType]) {
-                                                const value = constructionCosts[item.constructionType][usage];
-                                                unitValue = value ?? 0;
-                                            }
-                                            setItems(items.map((it, i) =>
-                                                i === idx
-                                                    ? { ...it, usage, unitValue }
-                                                    : it
-                                            ));
-                                        }}
-                                        disabled={!item.constructionType}
-                                    >
-                                        <option value="">Select Usage</option>
-                                        {item.constructionType && Object.keys(constructionCosts[item.constructionType])
-                                            .filter(usage => constructionCosts[item.constructionType][usage] !== null)
-                                            .map(usage => (
-                                                <option key={usage} value={usage}>{usage}</option>
-                                            ))}
-                                    </select>
-                                </td>
-                                <td>
-                                    <input
-                                        type="number"
-                                        className="form-input w-full"
-                                        placeholder="Area"
-                                        value={item.area}
-                                        onChange={e => updateItemValue('area', e.target.value, item.id)}
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        type="number"
-                                        className="form-input w-full"
-                                        placeholder="Unit Value"
-                                        value={item.unitValue}
-                                        onChange={e => updateItemValue('unitValue', e.target.value, item.id)}
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        type="number"
-                                        className="form-input w-full"
-                                        placeholder="SMV %"
-                                        value={item.smv}
-                                        onChange={e => updateItemValue('smv', e.target.value, item.id)}
-                                        min={0}
-                                        max={100}
-                                    />
-                                </td>
-                                <td>
-                                    <div>{formatPHP(item.baseMarketValue)}</div>
-                                </td>
-                                <td>
-                                    <input
-                                        type="number"
-                                        className="form-input w-full"
-                                        placeholder="Depn %"
-                                        value={item.depreciationPercentage}
-                                        onChange={e => updateItemValue('depreciationPercentage', e.target.value, item.id)}
-                                        min={0}
-                                        max={100}
-                                        step="0.01"
-                                    />
-                                </td>
-                                <td>
-                                    <div>{formatPHP(item.depreciatorCost)}</div>
-                                </td>
-                                <td>
-                                    <div>{formatPHP(item.marketValue)}</div>
-                                </td>
-                                <td>
-                                    <button type="button" onClick={() => removeItem(item.id)}>
-                                        <IconX className="w-5 h-5" />
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
+                        {items.map((item, idx) => {
+                            const area = Number(watch(`propertyAppraisal.${idx}.area`)) || 0;
+                            const unitValue = Number(watch(`propertyAppraisal.${idx}.unitValue`)) || 0;
+                            const smv = Number(watch(`propertyAppraisal.${idx}.smv`)) || 0;
+                            const depreciationPercentage = Number(watch(`propertyAppraisal.${idx}.depreciationPercentage`)) || 0;
+                            const baseMarketValue = area * unitValue;
+                            const depreciatorCost = baseMarketValue * (depreciationPercentage / 100);
+                            const marketValue = baseMarketValue - depreciatorCost;
+
+                            return (
+                                <React.Fragment key={item.id}>
+                                    {/* First row: Construction Type and Usage */}
+                                    <tr className='border border-gray-300'>
+                                        <td colSpan={2}>
+                                            <label className='text-right' htmlFor="constructionType">Building Type</label>
+                                        </td>
+                                        <td colSpan={4}>
+                                            <select
+                                                className="form-select w-full"
+                                                value={watch(`propertyAppraisal.${idx}.constructionType`) || ''}
+                                                onChange={e => {
+                                                    const newType = e.target.value;
+                                                    setItems(items.map((it, i) =>
+                                                        i === idx
+                                                            ? { ...it, constructionType: newType, usage: '', unitValue: 0 }
+                                                            : it
+                                                    ));
+                                                    setValue(`propertyAppraisal.${idx}.constructionType`, newType);
+                                                }}
+                                            >
+                                                <option value="">Select Construction Type</option>
+                                                {constructionTypes.map(type => (
+                                                    <option key={type} value={type}>{type}</option>
+                                                ))}
+                                            </select>
+                                        </td>
+                                        <td colSpan={2}>
+                                            <label className='text-right' htmlFor="constructionType">Building Type</label>
+                                        </td>
+                                        <td colSpan={4}>
+                                            <select
+                                                className="form-select w-full"
+                                                value={watch(`propertyAppraisal.${idx}.usage`) || ''}
+                                                onChange={e => {
+                                                    const selectedUsage = e.target.value;
+                                                    setValue(`propertyAppraisal.${idx}.usage`, selectedUsage);
+
+                                                    // Get the current construction type from the form state
+                                                    const currentType = watch(`propertyAppraisal.${idx}.constructionType`);
+                                                    let unitValue = 0;
+                                                    if (currentType && constructionCosts[currentType]) {
+                                                        unitValue = constructionCosts[currentType][selectedUsage] ?? 0;
+                                                    }
+                                                    setValue(`propertyAppraisal.${idx}.unitValue`, unitValue);
+                                                }}
+                                                disabled={!watch(`propertyAppraisal.${idx}.constructionType`)}
+                                            >
+                                                <option value="">Select Usage</option>
+                                                {watch(`propertyAppraisal.${idx}.constructionType`) &&
+                                                    Object.keys(constructionCosts[watch(`propertyAppraisal.${idx}.constructionType`)])
+                                                        .filter(
+                                                            usage =>
+                                                                watch(`propertyAppraisal.${idx}.constructionType`) &&
+                                                                constructionCosts[watch(`propertyAppraisal.${idx}.constructionType`)][usage] !== null
+                                                        )
+                                                        .map(usage => (
+                                                            <option key={usage} value={usage}>{usage}</option>
+                                                        ))
+                                                }
+                                            </select>
+                                        </td>
+                                        {/* Fill the rest of the columns for alignment */}
+                                    </tr>
+                                    {/* Second row: Details */}
+                                    <tr>
+                                        <td colSpan={2}>
+                                            <div className="flex">
+                                                <input
+                                                    type="number"
+                                                    className="form-input w-full rounded-r-none"
+                                                    placeholder="Area"
+                                                    {...register(`propertyAppraisal.${idx}.area`)}
+                                                />
+                                                <span className="inline-flex items-center px-3 py-2 border border-l border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-r-md">
+                                                    sq.m
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td colSpan={2}>
+                                            <input
+                                                type="number"
+                                                className="form-input w-full"
+                                                placeholder="Unit Value"
+                                                value={watch(`propertyAppraisal.${idx}.unitValue`) || 0}
+                                                {...register(`propertyAppraisal.${idx}.unitValue`)}
+                                                readOnly
+                                            />
+                                        </td>
+                                        <td colSpan={2}>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    className="form-input w-full pr-8 mx-4"
+                                                    placeholder="SMV %"
+                                                    value={item.smv}
+                                                    {...register(`propertyAppraisal.${idx}.smv`)}
+                                                    min={0}
+                                                    max={100}
+                                                />
+                                                <span className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">%</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>{formatPHP(baseMarketValue)}</div>
+                                        </td>
+                                        <td colSpan={1}>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    className="form-input w-full pr-8 mx-4"
+                                                    placeholder="Depn %"
+                                                    value={item.depreciationPercentage}
+                                                    {...register(`propertyAppraisal.${idx}.depreciationPercentage`)}
+                                                    min={0}
+                                                    max={100}
+                                                    step="0.01"
+                                                />
+                                                <span className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">%</span>
+                                            </div>
+                                        </td>
+                                        <td colSpan={2}>
+                                            <div>{formatPHP(depreciatorCost)}</div>
+                                        </td>
+                                        <td>
+                                            <div>{formatPHP(marketValue)}</div>
+                                        </td>
+                                        <td>
+                                            <button type="button" onClick={() => removeItem(item.id)}>
+                                                <IconX className="w-5 h-5" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </React.Fragment>
+                            );
+                        })}
                     </tbody>
                     <tfoot>
-                        <tr className="border-t-2 bg-gray-100">
-                            <th className="p-2 text-right font-semibold w-[10%]">Construction Type</th>
-                            <th className="p-2 text-right font-semibold w-[10%]">Usage</th>
-                            <th className="p-2 text-right font-semibold w-[10%]">Area</th>
-                            <th className="p-2 text-right font-semibold w-[10%]">Unit Value</th>
-                            <th className="p-2 text-center font-semibold w-[10%]">SMV</th>
-                            <th className="p-2 text-right font-semibold w-[10%]">Base Market Value</th>
-                            <th className="p-2 text-center font-semibold w-[10%]">% Depn</th>
-                            <th className="p-2 text-right font-semibold w-[10%]">Depreciator Cost (PHP)</th>
-                            <th className="p-2 text-right font-semibold w-[10%]">Market Value</th>
-                            <th></th>
+                        <tr className="">
+                            <th colSpan={1} className="text-right font-semibold ">Area</th>
+                            <th colSpan={2} className="p-2 text-center font-semibold ">Unit Value</th>
+                            <th colSpan={2} className="p-2 text-center font-semibold ">SMV</th>
+                            <th colSpan={2} className="p-2 text-center font-semibold ">Base Market Value</th>
+                            <th colSpan={1} className="p-2 text-center font-semibold ">% Depn</th>
+                            <th colSpan={2} className="p-2 text-center font-semibold ">Depreciator Cost (PHP)</th>
+                            <th colSpan={2} className="p-2 text-center font-semibold ">Market Value</th>
                         </tr>
                         <tr className="bg-gray-50">
-                            <td></td>
-                            <td></td>
-                            <td className="p-2 text-right font-bold">{items.reduce((sum, item) => sum + item.area, 0).toFixed(2)}</td>
-                            <td className="p-2 text-right font-bold">{items.reduce((sum, item) => sum + item.unitValue, 0).toFixed(2)}</td>
-                            <td className="p-2 text-center text-gray-400 align-middle">100%</td>
-                            <td className="p-2 text-right font-bold">{formatPHP(items.reduce((sum, item) => sum + item.baseMarketValue, 0))}</td>
-                            <td className="p-2 text-center text-gray-400 align-middle">12%</td>
-                            <td className="p-2 text-right font-bold">{formatPHP(items.reduce((sum, item) => sum + item.depreciatorCost, 0))}</td>
-                            <td className="p-2 text-right font-bold">{formatPHP(items.reduce((sum, item) => sum + item.marketValue, 0))}</td>
+                            <td colSpan={1} className="p-2 text-center font-bold">
+                                {watch('propertyAppraisalTotal.area')?.toFixed(2) || '0.00'}
+                            </td>
+                            <td colSpan={2} className="p-2 text-center font-bold">{watch('propertyAppraisalTotal.unitValue')?.toFixed(2) || '0.00'}</td>
+                            <td colSpan={2} className="p-2 text-center text-gray-400 align-middle">100%</td>
+                            <td colSpan={2} className="p-2 text-center font-bold">{formatPHP(watch('propertyAppraisalTotal.baseMarketValue') || 0)}</td>
+                            <td colSpan={1} className="p-2 text-center text-gray-400 align-middle">12%</td>
+                            <td colSpan={2} className="p-2 text-center font-bold">{formatPHP(watch('propertyAppraisalTotal.depreciatorCost') || 0)}</td>
+                            <td colSpan={2} className="p-2 text-center font-bold">{formatPHP(watch('propertyAppraisalTotal.marketValue') || 0)}</td>
                             <td></td>
                         </tr>
                     </tfoot>

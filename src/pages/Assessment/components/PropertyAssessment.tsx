@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import IconX from '../../../components/Icon/IconX';
+import { FieldValues } from 'react-hook-form';
 
 interface PropertyAssessmentItem {
     id: string;
@@ -10,6 +11,8 @@ interface PropertyAssessmentItem {
     depreciationPercentage: number;
     depreciatorCost: number;
     marketValue: number;
+    buildingCategory?: string;
+    assessmentLevel?: number;
 }
 
 // Add new interfaces for the dropdown options
@@ -24,20 +27,55 @@ interface BuildingType {
 }
 
 interface PropertyAssessmentProps {
+    register: any;
+    setValue: any;
+    watch: any;
     // Add any props you need to pass to the component
 }
 
-const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
+const formatPHP = (value: number) =>
+    new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value);
+
+function getAssessmentLevel(
+    typeKey: string | null,
+    marketValue: number,
+    assessmentLevels: Record<string, { min: number, max: number | null, assessmentLevel: number }[]>
+) {
+    if (!typeKey || !marketValue) return null;
+    const levels = assessmentLevels[typeKey];
+    if (!levels) return null;
+    for (const level of levels) {
+        if (
+            marketValue >= level.min &&
+            (level.max === null || marketValue < level.max)
+        ) {
+            return level.assessmentLevel;
+        }
+    }
+    return null;
+}
+
+function formatDateString(dateString: string | undefined) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+}
+
+const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setValue, watch }) => {
     const [items, setItems] = useState<PropertyAssessmentItem[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [selectedType, setSelectedType] = useState<string>('');
 
     // Sample data for dropdowns - you can replace these with your actual data
     const buildingCategories: BuildingCoreCategory[] = [
-        { id: '1', name: 'Residential' },
-        { id: '2', name: 'Commercial' },
-        { id: '3', name: 'Industrial' },
-        { id: '4', name: 'Mixed-Use' },
+        { id: '1', name: 'Residential Buildings ' },
+        { id: '2', name: 'Commercial and Industrial Buildings ' },
+        { id: '3', name: 'Agricultural Buildings ' },
+        { id: '4', name: 'Timberland Buildings ' },
     ];
 
     const buildingTypes: BuildingType[] = [
@@ -48,11 +86,52 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
         { id: '5', name: 'Warehouse' },
     ];
 
+
+    const assessmentLevels = {
+        "ResidentialBuildingsAndOtherStructures": [
+            { "min": 0, "max": 175000, "assessmentLevel": 0 },
+            { "min": 175000, "max": 300000, "assessmentLevel": 10 },
+            { "min": 300000, "max": 500000, "assessmentLevel": 20 },
+            { "min": 500000, "max": 750000, "assessmentLevel": 25 },
+            { "min": 750000, "max": 1000000, "assessmentLevel": 30 },
+            { "min": 1000000, "max": 2000000, "assessmentLevel": 35 },
+            { "min": 2000000, "max": 5000000, "assessmentLevel": 40 },
+            { "min": 5000000, "max": 10000000, "assessmentLevel": 50 },
+            { "min": 10000000, "max": null, "assessmentLevel": 60 }
+        ],
+        "CommercialAndIndustrialBuildingsOrStructures": [
+            { "min": 0, "max": 300000, "assessmentLevel": 30 },
+            { "min": 300000, "max": 500000, "assessmentLevel": 35 },
+            { "min": 500000, "max": 750000, "assessmentLevel": 40 },
+            { "min": 750000, "max": 1000000, "assessmentLevel": 50 },
+            { "min": 1000000, "max": 2000000, "assessmentLevel": 60 },
+            { "min": 2000000, "max": 5000000, "assessmentLevel": 70 },
+            { "min": 5000000, "max": 10000000, "assessmentLevel": 75 },
+            { "min": 10000000, "max": null, "assessmentLevel": 80 }
+        ],
+        "AgriculturalBuildingsAndOtherStructures": [
+            { "min": 0, "max": 300000, "assessmentLevel": 25 },
+            { "min": 300000, "max": 500000, "assessmentLevel": 30 },
+            { "min": 500000, "max": 750000, "assessmentLevel": 35 },
+            { "min": 750000, "max": 1000000, "assessmentLevel": 40 },
+            { "min": 1000000, "max": 2000000, "assessmentLevel": 45 },
+            { "min": 2000000, "max": null, "assessmentLevel": 50 }
+        ],
+        "TimberlandBuildingsAndOtherStructures": [
+            { "min": 0, "max": 300000, "assessmentLevel": 45 },
+            { "min": 300000, "max": 500000, "assessmentLevel": 50 },
+            { "min": 500000, "max": 750000, "assessmentLevel": 55 },
+            { "min": 750000, "max": 1000000, "assessmentLevel": 60 },
+            { "min": 1000000, "max": 2000000, "assessmentLevel": 65 },
+            { "min": 2000000, "max": null, "assessmentLevel": 70 }
+        ]
+    }
+
     const addItem = () => {
         if (items.length >= 1) {
             return; // Don't add more items if we already have one
         }
-        const newItem: PropertyAssessmentItem = {
+        const newItem: PropertyAssessmentItem & { buildingCategory?: string } = {
             id: (Math.random() + 1).toString(36).substring(7),
             area: 0,
             unitValue: 0,
@@ -60,7 +139,8 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
             baseMarketValue: 0,
             depreciationPercentage: 0,
             depreciatorCost: 0,
-            marketValue: 0
+            marketValue: 0,
+            buildingCategory: '',
         };
         setItems([...items, newItem]);
     };
@@ -69,26 +149,41 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
         setItems(items.filter((i) => i.id !== item.id));
     };
 
-    const updateItemValue = (field: keyof PropertyAssessmentItem, value: string, id: string) => {
-        const numValue = parseFloat(value) || 0;
-        setItems(
-            items.map((item) => {
-                if (item.id === id) {
-                    const updatedItem = { ...item, [field]: numValue };
-                    // Calculate dependent values
-                    updatedItem.baseMarketValue = updatedItem.area * updatedItem.unitValue;
-                    updatedItem.depreciatorCost = updatedItem.baseMarketValue * (updatedItem.depreciationPercentage / 100);
-                    updatedItem.marketValue = updatedItem.baseMarketValue - updatedItem.depreciatorCost;
-                    return updatedItem;
-                }
-                return item;
-            })
-        );
-    };
+    const totalMarketValue = watch('propertyAppraisalTotal.marketValue');
+    const buildingCategory = watch('buildingCategory');
+    const assessmentLevel = watch('assessmentLevel');
+    const assessmentValue = watch('assessmentValue') || 0;
+    const totalArea = watch('propertyAppraisalTotal.area');
 
-    const calculateTotal = () => {
-        return items.reduce((sum, item) => sum + item.marketValue, 0);
-    };
+
+    useEffect(() => {
+        let typeKey = '';
+        switch (buildingCategory) {
+            case 'residential':
+                typeKey = 'ResidentialBuildingsAndOtherStructures';
+                break;
+            case 'commercial':
+                typeKey = 'CommercialAndIndustrialBuildingsOrStructures';
+                break;
+            case 'agricultural':
+                typeKey = 'AgriculturalBuildingsAndOtherStructures';
+                break;
+            case 'timberland':
+                typeKey = 'TimberlandBuildingsAndOtherStructures';
+                break;
+            default:
+                typeKey = '';
+        }
+        if (typeKey && totalMarketValue > 0) {
+            const level = getAssessmentLevel(typeKey, totalMarketValue, assessmentLevels);
+            if (level !== null) {
+                setValue('assessmentLevel', level);
+                setValue('assessmentValue', totalMarketValue * level / 100);
+            }
+        } else {
+            setValue('assessmentValue', 0);
+        }
+    }, [buildingCategory, totalMarketValue, setValue]);
 
     return (
         <div className="px-10">
@@ -97,12 +192,13 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
                 <table className="w-full">
                     <thead>
                         <tr>
-                            <th style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Actual Use</th>
-                            <th style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Market Value</th>
-                            <th style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Assessment Level(%)</th>
-                            <th style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Assessment Value(PHP)</th>
-                            <th style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Effectivity of Assessment/Revision Date</th>
-                            <th style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}></th>
+                            <th colSpan={4} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Area</th>
+                            <th colSpan={2} className="text-center font-semibold">Assessment Level</th>
+                            <th colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Actual Use</th>
+                            <th colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Market Value</th>
+                            <th colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Assessment Value(PHP)</th>
+                            <th colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Effectivity of Assessment/Revision Date</th>
+                            <th colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -113,109 +209,75 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
                                 </td>
                             </tr>
                         )}
-                        {items.map((item: PropertyAssessmentItem) => (
-                            <React.Fragment key={item.id}>
-                                {/* First row with building category and type */}
-                                <tr>
-                                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} colSpan={3}>
-                                        <select
-                                            id={`buildingCategory-${item.id}`}
-                                            className="form-select w-full"
-                                            value={selectedCategory}
-                                            onChange={(e) => setSelectedCategory(e.target.value)}
-                                        >
-                                            <option value="">Select Category</option>
-                                            {buildingCategories.map((category) => (
-                                                <option key={category.id} value={category.id}>
-                                                    {category.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </td>
-                                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} colSpan={4}>
-                                        <select
-                                            id={`buildingType-${item.id}`}
-                                            className="form-select w-full"
-                                            value={selectedType}
-                                            onChange={(e) => setSelectedType(e.target.value)}
-                                        >
-                                            <option value="">Select Type</option>
-                                            {buildingTypes.map((type) => (
-                                                <option key={type.id} value={type.id}>
-                                                    {type.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </td>
-                                </tr>
-                                {/* Second row with all other fields */}
-                                <tr>
-                                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        <input
-                                            type="number"
-                                            className="form-input w-full"
-                                            placeholder="Area"
-                                            value={item.area}
-                                            onChange={(e) => updateItemValue('area', e.target.value, item.id)}
-                                        />
-                                    </td>
-                                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        <input
-                                            type="number"
-                                            className="form-input w-full"
-                                            placeholder="Unit Value"
-                                            value={item.unitValue}
-                                            onChange={(e) => updateItemValue('unitValue', e.target.value, item.id)}
-                                        />
-                                    </td>
-                                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        <input
-                                            type="number"
-                                            className="form-input w-full"
-                                            placeholder="SMV"
-                                            value={item.smv}
-                                            onChange={(e) => updateItemValue('smv', e.target.value, item.id)}
-                                        />
-                                    </td>
-                                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        <input
-                                            type="text"
-                                            className="form-input w-full"
-                                            placeholder="SMV"
-                                            value={item.smv}
-                                            onChange={(e) => updateItemValue('smv', e.target.value, item.id)}
-                                        />
-                                    </td>
-                                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        <input
-                                            type="date"
-                                            className="form-input w-full"
-                                            placeholder="SMV"
-                                            value={item.smv}
-                                            onChange={(e) => updateItemValue('smv', e.target.value, item.id)}
-                                        />
-                                    </td>
-                                    <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        <button type="button" onClick={() => removeItem(item)}>
-                                            <IconX className="w-5 h-5" />
-                                        </button>
-                                    </td>
-                                </tr>
-                            </React.Fragment>
-                        ))}
+                        {items.map((item, idx) => {
+                            // Calculate assessment level for each item
+                            let assessmentLevel = null;
+                            if (buildingCategory && totalMarketValue > 0) {
+                                // Map your form's buildingCategory to the keys in assessmentLevels
+                                let typeKey = '';
+                                switch (buildingCategory) {
+                                    case 'residential':
+                                        typeKey = 'ResidentialBuildingsAndOtherStructures';
+                                        break;
+                                    case 'commercial':
+                                        typeKey = 'CommercialAndIndustrialBuildingsOrStructures';
+                                        break;
+                                    case 'agricultural':
+                                        typeKey = 'AgriculturalBuildingsAndOtherStructures';
+                                        break;
+                                    case 'timberland':
+                                        typeKey = 'TimberlandBuildingsAndOtherStructures';
+                                        break;
+                                    default:
+                                        typeKey = '';
+                                }
+                                assessmentLevel = getAssessmentLevel(typeKey, totalMarketValue, assessmentLevels);
+                            }
+                            return (
+                                <React.Fragment key={item.id}>
+                                    <tr>
+                                        <td colSpan={3} className="text-center font-semibold">
+                                            {totalArea !== null ? `${totalArea} sq.m` : '-'}
+                                        </td>
+                                        <td colSpan={2} className="text-center font-semibold">
+                                            {assessmentLevel !== null ? `${assessmentLevel}%` : '-'}
+                                        </td>
+                                        <td colSpan={3}  >
+                                            <select
+                                                id="buildingCategory"
+                                                className="form-select w-full"
+                                                {...register(`buildingCategory`)}
+                                            >
+                                                <option value="">Select category</option>
+                                                <option value="residential">Residential</option>
+                                                <option value="commercial">Commercial</option>
+                                                <option value="agricultural">Agricultural</option>
+                                                <option value="timberland">Timberland</option>
+
+                                            </select>
+                                        </td>
+                                        <td className='text-center' colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {formatPHP(totalMarketValue || 0)}
+                                        </td>
+                                        <td className='text-center' colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            <span title={`Assessment Value = totalMarketValue × assessmentLevel / 100`}>
+                                                {formatPHP(assessmentValue || 0)}
+                                            </span>
+                                        </td>
+                                        <td className='text-center' colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            <input type="date" {...register(`effectivityOfAssessment`)} />
+                                        </td>
+                                        <td className='text-center' colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            <button type="button" onClick={() => removeItem(item)}>
+                                                <IconX className="w-5 h-5" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </React.Fragment>
+                            );
+                        })}
+
                     </tbody>
-                    <tfoot className="mt-8">
-                        <h2 className='px-10 text-wrap text-left'>Sub Total</h2>
-                        <tr className="border-t-2 mb-[200px]">
-                            <td className="pt-8 font-semibold p-2">{items.reduce((sum, item) => sum + item.area, 0).toFixed(2)}</td>
-                            <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} className="font-semibold p-2">-</td>
-                            <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} className="font-semibold p-2">-</td>
-                            <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} className="font-semibold p-2">{items.reduce((sum, item) => sum + item.baseMarketValue, 0).toFixed(2)}</td>
-                            <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} className="font-semibold p-2">-</td>
-                            <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} className="font-semibold p-2">{items.reduce((sum, item) => sum + item.depreciatorCost, 0).toFixed(2)}</td>
-                            <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} className="font-semibold p-2">{items.reduce((sum, item) => sum + item.marketValue, 0).toFixed(2)}</td>
-                        </tr>
-                    </tfoot>
                 </table>
             </div>
             <div className="flex justify-between sm:flex-row flex-col mt-6 px-4">
@@ -230,6 +292,7 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = () => {
                     </button>
                 </div>
             </div>
+
         </div>
     );
 };

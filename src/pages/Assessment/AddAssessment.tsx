@@ -346,7 +346,7 @@ const Add = () => {
     }, [allValues]);
 
     return (
-        <div className="panel p-0 border rounded-lg bg-white dark:bg-black-dark-2 shadow-[4px_6px_10px_-3px_#bfc9d4] dark:shadow-[4px_6px_10px_-3px_#1b2e4b]">
+        <div className="panel">
             <div className="flex xl:flex-row flex-col gap-2.5 w-[1200px]">
                 <div className="panel px-0 ltr:xl:mr-10 rtl:xl:ml-10">
                     <Header />
@@ -461,7 +461,7 @@ const Add = () => {
                         </button>
                         {showPropertyAppraisal && (
                             <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-                                <PropertyAppraisal register={register} />
+                                <PropertyAppraisal register={register} setValue={setValue} watch={watch} />
                             </div>
                         )}
                     </div>
@@ -485,7 +485,7 @@ const Add = () => {
                         </button>
                         {showPropertyAssessment && (
                             <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-                                <PropertyAssessment />
+                                <PropertyAssessment register={register} setValue={setValue} watch={watch} />
                             </div>
                         )}
                     </div>
@@ -499,14 +499,16 @@ const Add = () => {
                                     <label className="mb-2 font-semibold text-center">Appraised/Assessed by:</label>
                                     <input
                                         type="text"
-                                        className="form-input"
+                                        className="form-input text-center"
                                         placeholder="Enter name"
+                                        {...register('appraisedBy')}
                                     />
                                     <label className="mb-2 font-semibold text-center">Appraised/Assessed by:</label>
                                     <div className="mt-2">
                                         <input
                                             type="date"
-                                            className="form-input"
+                                            className="form-input text-center"
+                                            {...register('appraisedDate')}
                                         />
                                     </div>
                                 </div>
@@ -516,14 +518,16 @@ const Add = () => {
                                     <label className="mb-2 font-semibold text-center">Recommending Approval:</label>
                                     <input
                                         type="text"
-                                        className="form-input"
+                                        className="form-input text-center"
                                         placeholder="Enter name"
+                                        {...register('recommendingApproval')}
                                     />
                                     <label className="mb-2 font-semibold text-center">Municipality Assessor</label>
                                     <div className="mt-2">
                                         <input
                                             type="date"
-                                            className="form-input"
+                                            className="form-input text-center"
+                                            {...register('municipalityAssessorDate')}
                                         />
                                     </div>
                                 </div>
@@ -533,14 +537,16 @@ const Add = () => {
                                     <label className="mb-2 font-semibold text-center">Approved by:</label>
                                     <input
                                         type="text"
-                                        className="form-input"
+                                        className="form-input text-center"
                                         placeholder="Enter name"
+                                        {...register('approvedByProvince')}
                                     />
                                     <label className="mb-2 font-semibold text-center">Provincial Assessor</label>
                                     <div className="mt-2">
                                         <input
                                             type="date"
-                                            className="form-input"
+                                            className="form-input text-center"
+                                            {...register('provincialAssessorDate')}
                                         />
                                     </div>
 
