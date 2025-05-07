@@ -3,8 +3,11 @@ import ImageUploading, { ImageListType } from 'react-images-uploading';
 import IconX from '../../../components/Icon/IconX';
 import InputField from './shared/InputField';
 import { Controller } from 'react-hook-form';
+import ConstructionCost from './gendesc_component/ConstructionCost';
 
 interface GeneralDescriptionProps {
+    setValue: any;
+    watch: any;
     register: any;
     images1: ImageListType;
     images2: ImageListType;
@@ -17,6 +20,7 @@ interface GeneralDescriptionProps {
 
 // Define form values interface
 interface FormValues {
+    totalFloorArea: number;
     kind_of_bldg: string;
     structural_type: string;
     building_permit_no: string;
@@ -37,6 +41,8 @@ interface FormValues {
 
 const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
     register,
+    setValue,
+    watch,
     images1,
     images2,
     onChange1,
@@ -47,6 +53,7 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
 }) => {
     // Initialize form values with proper typing
     const [formValues, setFormValues] = React.useState<FormValues>({
+        totalFloorArea: 0,
         kind_of_bldg: '',
         structural_type: '',
         building_permit_no: '',
@@ -98,6 +105,18 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
         />
     );
 
+    const floor1 = watch('generalDescription.area_of_1st_floor');
+    const floor2 = watch('generalDescription.area_of_2nd_floor');
+    const floor3 = watch('generalDescription.area_of_3rd_floor');
+    const floor4 = watch('generalDescription.area_of_4th_floor');
+
+    React.useEffect(() => {
+        const totalFloorArea = Number(floor1) + Number(floor2) + Number(floor3) + Number(floor4);
+        if (totalFloorArea > 0) {
+            setValue('generalDescription.total_floor_area', totalFloorArea);
+        }
+    }, [floor1, floor2, floor3, floor4, setValue]);
+
     return (
         <div className="px-10 w-full">
             <h2 className='text-xl px-5 text-wrap text-left mb-6'>GENERAL DESCRIPTION</h2>
@@ -107,32 +126,30 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                     <tbody>
                         {/* Building Information */}
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3 w-1/3">Kind of Bldg</td>
-                            <td className="border border-gray-300 p-3">
-                                {renderInputField('kind_of_bldg', 'Kind of Bldg', 'text', 'Enter Kind of Bldg')}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Structural Type</td>
-                            <td className="border border-gray-300 p-3">
-                                {renderInputField('structural_type', 'Structural Type', 'text', 'Enter Structural Type')}
+                            <td className="border border-gray-300 p-3 w-1/3">Kind of Building</td>
+                            <td className="p-3">
+                                <ConstructionCost
+                                    register={register}
+                                    setValue={setValue}
+                                    watch={watch}
+                                />
                             </td>
                         </tr>
 
                         {/* Building Details */}
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Building Permit No.</td>
-                            <td className="border border-gray-300 p-3">
+                            <td className="border border-gray-300 p-3 w-1/3">Building Permit No.</td>
+                            <td className="p-3">
                                 {renderInputField('building_permit_no', 'Building Permit No.', 'text', 'Enter Building Permit No.')}
                             </td>
                         </tr>
 
                         {/* Certificates */}
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">
+                            <td className="border border-gray-300 p-3 w-1/3">
                                 Condominium Certificate of Title (CCT)
                             </td>
-                            <td className="border border-gray-300 p-3">
+                            <td className="p-3">
                                 <Controller
                                     control={control}
                                     name="cct"
@@ -192,38 +209,45 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
 
                         {/* Dates */}
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Certificate of Completion Issued On</td>
-                            <td className="border border-gray-300 p-3">
+                            <td className="border border-gray-300 p-3 w-1/3">Certificate of Completion Issued On</td>
+                            <td className="p-3">
                                 {renderInputField('certificate_of_completion_issued_on', 'Certificate of Completion', 'date')}
                             </td>
                         </tr>
 
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Certificate of Occupancy Issued On</td>
-                            <td className="border border-gray-300 p-3">
+                            <td className="border border-gray-300 p-3 w-1/3">Certificate of Occupancy Issued On</td>
+                            <td className="p-3">
                                 {renderInputField('certificate_of_occupancy_issued_on', 'Certificate of Occupancy', 'date')}
+                            </td>
+                        </tr>
+                        {/* Date of Occupied */}
+                        <tr>
+                            <td className="border border-gray-300 p-3 w-1/3">Date of Occupied</td>
+                            <td className="p-3">
+                                {renderInputField('date_of_occupied', 'Date of Occupied', 'date')}
                             </td>
                         </tr>
 
                         {/* Building Areas */}
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Building Age</td>
-                            <td className="border border-gray-300 p-3">
+                            <td className="border border-gray-300 p-3 w-1/3">Building Age</td>
+                            <td className="p-3">
                                 {renderInputField('bldg_age', 'Building Age', 'number', 'Enter Building Age')}
                             </td>
                         </tr>
 
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Number of Storeys</td>
-                            <td className="border border-gray-300 p-3">
+                            <td className="border border-gray-300 p-3 w-1/3">Number of Storeys</td>
+                            <td className="p-3">
                                 {renderInputField('no_of_storeys', 'Number of Storeys', 'number', 'Enter Number of Storeys')}
                             </td>
                         </tr>
 
                         {/* Floor Areas */}
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Floor Areas (sqm)</td>
-                            <td className="border border-gray-300 p-3">
+                            <td className="border border-gray-300 p-3 w-1/3">Floor Areas (sqm)</td>
+                            <td className="p-3">
                                 <div className="space-y-2">
                                     {renderInputField('area_of_1st_floor', '1st Floor', 'number', '1st Floor')}
                                     {renderInputField('area_of_2nd_floor', '2nd Floor', 'number', '2nd Floor')}
@@ -234,19 +258,19 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                         </tr>
 
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">Total Floor Area</td>
-                            <td className="border border-gray-300 p-3">
+                            <td className="border border-gray-300 p-3 w-1/3">Total Floor Area</td>
+                            <td className="p-3">
                                 {renderInputField('total_floor_area', 'Total Floor Area', 'number', 'Total Floor Area')}
                             </td>
                         </tr>
 
                         {/* Floor Plan Upload */}
                         <tr>
-                            <td className="border border-gray-300 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 p-3">
+                            <td className="border border-gray-300 p-3 w-1/3">
                                 Floor Plan
                                 <p className='text-xs text-gray-500'>Note : Attached the building plan/sketch of floor plan . A photograph may also be attached if necessary.</p>
                             </td>
-                            <td className="border border-gray-300 p-3">
+                            <td className="p-3 w-1/2 border border-gray-300">
                                 <Controller
                                     control={control}
                                     name="floor_plan"

@@ -13,6 +13,7 @@ interface PropertyAssessmentItem {
     marketValue: number;
     buildingCategory?: string;
     assessmentLevel?: number;
+    effectivityOfAssessment?: string;
 }
 
 // Add new interfaces for the dropdown options
@@ -149,12 +150,21 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setVa
         setItems(items.filter((i) => i.id !== item.id));
     };
 
-    const totalMarketValue = watch('propertyAppraisalTotal.marketValue');
+    const totalMarketValue = watch('propertyAppraisal.marketValue');
     const buildingCategory = watch('buildingCategory');
     const assessmentLevel = watch('assessmentLevel');
     const assessmentValue = watch('assessmentValue') || 0;
-    const totalArea = watch('propertyAppraisalTotal.area');
+    const totalArea = watch('propertyAppraisal.totalArea');
+    const effectivityOfAssessment = watch('effectivityOfAssessment');
 
+    useEffect(() => {
+        setValue('propertyAssessment.assessmentLevel', assessmentLevel);
+        setValue('propertyAssessment.assessmentValue', assessmentValue);
+        setValue('propertyAssessment.totalArea', totalArea);
+        setValue('propertyAssessment.marketValue', totalMarketValue);
+        setValue('propertyAssessment.buildingCategory', buildingCategory);
+        setValue('propertyAssessment.effectivityOfAssessment', effectivityOfAssessment);
+    }, [assessmentLevel, assessmentValue, setValue]);
 
     useEffect(() => {
         let typeKey = '';
@@ -192,13 +202,12 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setVa
                 <table className="w-full">
                     <thead>
                         <tr>
-                            <th colSpan={4} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Area</th>
-                            <th colSpan={2} className="text-center font-semibold">Assessment Level</th>
-                            <th colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Actual Use</th>
-                            <th colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Market Value</th>
-                            <th colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Assessment Value(PHP)</th>
-                            <th colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Effectivity of Assessment/Revision Date</th>
-                            <th colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}></th>
+                            <th className='text-center' colSpan={2} >Area</th>
+                            <th className='text-center' colSpan={2} >Assessment Level</th>
+                            <th className='text-center' colSpan={3} >Actual Use</th>
+                            <th className='text-center' colSpan={2} >Market Value</th>
+                            <th className='text-center' colSpan={2} >Assessment Value(PHP)</th>
+                            <th className='text-center' colSpan={1} >Effectivity of Assessment/Revision Date</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -236,13 +245,14 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setVa
                             return (
                                 <React.Fragment key={item.id}>
                                     <tr>
-                                        <td colSpan={3} className="text-center font-semibold">
+                                        <td colSpan={2} className="text-center font-semibold">
                                             {totalArea !== null ? `${totalArea} sq.m` : '-'}
+
                                         </td>
                                         <td colSpan={2} className="text-center font-semibold">
                                             {assessmentLevel !== null ? `${assessmentLevel}%` : '-'}
                                         </td>
-                                        <td colSpan={3}  >
+                                        <td colSpan={3} className='text-center'  >
                                             <select
                                                 id="buildingCategory"
                                                 className="form-select w-full"
@@ -256,19 +266,17 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setVa
 
                                             </select>
                                         </td>
-                                        <td className='text-center' colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        <td colSpan={2} className='text-center'>
                                             {formatPHP(totalMarketValue || 0)}
                                         </td>
-                                        <td className='text-center' colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        <td colSpan={2} className='text-center font-semibold' >
                                             <span title={`Assessment Value = totalMarketValue × assessmentLevel / 100`}>
                                                 {formatPHP(assessmentValue || 0)}
                                             </span>
                                         </td>
-                                        <td className='text-center' colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                            <input type="date" {...register(`effectivityOfAssessment`)} />
-                                        </td>
-                                        <td className='text-center' colSpan={2} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                            <button type="button" onClick={() => removeItem(item)}>
+                                        <td colSpan={2} className='text-center flex justify-center'>
+                                            <input className='form-input w-[150px]' type="date" {...register(`effectivityOfAssessment`)} />
+                                            <button className='ml-4' type="button" onClick={() => removeItem(item)}>
                                                 <IconX className="w-5 h-5" />
                                             </button>
                                         </td>
@@ -280,7 +288,7 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setVa
                     </tbody>
                 </table>
             </div>
-            <div className="flex justify-between sm:flex-row flex-col mt-6 px-4">
+            <div className="flex justify-start sm:flex-row flex-col mt-6 px-4">
                 <div className="sm:mb-0 mb-6">
                     <button
                         type="button"

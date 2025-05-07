@@ -22,6 +22,7 @@ import RecordOfSupersededAssessment from './components/RecordOfSupersededAssessm
 import OwnerDetailsForm from './components/OwnerDetailsForm';
 import { useForm } from 'react-hook-form';
 import { UseFormRegister, FieldValues } from 'react-hook-form';
+import AdditionalItems from './components/Additionalitems';
 
 // Type definitions
 type BarangayData = {
@@ -345,6 +346,8 @@ const Add = () => {
         console.log("OwnerDetailsForm values:", allValues);
     }, [allValues]);
 
+    const [showAdditionalItem, setShowAdditionalItem] = useState(false);
+
     return (
         <div className="panel">
             <div className="flex xl:flex-row flex-col gap-2.5 w-[1200px]">
@@ -406,10 +409,12 @@ const Add = () => {
                                 <GeneralDescription
                                     register={register}
                                     control={rest.control}
+                                    setValue={setValue}
+                                    watch={watch}
                                     images1={images1}
                                     images2={images2}
-                                    onChange1={setImages1}
-                                    onChange2={setImages2}
+                                    onChange1={onChange1}
+                                    onChange2={onChange2}
                                     onInputChange={(field, value) => handleGeneralDescriptionChange(field as keyof GeneralDescriptionData, value)}
                                     onPreviewImage={setPreviewImage}
                                 />
@@ -486,6 +491,30 @@ const Add = () => {
                         {showPropertyAssessment && (
                             <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
                                 <PropertyAssessment register={register} setValue={setValue} watch={watch} />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Additional Item Section - Collapsible */}
+                    <div className="px-10 mt-8">
+                        <button
+                            type="button"
+                            className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
+                            onClick={() => setShowAdditionalItem(!showAdditionalItem)}
+                        >
+                            <span className="flex items-center">
+                                <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
+                                <span className="text-black dark:text-white-dark font-medium">Additional Item</span>
+                            </span>
+                            <span className={`transform transition-transform duration-300 ${showAdditionalItem ? 'rotate-180' : ''}`}>
+                                <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </span>
+                        </button>
+                        {showAdditionalItem && (
+                            <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
+                                <AdditionalItems register={register} setValue={setValue} watch={watch} />
                             </div>
                         )}
                     </div>
