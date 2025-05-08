@@ -53,11 +53,11 @@ const additionalItems = {
         },
         {
             "label": "Flooring - Crazy cut marble",
-            "ratePerSqMRange": 630.00
+            "ratePerSqM": 630.00
         },
         {
             "label": "Flooring - Marble (depends on quality)",
-            "ratePerSqMRange": 787.00
+            "ratePerSqM": 787.00
         }
     ],
     "wallingAndPartitioning": [
@@ -117,16 +117,25 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
     const items = flattenAdditionalItems();
     const selectedLabel = watch("additionalItem");
     const selectedItem = items.find((item) => item.label === selectedLabel);
+    const unitValue = watch("generalDescription.unitValue") || 0;
 
     // Add state for table items
     const [tableItems, setTableItems] = useState<TableItem[]>([]);
+    // Add a counter for unique IDs
+    const [nextId, setNextId] = useState(1);
+
+    // Add useEffect to update subtotal
+    useEffect(() => {
+        const subtotal = tableItems.reduce((sum, item) => sum + calculateTotal(item), 0);
+        setValue('additionalItems.subTotal', subtotal);
+    }, [tableItems, setValue]);
 
     // Add item to table
     const addTableItem = () => {
         if (!selectedItem) return;
 
         const newItem: TableItem = {
-            id: tableItems.length + 1,
+            id: nextId,  // Use the counter instead of array length
             label: selectedItem.label,
             value: selectedItem.value,
             quantity: 1,
@@ -134,6 +143,7 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
             description: ''
         };
         setTableItems([...tableItems, newItem]);
+        setNextId(nextId + 1);  // Increment the counter
     };
 
     // Remove item from table
@@ -153,31 +163,29 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
 
     // Calculate total for an item
     const calculateTotal = (item: TableItem) => {
-        if (!unitValue || isNaN(unitValue)) {
-            return 0;
-        }
+        const baseValue = Number(unitValue) || 0;
 
         // Handle rate per square meter items (flooring, walling, septic tank)
         if (item.value.ratePerSqM) {
-            return item.quantity * item.value.ratePerSqM;
+            return item.quantity * Number(item.value.ratePerSqM);
         }
 
         // Handle percentage-based items (percentage components)
         if (item.value.percentage) {
-            return item.quantity * (item.value.percentage * unitValue);
+            return item.quantity * (Number(item.value.percentage) * baseValue);
         }
 
         // Handle excess height calculations
         if (item.value.perMeterAddition) {
-            return item.quantity * (item.value.perMeterAddition * unitValue);
+            return item.quantity * (Number(item.value.perMeterAddition) * baseValue);
         }
 
         // Handle deductions
         if (item.value.deductPercentage) {
-            return item.quantity * (unitValue - (unitValue * item.value.deductPercentage));
+            return item.quantity * (baseValue - (baseValue * Number(item.value.deductPercentage)));
         }
         if (item.value.deductRange) {
-            return item.quantity * (unitValue - (unitValue * item.value.deductRange));
+            return item.quantity * (baseValue - (baseValue * Number(item.value.deductRange)));
         }
 
         return 0;
@@ -187,19 +195,21 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
     const renderValueRows = (item: any) => {
         return Object.entries(item.value).map(([key, val]: [string, any]) => {
             if (key === "label") return null;
-            if (key === "percentageComponents") {
-                return null;
-            }
+            if (key === "percentageComponents") return null;
+
+            const numericValue = Number(val);
+            const isPercentage = key === "percentage" || key === "perMeterAddition" || key === "deductPercentage";
+
             return (
                 <tr key={key}>
                     <td>{key}</td>
                     <td>
                         {Array.isArray(val)
                             ? val.join(" - ")
-                            : typeof val === "number"
-                                ? key === "percentage" || key === "perMeterAddition" || key === "deductPercentage"
-                                    ? `${(val * 100).toFixed(0)}% (${formatPHP(val * unitValue)})`
-                                    : formatPHP(val)
+                            : !isNaN(numericValue)
+                                ? isPercentage
+                                    ? `${(numericValue * 100).toFixed(0)}% (${formatPHP(numericValue * unitValue)})`
+                                    : formatPHP(numericValue)
                                 : val.toString()}
                     </td>
                 </tr>
@@ -207,7 +217,6 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
         });
     };
 
-    const unitValue = watch("propertyAppraisalTotal.unitValue");
     return (
         <React.Fragment>
             <h1 className='text-xl'>Additional Items</h1>
@@ -251,7 +260,7 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
                     <table className="table-striped">
                         <thead>
                             <tr>
-                                <th>Item</th>
+                                <th className='text-center w-full'>Item</th>
                                 <th>Description</th>
                                 <th>Quantity</th>
                                 <th>Rate</th>
@@ -268,6 +277,7 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
                                 </tr>
                             )}
                             {tableItems.map((item) => (
+
                                 <tr key={item.id}>
                                     <td>{item.label}</td>
                                     <td>
@@ -313,6 +323,14 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
                                     </td>
                                 </tr>
                             ))}
+                            {tableItems.length > 0 && (
+                                <tr className="font-bold">
+                                    <td colSpan={4} className="text-right">Subtotal:</td>
+
+                                    <td>{formatPHP(tableItems.reduce((sum, item) => sum + calculateTotal(item), 0))}</td>
+                                    <td></td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>

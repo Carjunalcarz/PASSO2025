@@ -19,7 +19,7 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
-                const response = await fetch(`http://localhost:8000/verify-token`, {
+                const response = await fetch(`${import.meta.env.VITE_API_URL_FASTAPI}/verify-token`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,

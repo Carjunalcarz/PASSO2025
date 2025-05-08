@@ -57,8 +57,8 @@ const PropertyAppraisal: React.FC<PropertyAppraisalProps> = ({ register, setValu
             {/* Table of selected items */}
             <div className="mt-8">
                 <div className="table-responsive">
-                    <h2 className='text-xl px-5 text-wrap text-left mb-6'>PROPERTY APPRAISAL</h2>
-                    <table className="table-striped">
+                    <h2 className='text-xl text-wrap text-left mb-6'>PROPERTY APPRAISAL</h2>
+                    <table className='table-striped'>
                         <thead>
                             <tr>
                                 <th className='text-center'>Building Type</th>
@@ -106,7 +106,7 @@ const PropertyAppraisal: React.FC<PropertyAppraisalProps> = ({ register, setValu
                     </table>
                 </div>
             </div>
-        </React.Fragment>
+        </React.Fragment >
     );
 };
 

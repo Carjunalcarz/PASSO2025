@@ -119,7 +119,7 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                 {/* First Column */}
                 <div className="w-1/2 px-2">
                     {/* Walls and Partition */}
-                    <div className="mb-6">
+                    <div className="mb-6 table-responsive">
                         <h3 className="font-semibold mb-2">Walls and Partition</h3>
                         <table className="w-full border-collapse">
                             {renderTableHeader()}
@@ -262,8 +262,8 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                         </table>
                     </div>
                     {/* Foundation */}
-                    <div className="mb-6">
-                        <h3 className="font-semibold mb-2">Foundation</h3>
+                    <div className="mb-6 table-responsive">
+                        <h3 className="font-semibold mb-2 ">Foundation</h3>
                         <table className="w-full border-collapse">
                             {renderTableHeader()}
                             <tbody>
@@ -325,7 +325,7 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                         </table>
                     </div>
                     {/* Columns */}
-                    <div className="mb-6">
+                    <div className="mb-6 table-responsive">
                         <h3 className="font-semibold mb-2">Columns</h3>
                         <table className="w-full border-collapse">
                             {renderTableHeader()}
@@ -407,7 +407,7 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                 {/* Second Column */}
                 <div className="w-1/2 px-2">
                     {/* Beams */}
-                    <div className="mb-6">
+                    <div className="mb-6 table-responsive">
                         <h3 className="font-semibold mb-2">Beams</h3>
                         <table className="w-full border-collapse">
                             {renderTableHeader()}
@@ -486,7 +486,7 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                         </table>
                     </div>
                     {/* Floor */}
-                    <div className="mb-6">
+                    <div className="mb-6 table-responsive">
                         <h3 className="font-semibold mb-2">Floor</h3>
                         <table className="w-full border-collapse">
                             {renderTableHeader()}
@@ -597,7 +597,7 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                         </table>
                     </div>
                     {/* Truss Framing */}
-                    <div className="mb-6">
+                    <div className="mb-6 table-responsive">
                         <h3 className="font-semibold mb-2">Truss Framing</h3>
                         <table className="w-full border-collapse">
                             {renderTableHeader()}

@@ -349,294 +349,296 @@ const Add = () => {
     const [showAdditionalItem, setShowAdditionalItem] = useState(false);
 
     return (
-        <div className="panel">
-            <div className="flex xl:flex-row flex-col gap-2.5 w-[1200px]">
-                <div className="panel px-0 ltr:xl:mr-10 rtl:xl:ml-10">
+        <div className="panel hidden sm:block md:w-[900px]  ">
+            <div className="flex flex-col gap-2.5 ">
+                <div className='mt-5'>
                     <Header />
-                    <div className="p-10">
-                        <OwnerDetailsForm register={register} />
-                    </div>
-                    {/* ###########ENTRY############## */}
+                </div>
 
-                    <div className="px-10">
-                        <BuildingLocation
-                            register={register}
-                            municipalitySuggestions={municipalitySuggestions}
-                            provinceSuggestions={provinceSuggestions}
-                            barangaySuggestions={barangaySuggestions}
-                            showMunicipalitySuggestions={showMunicipalitySuggestions}
-                            showProvinceSuggestions={showProvinceSuggestions}
-                            showBarangaySuggestions={showBarangaySuggestions}
-                            handleInputChangeMunicipality={handleInputChangeMunicipality}
-                            handleInputChangeProvince={handleInputChangeProvince}
-                            handleInputChangeBarangay={handleInputChangeBarangay}
-                            handleSuggestionClickMunicipality={handleSuggestionClickMunicipality}
-                            handleSuggestionClickProvince={handleSuggestionClickProvince}
-                            handleSuggestionClickBarangay={handleSuggestionClickBarangay}
-                            setShowMunicipalitySuggestions={setShowMunicipalitySuggestions}
-                            setShowProvinceSuggestions={setShowProvinceSuggestions}
-                            setShowBarangaySuggestions={setShowBarangaySuggestions}
-                        />
-                    </div>
-                    {/* ##########END############### */}
-                    {/* ##########ENTRY############### */}
-                    <div className="px-10 mt-4">
-                        <LandReference register={register} />
-                    </div>
+                <div className="p-10">
+                    <OwnerDetailsForm register={register} />
+                </div>
+                {/* ###########ENTRY############## */}
 
-                    {/* ###########END############## */}
-                    {/* ##########ENTRY############### */}
+                <div className="px-10">
+                    <BuildingLocation
+                        register={register}
+                        municipalitySuggestions={municipalitySuggestions}
+                        provinceSuggestions={provinceSuggestions}
+                        barangaySuggestions={barangaySuggestions}
+                        showMunicipalitySuggestions={showMunicipalitySuggestions}
+                        showProvinceSuggestions={showProvinceSuggestions}
+                        showBarangaySuggestions={showBarangaySuggestions}
+                        handleInputChangeMunicipality={handleInputChangeMunicipality}
+                        handleInputChangeProvince={handleInputChangeProvince}
+                        handleInputChangeBarangay={handleInputChangeBarangay}
+                        handleSuggestionClickMunicipality={handleSuggestionClickMunicipality}
+                        handleSuggestionClickProvince={handleSuggestionClickProvince}
+                        handleSuggestionClickBarangay={handleSuggestionClickBarangay}
+                        setShowMunicipalitySuggestions={setShowMunicipalitySuggestions}
+                        setShowProvinceSuggestions={setShowProvinceSuggestions}
+                        setShowBarangaySuggestions={setShowBarangaySuggestions}
+                    />
+                </div>
+                {/* ##########END############### */}
+                {/* ##########ENTRY############### */}
+                <div className="px-10 mt-4">
+                    <LandReference register={register} />
+                </div>
 
-                    {/* General Description Section - Collapsible */}
-                    <div className="px-10 mt-4">
-                        <button
-                            type="button"
-                            className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
-                            onClick={() => setShowGeneralDescription(!showGeneralDescription)}
-                        >
-                            <span className="flex items-center">
-                                <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
-                                <span className="text-black dark:text-white-dark font-medium">General Description</span>
-                            </span>
-                            <span className={`transform transition-transform duration-300 ${showGeneralDescription ? 'rotate-180' : ''}`}>
-                                <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </span>
-                        </button>
-                        {showGeneralDescription && (
-                            <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-                                <GeneralDescription
-                                    register={register}
-                                    control={rest.control}
-                                    setValue={setValue}
-                                    watch={watch}
-                                    images1={images1}
-                                    images2={images2}
-                                    onChange1={onChange1}
-                                    onChange2={onChange2}
-                                    onInputChange={(field, value) => handleGeneralDescriptionChange(field as keyof GeneralDescriptionData, value)}
-                                    onPreviewImage={setPreviewImage}
+                {/* ###########END############## */}
+                {/* ##########ENTRY############### */}
+
+                {/* General Description Section - Collapsible */}
+                <div className="px-10 mt-4">
+                    <button
+                        type="button"
+                        className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
+                        onClick={() => setShowGeneralDescription(!showGeneralDescription)}
+                    >
+                        <span className="flex items-center">
+                            <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
+                            <span className="text-black dark:text-white-dark font-medium">General Description</span>
+                        </span>
+                        <span className={`transform transition-transform duration-300 ${showGeneralDescription ? 'rotate-180' : ''}`}>
+                            <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </span>
+                    </button>
+                    {showGeneralDescription && (
+                        <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
+                            <GeneralDescription
+                                register={register}
+                                control={rest.control}
+                                setValue={setValue}
+                                watch={watch}
+                                images1={images1}
+                                images2={images2}
+                                onChange1={onChange1}
+                                onChange2={onChange2}
+                                onInputChange={(field, value) => handleGeneralDescriptionChange(field as keyof GeneralDescriptionData, value)}
+                                onPreviewImage={setPreviewImage}
+                            />
+                        </div>
+                    )}
+                </div>
+                {/* ###########END############## */}
+
+                {/* Structural Material Checklist Section - Collapsible */}
+                <div className="px-10 mt-4">
+                    <button
+                        type="button"
+                        className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
+                        onClick={() => setShowStructuralMaterial(!showStructuralMaterial)}
+                    >
+                        <span className="flex items-center">
+                            <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
+                            <span className="text-black dark:text-white-dark font-medium">Structural Material Checklist</span>
+                        </span>
+                        <span className={`transform transition-transform duration-300 ${showStructuralMaterial ? 'rotate-180' : ''}`}>
+                            <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </span>
+                    </button>
+                    {showStructuralMaterial && (
+                        <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
+                            <StructuralMaterialChecklist register={register} />
+                        </div>
+                    )}
+                </div>
+
+                {/* Property Appraisal Section - Collapsible */}
+                <div className="mt-4 px-10">
+                    <button
+                        type="button"
+                        className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
+                        onClick={() => setShowPropertyAppraisal(!showPropertyAppraisal)}
+                    >
+                        <span className="flex items-center">
+                            <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
+                            <span className="text-black dark:text-white-dark font-medium">Property Appraisal</span>
+                        </span>
+                        <span className={`transform transition-transform duration-300 ${showPropertyAppraisal ? 'rotate-180' : ''}`}>
+                            <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </span>
+                    </button>
+                    {showPropertyAppraisal && (
+                        <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
+                            <PropertyAppraisal register={register} setValue={setValue} watch={watch} />
+                        </div>
+                    )}
+                </div>
+                {/* Additional Item Section - Collapsible */}
+                <div className="px-10 mt-8">
+                    <button
+                        type="button"
+                        className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
+                        onClick={() => setShowAdditionalItem(!showAdditionalItem)}
+                    >
+                        <span className="flex items-center">
+                            <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
+                            <span className="text-black dark:text-white-dark font-medium">Additional Item</span>
+                        </span>
+                        <span className={`transform transition-transform duration-300 ${showAdditionalItem ? 'rotate-180' : ''}`}>
+                            <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </span>
+                    </button>
+                    {showAdditionalItem && (
+                        <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
+                            <AdditionalItems register={register} setValue={setValue} watch={watch} />
+                        </div>
+                    )}
+                </div>
+
+                {/* Property Assessment Section - Collapsible */}
+                <div className="mt-4 px-10">
+                    <button
+                        type="button"
+                        className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
+                        onClick={() => setShowPropertyAssessment(!showPropertyAssessment)}
+                    >
+                        <span className="flex items-center">
+                            <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
+                            <span className="text-black dark:text-white-dark font-medium">Property Assessment</span>
+                        </span>
+                        <span className={`transform transition-transform duration-300 ${showPropertyAssessment ? 'rotate-180' : ''}`}>
+                            <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </span>
+                    </button>
+                    {showPropertyAssessment && (
+                        <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
+                            <PropertyAssessment register={register} setValue={setValue} watch={watch} />
+                        </div>
+                    )}
+                </div>
+
+
+
+                {/* Approval Section */}
+                <div className="px-10 mt-8">
+                    <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-6 bg-white dark:bg-[#0e1726]">
+                        <div className="grid grid-cols-3 gap-6">
+                            {/* Appraised/Assessed by */}
+                            <div className="flex flex-col">
+                                <label className="mb-2 font-semibold text-center">Appraised/Assessed by:</label>
+                                <input
+                                    type="text"
+                                    className="form-input text-center"
+                                    placeholder="Enter name"
+                                    {...register('appraisedBy')}
                                 />
-                            </div>
-                        )}
-                    </div>
-                    {/* ###########END############## */}
-
-                    {/* Structural Material Checklist Section - Collapsible */}
-                    <div className="px-10 mt-4">
-                        <button
-                            type="button"
-                            className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
-                            onClick={() => setShowStructuralMaterial(!showStructuralMaterial)}
-                        >
-                            <span className="flex items-center">
-                                <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
-                                <span className="text-black dark:text-white-dark font-medium">Structural Material Checklist</span>
-                            </span>
-                            <span className={`transform transition-transform duration-300 ${showStructuralMaterial ? 'rotate-180' : ''}`}>
-                                <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </span>
-                        </button>
-                        {showStructuralMaterial && (
-                            <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-                                <StructuralMaterialChecklist register={register} />
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Property Appraisal Section - Collapsible */}
-                    <div className="mt-4 px-10">
-                        <button
-                            type="button"
-                            className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
-                            onClick={() => setShowPropertyAppraisal(!showPropertyAppraisal)}
-                        >
-                            <span className="flex items-center">
-                                <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
-                                <span className="text-black dark:text-white-dark font-medium">Property Appraisal</span>
-                            </span>
-                            <span className={`transform transition-transform duration-300 ${showPropertyAppraisal ? 'rotate-180' : ''}`}>
-                                <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </span>
-                        </button>
-                        {showPropertyAppraisal && (
-                            <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-                                <PropertyAppraisal register={register} setValue={setValue} watch={watch} />
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Property Assessment Section - Collapsible */}
-                    <div className="mt-4 px-10">
-                        <button
-                            type="button"
-                            className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
-                            onClick={() => setShowPropertyAssessment(!showPropertyAssessment)}
-                        >
-                            <span className="flex items-center">
-                                <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
-                                <span className="text-black dark:text-white-dark font-medium">Property Assessment</span>
-                            </span>
-                            <span className={`transform transition-transform duration-300 ${showPropertyAssessment ? 'rotate-180' : ''}`}>
-                                <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </span>
-                        </button>
-                        {showPropertyAssessment && (
-                            <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-                                <PropertyAssessment register={register} setValue={setValue} watch={watch} />
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Additional Item Section - Collapsible */}
-                    <div className="px-10 mt-8">
-                        <button
-                            type="button"
-                            className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
-                            onClick={() => setShowAdditionalItem(!showAdditionalItem)}
-                        >
-                            <span className="flex items-center">
-                                <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
-                                <span className="text-black dark:text-white-dark font-medium">Additional Item</span>
-                            </span>
-                            <span className={`transform transition-transform duration-300 ${showAdditionalItem ? 'rotate-180' : ''}`}>
-                                <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </span>
-                        </button>
-                        {showAdditionalItem && (
-                            <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-                                <AdditionalItems register={register} setValue={setValue} watch={watch} />
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Approval Section */}
-                    <div className="px-10 mt-8">
-                        <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-6 bg-white dark:bg-[#0e1726]">
-                            <div className="grid grid-cols-3 gap-6">
-                                {/* Appraised/Assessed by */}
-                                <div className="flex flex-col">
-                                    <label className="mb-2 font-semibold text-center">Appraised/Assessed by:</label>
+                                <label className="mb-2  mt-3 font-semibold text-center">Appraised/Assessed by:</label>
+                                <div className="mt-2">
                                     <input
-                                        type="text"
+                                        type="date"
                                         className="form-input text-center"
-                                        placeholder="Enter name"
-                                        {...register('appraisedBy')}
+                                        {...register('appraisedDate')}
                                     />
-                                    <label className="mb-2 font-semibold text-center">Appraised/Assessed by:</label>
-                                    <div className="mt-2">
-                                        <input
-                                            type="date"
-                                            className="form-input text-center"
-                                            {...register('appraisedDate')}
-                                        />
-                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Recommending Approval */}
+                            <div className="flex flex-col">
+                                <label className="mb-2 font-semibold text-center">Recommending Approval:</label>
+                                <input
+                                    type="text"
+                                    className="form-input text-center"
+                                    placeholder="Enter name"
+                                    {...register('recommendingApproval')}
+                                />
+                                <label className="mb-2  mt-3 font-semibold text-center">Municipality Assessor</label>
+                                <div className="mt-2">
+                                    <input
+                                        type="date"
+                                        className="form-input text-center"
+                                        {...register('municipalityAssessorDate')}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Approved by */}
+                            <div className="flex flex-col">
+                                <label className="mb-2 font-semibold text-center">Approved by:</label>
+                                <input
+                                    type="text"
+                                    className="form-input text-center"
+                                    placeholder="Enter name"
+                                    {...register('approvedByProvince')}
+                                />
+                                <label className="mb-2  mt-3 font-semibold text-center">Provincial Assessor</label>
+                                <div className="mt-2">
+                                    <input
+                                        type="date"
+                                        className="form-input text-center"
+                                        {...register('provincialAssessorDate')}
+                                    />
                                 </div>
 
-                                {/* Recommending Approval */}
-                                <div className="flex flex-col">
-                                    <label className="mb-2 font-semibold text-center">Recommending Approval:</label>
-                                    <input
-                                        type="text"
-                                        className="form-input text-center"
-                                        placeholder="Enter name"
-                                        {...register('recommendingApproval')}
-                                    />
-                                    <label className="mb-2 font-semibold text-center">Municipality Assessor</label>
-                                    <div className="mt-2">
-                                        <input
-                                            type="date"
-                                            className="form-input text-center"
-                                            {...register('municipalityAssessorDate')}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Approved by */}
-                                <div className="flex flex-col">
-                                    <label className="mb-2 font-semibold text-center">Approved by:</label>
-                                    <input
-                                        type="text"
-                                        className="form-input text-center"
-                                        placeholder="Enter name"
-                                        {...register('approvedByProvince')}
-                                    />
-                                    <label className="mb-2 font-semibold text-center">Provincial Assessor</label>
-                                    <div className="mt-2">
-                                        <input
-                                            type="date"
-                                            className="form-input text-center"
-                                            {...register('provincialAssessorDate')}
-                                        />
-                                    </div>
-
-
-                                </div>
 
                             </div>
+
                         </div>
                     </div>
+                </div>
 
-                    {/* Memoranda Section - Collapsible */}
-                    <div className="px-10 mt-8">
-                        <button
-                            type="button"
-                            className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
-                            onClick={() => setShowMemorada(!showMemorada)}
-                        >
-                            <span className="flex items-center">
-                                <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
-                                <span className="text-black dark:text-white-dark font-medium">Memoranda</span>
-                            </span>
-                            <span className={`transform transition-transform duration-300 ${showMemorada ? 'rotate-180' : ''}`}>
-                                <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </span>
-                        </button>
-                        {showMemorada && (
-                            <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-                                <Memoranda onMemorandaChange={handleMemorandaChange} />
-                            </div>
-                        )}
-                    </div>
+                {/* Memoranda Section - Collapsible */}
+                <div className="px-10 mt-8">
+                    <button
+                        type="button"
+                        className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
+                        onClick={() => setShowMemorada(!showMemorada)}
+                    >
+                        <span className="flex items-center">
+                            <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
+                            <span className="text-black dark:text-white-dark font-medium">Memoranda</span>
+                        </span>
+                        <span className={`transform transition-transform duration-300 ${showMemorada ? 'rotate-180' : ''}`}>
+                            <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </span>
+                    </button>
+                    {showMemorada && (
+                        <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
+                            <Memoranda onMemorandaChange={handleMemorandaChange} />
+                        </div>
+                    )}
+                </div>
 
-                    {/* Record of Superseded Section - Collapsible */}
-                    <div className="px-10 mt-8">
-                        <button
-                            type="button"
-                            className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
-                            onClick={() => setShowSuperseded(!showSuperseded)}
-                        >
-                            <span className="flex items-center">
-                                <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
-                                <span className="text-black dark:text-white-dark font-medium">Record of Superseded</span>
-                            </span>
-                            <span className={`transform transition-transform duration-300 ${showSuperseded ? 'rotate-180' : ''}`}>
-                                <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </span>
-                        </button>
-                        {showSuperseded && (
-                            <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-                                <RecordOfSupersededAssessment />
-                            </div>
-                        )}
-                    </div>
-
+                {/* Record of Superseded Section - Collapsible */}
+                <div className="px-10 mt-8">
+                    <button
+                        type="button"
+                        className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
+                        onClick={() => setShowSuperseded(!showSuperseded)}
+                    >
+                        <span className="flex items-center">
+                            <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2 text-primary dark:text-white-dark" />
+                            <span className="text-black dark:text-white-dark font-medium">Record of Superseded</span>
+                        </span>
+                        <span className={`transform transition-transform duration-300 ${showSuperseded ? 'rotate-180' : ''}`}>
+                            <svg className="w-6 h-6 text-gray-500 dark:text-white-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </span>
+                    </button>
+                    {showSuperseded && (
+                        <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
+                            <RecordOfSupersededAssessment />
+                        </div>
+                    )}
                 </div>
 
             </div>
+
 
 
             {previewImage && (

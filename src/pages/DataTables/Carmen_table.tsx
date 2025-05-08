@@ -121,7 +121,7 @@ const Carmen = () => {
     }, [dispatch]);
 
     const fetchAssessments = async (): Promise<Assessment[]> => {
-        const response = await axios.get('http://localhost:8000/assessments?municipality=carmen&skip=0&limit=300000', {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/assessments?municipality=carmen&skip=0&limit=300000`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -176,7 +176,7 @@ const Carmen = () => {
         unknown
     >({
         mutationFn: async (data: Assessment) => {
-            const response = await axios.put(`http://localhost:8000/assessments/${data.tdn}`, data, {
+            const response = await axios.put(`${import.meta.env.VITE_API_URL_FASTAPI}/assessments/${data.tdn}`, data, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -200,7 +200,7 @@ const Carmen = () => {
         unknown
     >({
         mutationFn: async (tdn: string) => {
-            const response = await axios.delete(`http://localhost:8000/assessments/${tdn}`, {
+            const response = await axios.delete(`${import.meta.env.VITE_API_URL_FASTAPI}/assessments/${tdn}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

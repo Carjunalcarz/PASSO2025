@@ -118,10 +118,10 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
     }, [floor1, floor2, floor3, floor4, setValue]);
 
     return (
-        <div className="px-10 w-full">
+        <div className="px-10">
             <h2 className='text-xl px-5 text-wrap text-left mb-6'>GENERAL DESCRIPTION</h2>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto table-responsive">
                 <table className="min-w-full border-collapse border border-gray-300">
                     <tbody>
                         {/* Building Information */}

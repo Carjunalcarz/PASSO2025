@@ -182,12 +182,7 @@ const constructionCosts: Record<string, Record<string, number | null>> = {
 
 const ConstructionCost: React.FC<ConstructionCostProps> = ({ register, setValue, watch }) => {
     const constructionTypes = Object.keys(constructionCosts);
-    const floor1 = watch('generalDescription.area_of_1st_floor');
-    const floor2 = watch('generalDescription.area_of_2nd_floor');
-    const floor3 = watch('generalDescription.area_of_3rd_floor');
-    const floor4 = watch('generalDescription.area_of_4th_floor');
-
-    const totalFloorArea = floor1 + floor2 + floor3 + floor4;
+   
 
     return (
         <div className="flex gap-4">

@@ -36,7 +36,7 @@ const LoginBoxed = () => {
             }
 
             try {
-                const response = await fetch(`http://localhost:8000/verify-token`, {
+                const response = await fetch(`${import.meta.env.VITE_API_URL_FASTAPI}/verify-token`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -76,7 +76,7 @@ const LoginBoxed = () => {
             formData.append('username', data.email);
             formData.append('password', data.password);
 
-            const response = await fetch('http://localhost:8000/token', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL_FASTAPI}/token`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',

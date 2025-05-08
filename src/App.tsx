@@ -20,7 +20,7 @@ function App({ children }: PropsWithChildren) {
         dispatch(toggleLocale(localStorage.getItem('i18nextLng') || themeConfig.locale));
         dispatch(toggleSemidark(localStorage.getItem('semidark') || themeConfig.semidark));
     }, [dispatch, themeConfig.theme, themeConfig.menu, themeConfig.layout, themeConfig.rtlClass, themeConfig.animation, themeConfig.navbar, themeConfig.locale, themeConfig.semidark]);
-
+    console.log(import.meta.env.VITE_API_URL_FASTAPI);
     return (
         <>
             <div

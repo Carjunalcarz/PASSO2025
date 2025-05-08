@@ -52,7 +52,7 @@ const ColumnChooser = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get('http://localhost:8000/assessments?municipality=carmen&skip=0&limit=300000', {
+                const response = await axios.get(`${import.meta.env.API_URL}/assessments?municipality=carmen&skip=0&limit=300000`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

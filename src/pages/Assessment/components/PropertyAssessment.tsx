@@ -66,6 +66,13 @@ function formatDateString(dateString: string | undefined) {
     });
 }
 
+const quarters = [
+    { value: 'QTR1', label: '1st Quarter' },
+    { value: 'QTR2', label: '2nd Quarter' },
+    { value: 'QTR3', label: '3rd Quarter' },
+    { value: 'QTR4', label: '4th Quarter' },
+];
+
 const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setValue, watch }) => {
     const [items, setItems] = useState<PropertyAssessmentItem[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -154,16 +161,19 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setVa
     const buildingCategory = watch('buildingCategory');
     const assessmentLevel = watch('assessmentLevel');
     const assessmentValue = watch('assessmentValue') || 0;
-    const totalArea = watch('propertyAppraisal.totalArea');
+    const totalArea = watch('propertyAppraisal.totalArea') || 0;
     const effectivityOfAssessment = watch('effectivityOfAssessment');
+    const additionalItems = watch('additionalItems.subTotal');
+    const AssessmentTotalMarketValue = totalMarketValue + additionalItems;
 
     useEffect(() => {
         setValue('propertyAssessment.assessmentLevel', assessmentLevel);
         setValue('propertyAssessment.assessmentValue', assessmentValue);
         setValue('propertyAssessment.totalArea', totalArea);
-        setValue('propertyAssessment.marketValue', totalMarketValue);
+        setValue('propertyAssessment.marketValue', AssessmentTotalMarketValue);
         setValue('propertyAssessment.buildingCategory', buildingCategory);
         setValue('propertyAssessment.effectivityOfAssessment', effectivityOfAssessment);
+
     }, [assessmentLevel, assessmentValue, setValue]);
 
     useEffect(() => {
@@ -196,18 +206,18 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setVa
     }, [buildingCategory, totalMarketValue, setValue]);
 
     return (
-        <div className="px-10">
+        <div className="">
             <h2 className='text-xl px-5 text-wrap text-left mb-6'>PROPERTY ASSESSMENT</h2>
-            <div className="table-container">
-                <table className="w-full">
+            <div className="table-responsive">
+                <table className='table-striped'>
                     <thead>
                         <tr>
-                            <th className='text-center' colSpan={2} >Area</th>
-                            <th className='text-center' colSpan={2} >Assessment Level</th>
-                            <th className='text-center' colSpan={3} >Actual Use</th>
-                            <th className='text-center' colSpan={2} >Market Value</th>
-                            <th className='text-center' colSpan={2} >Assessment Value(PHP)</th>
-                            <th className='text-center' colSpan={1} >Effectivity of Assessment/Revision Date</th>
+                            <th className='w-full text-center'>Area</th>
+                            <th className='w-full text-center' >Assessment Level</th>
+                            <th className='w-full text-center' >Actual Use</th>
+                            <th className='w-full text-center' >Market Value</th>
+                            <th className='w-full text-center' >Assessment Value(PHP)</th>
+                            <th className='w-full text-center'></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -245,14 +255,15 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setVa
                             return (
                                 <React.Fragment key={item.id}>
                                     <tr>
-                                        <td colSpan={2} className="text-center font-semibold">
+                                        <td className="text-center font-semibold">
                                             {totalArea !== null ? `${totalArea} sq.m` : '-'}
 
                                         </td>
-                                        <td colSpan={2} className="text-center font-semibold">
+                                        <td className="text-center font-semibold auto-fit">
                                             {assessmentLevel !== null ? `${assessmentLevel}%` : '-'}
                                         </td>
-                                        <td colSpan={3} className='text-center'  >
+
+                                        <td className=''>
                                             <select
                                                 id="buildingCategory"
                                                 className="form-select w-full"
@@ -266,21 +277,75 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setVa
 
                                             </select>
                                         </td>
-                                        <td colSpan={2} className='text-center'>
-                                            {formatPHP(totalMarketValue || 0)}
+                                        <td className='text-center'>
+                                            {formatPHP(AssessmentTotalMarketValue || 0)}
                                         </td>
-                                        <td colSpan={2} className='text-center font-semibold' >
+                                        <td className='text-center font-semibold' >
                                             <span title={`Assessment Value = totalMarketValue × assessmentLevel / 100`}>
                                                 {formatPHP(assessmentValue || 0)}
                                             </span>
+
                                         </td>
-                                        <td colSpan={2} className='text-center flex justify-center'>
-                                            <input className='form-input w-[150px]' type="date" {...register(`effectivityOfAssessment`)} />
+                                        <td>
                                             <button className='ml-4' type="button" onClick={() => removeItem(item)}>
                                                 <IconX className="w-5 h-5" />
                                             </button>
                                         </td>
                                     </tr>
+                                    <tr>
+                                        <td className='text-center font-semibold p-2 w-full'>
+                                            <label htmlFor="effectivityOfAssessment">Taxable Value</label>
+                                            <input type="checkbox" {...register(`taxableValue`)} />
+                                        </td>
+                                        <td className='text-center font-semibold w-full'>
+                                            <label htmlFor="effectivityOfAssessment">Exempt</label>
+                                            <input type="checkbox" {...register(`taxableValue`)} />
+                                        </td>
+
+                                        <td className='text-center font-semibold w-full'>
+                                            <label htmlFor="effectivityOfAssessment">Effectivity of Assessment/Revision Date</label>
+                                        </td>
+                                        <td colSpan={2}>  <select
+                                            className='form-select w-full'
+                                            {...register(`effectivityOfAssessment.quarter`)}
+                                        >
+                                            <option value="">Qtr</option>
+                                            {quarters.map((quarter) => (
+                                                <option key={quarter.value} value={quarter.value}>
+                                                    {quarter.label}
+                                                </option>
+                                            ))}
+                                        </select></td>
+
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+
+                                        <td colSpan={2} className='text-center font-semibold w-full'>
+
+                                            <select
+                                                className='form-select'
+                                                {...register(`effectivityOfAssessment`)}
+
+                                            >
+                                                <option value="" className='w-full0' >Year</option>
+                                                {Array.from({ length: (new Date().getFullYear() + 1) - 1900 + 1 }, (_, i) => {
+                                                    const year = (new Date().getFullYear() + 10) - i;
+                                                    return (
+                                                        <option key={year} value={year}>
+                                                            {year}
+                                                        </option>
+                                                    );
+                                                })}
+                                            </select>
+                                        </td>
+                                        <td className='text-center font-semibold'>
+
+                                        </td>
+                                    </tr>
+
                                 </React.Fragment>
                             );
                         })}
@@ -301,7 +366,7 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setVa
                 </div>
             </div>
 
-        </div>
+        </div >
     );
 };
 
