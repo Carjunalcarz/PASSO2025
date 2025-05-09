@@ -99,8 +99,8 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
             id={id}
             type={type}
             placeholder={placeholder}
-            className="w-full"
-            labelClassName="w-1/2"
+            className="w-1/2"
+            labelClassName="w-1/3"
             {...register(`generalDescription.${id}`)}
         />
     );

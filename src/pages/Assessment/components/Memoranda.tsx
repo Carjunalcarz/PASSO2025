@@ -1,21 +1,37 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import IconPlus from '../../../components/Icon/IconPlus';
 import IconX from '../../../components/Icon/IconX';
+
+interface FormValues {
+    ownerDetails: {
+        owner: string;
+    };
+    // add other fields here if needed
+}
 
 interface MemorandaEntry {
     id: number;
     date: string;
     details: string;
 }
+interface PropertyAssessmentItem {
+    owner: string;
+
+}
 
 interface MemorandaProps {
+
+    register: any;
+    setValue: any;
+    watch: any;
     onMemorandaChange?: (memoranda: MemorandaEntry[]) => void;
 }
 
-const Memoranda: React.FC<MemorandaProps> = ({ onMemorandaChange }) => {
+const Memoranda: React.FC<MemorandaProps> = ({ onMemorandaChange, register, watch, setValue }) => {
     const [entries, setEntries] = useState<MemorandaEntry[]>([
-        { id: 1, date: '', details: '' }
+        { id: 1, date: '', details: `REVISED PERSUANT TO SEC.219 OF RA 7160 AND AS IMPLEMENTED BY SP ORDINANCE NO. 716-2024 5TH GENERAL REVISION`, }
     ]);
+
 
     const addEntry = () => {
         const newEntry = {
@@ -43,8 +59,11 @@ const Memoranda: React.FC<MemorandaProps> = ({ onMemorandaChange }) => {
         onMemorandaChange?.(updatedEntries);
     };
 
+    const owner = watch('ownerDetails.owner');
+    console.log(owner);
+
     return (
-        <div className="w-full">
+        <div className="w-full" >
             <div className="mb-4">
                 <h4 className="text-xl font-semibold mb-4">Memoranda</h4>
                 <div className="space-y-4">
@@ -64,10 +83,11 @@ const Memoranda: React.FC<MemorandaProps> = ({ onMemorandaChange }) => {
                                 <textarea
                                     className="form-textarea w-full"
                                     rows={3}
-                                    value={entry.details}
-                                    onChange={(e) => updateEntry(entry.id, 'details', e.target.value)}
+                                    value={entry.details} // <-- bind to state
+                                    onChange={(e) => updateEntry(entry.id, 'details', e.target.value)} // <-- updates the state
                                     placeholder="Enter memoranda details..."
                                 />
+
                             </div>
                             <button
                                 type="button"

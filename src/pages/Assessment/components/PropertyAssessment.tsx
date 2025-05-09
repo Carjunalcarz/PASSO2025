@@ -212,12 +212,12 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setVa
                 <table className='table-striped'>
                     <thead>
                         <tr>
-                            <th className='w-full text-center'>Area</th>
-                            <th className='w-full text-center' >Assessment Level</th>
-                            <th className='w-full text-center' >Actual Use</th>
-                            <th className='w-full text-center' >Market Value</th>
-                            <th className='w-full text-center' >Assessment Value(PHP)</th>
-                            <th className='w-full text-center'></th>
+                            <th className='text-center' >Area</th>
+                            <th className='text-center' >Assessment Level</th>
+                            <th className='text-center' >Actual Use</th>
+                            <th className='text-center' >Market Value</th>
+                            <th className='text-center' >Assessment Value(PHP)</th>
+                            <th className='text-center'></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -259,7 +259,7 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setVa
                                             {totalArea !== null ? `${totalArea} sq.m` : '-'}
 
                                         </td>
-                                        <td className="text-center font-semibold auto-fit">
+                                        <td className="text-center font-semibold ">
                                             {assessmentLevel !== null ? `${assessmentLevel}%` : '-'}
                                         </td>
 
@@ -293,38 +293,35 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setVa
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td className='text-center font-semibold p-2 w-full'>
+                                        <td className='text-center font-semibold p-2'>
                                             <label htmlFor="effectivityOfAssessment">Taxable Value</label>
                                             <input type="checkbox" {...register(`taxableValue`)} />
                                         </td>
-                                        <td className='text-center font-semibold w-full'>
+                                        <td className='text-center font-semibold'>
                                             <label htmlFor="effectivityOfAssessment">Exempt</label>
                                             <input type="checkbox" {...register(`taxableValue`)} />
                                         </td>
 
-                                        <td className='text-center font-semibold w-full'>
+                                        <td className='text-center font-semibold'>
                                             <label htmlFor="effectivityOfAssessment">Effectivity of Assessment/Revision Date</label>
                                         </td>
-                                        <td colSpan={2}>  <select
-                                            className='form-select w-full'
-                                            {...register(`effectivityOfAssessment.quarter`)}
-                                        >
-                                            <option value="">Qtr</option>
-                                            {quarters.map((quarter) => (
-                                                <option key={quarter.value} value={quarter.value}>
-                                                    {quarter.label}
-                                                </option>
-                                            ))}
-                                        </select></td>
+                                        <td >
+                                            <label htmlFor="" className='text-center'>Quarter</label>
 
-                                    </tr>
-                                    <tr>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
+                                            <select
+                                                className='form-select w-full'
+                                                {...register(`effectivityOfAssessment.quarter`)}
+                                            >
+                                                <option value="">Qtr</option>
+                                                {quarters.map((quarter) => (
+                                                    <option key={quarter.value} value={quarter.value}>
+                                                        {quarter.label}
+                                                    </option>
+                                                ))}
+                                            </select></td>
 
-                                        <td colSpan={2} className='text-center font-semibold w-full'>
-
+                                        <td className='text-center font-semibold'>
+                                            <label htmlFor="">Year</label>
                                             <select
                                                 className='form-select'
                                                 {...register(`effectivityOfAssessment`)}
@@ -341,11 +338,8 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setVa
                                                 })}
                                             </select>
                                         </td>
-                                        <td className='text-center font-semibold'>
 
-                                        </td>
                                     </tr>
-
                                 </React.Fragment>
                             );
                         })}

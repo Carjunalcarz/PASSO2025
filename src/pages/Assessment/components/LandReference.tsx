@@ -5,9 +5,9 @@ import InputField from './shared/InputField';
 
 const LandReference: React.FC<{ register: any }> = ({ register }) => {
     return (
-        <div className="px-10 border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
+        <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
             <h2 className="text-xl px-5 text-wrap text-left">LAND REFERENCE</h2>
-            <div className="flex justify-between lg:flex-row flex-col">
+            <div className="flex justify-between lg:flex-row flex-col m-5">
                 {/* Left Column */}
                 <div className="lg:w-1/2 w-full ltr:lg:mr-6 rtl:lg:ml-6 mb-6">
                     <InputField
@@ -15,7 +15,7 @@ const LandReference: React.FC<{ register: any }> = ({ register }) => {
                         id="land_owner"
                         type="text"
                         placeholder="Enter Owner"
-                        {...register('land_owner')}
+                        {...register('landReference.land_owner')}
                     />
 
                     <InputField
@@ -23,7 +23,7 @@ const LandReference: React.FC<{ register: any }> = ({ register }) => {
                         id="block_no"
                         type="text"
                         placeholder="Enter Block No."
-                        {...register('block_no')}
+                        {...register('landReference.block_no')}
                     />
 
                     <InputField
@@ -31,7 +31,14 @@ const LandReference: React.FC<{ register: any }> = ({ register }) => {
                         id="tdn_no"
                         type="text"
                         placeholder="Enter TDN No."
-                        {...register('tdn_no')}
+                        {...register('landReference.tdn_no')}
+                    />
+                    <InputField
+                        label="PIN. :"
+                        id="pin"
+                        type="text"
+                        placeholder="Enter PIN."
+                        {...register('landReference.pin')}
                     />
                 </div>
 
@@ -42,7 +49,7 @@ const LandReference: React.FC<{ register: any }> = ({ register }) => {
                         id="lot_no"
                         type="text"
                         placeholder="Enter Lot No."
-                        {...register('lot_no')}
+                        {...register('landReference.lot_no')}
                     />
 
                     <InputField
@@ -50,7 +57,7 @@ const LandReference: React.FC<{ register: any }> = ({ register }) => {
                         id="survey_no"
                         type="text"
                         placeholder="Enter Survey No."
-                        {...register('survey_no')}
+                        {...register('landReference.survey_no')}
                     />
 
                     <InputField
@@ -58,7 +65,7 @@ const LandReference: React.FC<{ register: any }> = ({ register }) => {
                         id="area"
                         type="text"
                         placeholder="Enter Area"
-                        {...register('area')}
+                        {...register('landReference.area')}
                     />
                 </div>
             </div>

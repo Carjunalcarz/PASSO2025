@@ -11,6 +11,7 @@ interface SuggestionInputProps {
 }
 
 const SuggestionInput = ({
+
     id,
     label,
     placeholder,
@@ -22,30 +23,33 @@ const SuggestionInput = ({
     labelClassName = "w-1/4"
 }: SuggestionInputProps) => {
     return (
-        <div className="mt-4 flex items-center">
-            <label htmlFor={id} className={`ltr:mr-2 rtl:ml-2 ${labelClassName} mb-0`}>
-                {label}
-            </label>
-            <div className="relative flex-1">
+
+        <div className="w-full ltr:lg:mr-6 rtl:lg:ml-6 mb-6">
+            <div className="flex">
+                <div className='flex justify-center items-center ltr:rounded-l-md rtl:rounded-r-md px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]'>
+                    {label}
+                </div>
                 <input
                     id={id}
                     type="text"
                     name={id}
-                    className="form-input w-full"
+                    className={`form-input flex-1 ltr:rounded-l-none rtl:rounded-r-none`}
                     placeholder={placeholder}
                     onChange={onInputChange}
                     onFocus={() => setShowSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+
                 />
                 {showSuggestions && suggestions.length > 0 && (
-                    <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                    <div className="mt-[40px] absolute z-10 w-1/4 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto form-input">
                         {suggestions.map((suggestion, index) => (
                             <div
                                 key={index}
-                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer form-input mt-2"
                                 onClick={() => onSuggestionClick(suggestion)}
                             >
                                 {suggestion}
+
                             </div>
                         ))}
                     </div>

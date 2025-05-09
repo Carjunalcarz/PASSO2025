@@ -1,7 +1,12 @@
+import { useEffect } from 'react';
+import InputField from './shared/InputField';
 import SuggestionInput from './shared/SuggestionInput';
+import { set } from 'lodash';
 
 interface BuildingLocationProps {
     register: any;
+    setValue: any;
+    watch: any;
     municipalitySuggestions: string[];
     provinceSuggestions: string[];
     barangaySuggestions: string[];
@@ -20,6 +25,8 @@ interface BuildingLocationProps {
 }
 
 const BuildingLocation = ({
+    setValue,
+    watch,
     register,
     municipalitySuggestions,
     provinceSuggestions,
@@ -37,11 +44,24 @@ const BuildingLocation = ({
     setShowProvinceSuggestions,
     setShowBarangaySuggestions,
 }: BuildingLocationProps) => {
+    const municipality = watch("address_municipality");
+    const barangay = watch("address_barangay");
+    const street = watch("street");
+    const province = watch("address_province")
+    useEffect(() => {
+        setValue("buildingLocation.address_municipality", municipality);
+        setValue("buildingLocation.adress_barangay", barangay);
+        setValue("buildingLocation.street", street);
+        setValue("buildingLocation.province", province);
+    }, [municipality, barangay, street, province, setValue])
+
     return (
         <div className="px-10 border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
             <h2 className='text-xl px-5 text-wrap text-left mb-8'>BUILDING LOCATION</h2>
 
             <div className="mt-5 flex justify-between lg:flex-row flex-col">
+
+
                 <div className="lg:w-1/2 w-full ltr:lg:mr-6 rtl:lg:ml-6 mb-6">
                     <SuggestionInput
                         id="address_municipality"
@@ -67,14 +87,14 @@ const BuildingLocation = ({
 
                     />
 
-                    <div className="mt-4 flex items-center">
-                        <label htmlFor="street" className="ltr:mr-2 rtl:ml-2 w-1/4 mb-0">
-                            NO. / Street :
-                        </label>
+                    <div className="mt-4 items-center">
+                        <div className="p-2 justify-center items-center ltr:rounded-l-md rtl:rounded-r-md px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                            Street No. / Street
+                        </div>
                         <textarea
                             id="street"
                             name="street"
-                            className="form-textarea flex-1 resize-none rounded-lg border border-[#e0e6ed] bg-white px-4 py-2 text-sm font-normal text-black focus:border-primary focus:outline-none dark:border-[#17263c] dark:bg-[#121e32] dark:text-white-dark"
+                            className="form-input ltr:rounded-l-none rtl:rounded-r-none flex-1"
                             placeholder="Enter No. / Street"
                             {...register("street")}
                         ></textarea>

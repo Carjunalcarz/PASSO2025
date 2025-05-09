@@ -182,7 +182,7 @@ const constructionCosts: Record<string, Record<string, number | null>> = {
 
 const ConstructionCost: React.FC<ConstructionCostProps> = ({ register, setValue, watch }) => {
     const constructionTypes = Object.keys(constructionCosts);
-   
+
 
     return (
         <div className="flex gap-4">
@@ -198,7 +198,7 @@ const ConstructionCost: React.FC<ConstructionCostProps> = ({ register, setValue,
                         setValue('generalDescription.unitValue', 0);
                     }}
                 >
-                    <option value="">Select Construction Type</option>
+                    <option value="">Select Type</option>
                     {constructionTypes.map(type => (
                         <option key={type} value={type}>{type}</option>
                     ))}
@@ -223,7 +223,7 @@ const ConstructionCost: React.FC<ConstructionCostProps> = ({ register, setValue,
                     }}
                     disabled={!watch('generalDescription.kind_of_bldg')}
                 >
-                    <option value="">Select Structural Type</option>
+                    <option value="">Select  Type</option>
                     {watch('generalDescription.kind_of_bldg') &&
                         Object.keys(constructionCosts[watch('generalDescription.kind_of_bldg')])
                             .filter(structuralType => constructionCosts[watch('generalDescription.kind_of_bldg')][structuralType] !== null)

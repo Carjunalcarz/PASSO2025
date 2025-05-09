@@ -349,7 +349,7 @@ const Add = () => {
     const [showAdditionalItem, setShowAdditionalItem] = useState(false);
 
     return (
-        <div className="panel hidden sm:block md:w-[900px]  ">
+        <div className="panel hidden sm:block md:w-[900px] lg:w-[1200px]">
             <div className="flex flex-col gap-2.5 ">
                 <div className='mt-5'>
                     <Header />
@@ -363,6 +363,8 @@ const Add = () => {
                 <div className="px-10">
                     <BuildingLocation
                         register={register}
+                        watch={watch}
+                        setValue={setValue}
                         municipalitySuggestions={municipalitySuggestions}
                         provinceSuggestions={provinceSuggestions}
                         barangaySuggestions={barangaySuggestions}
@@ -382,7 +384,7 @@ const Add = () => {
                 </div>
                 {/* ##########END############### */}
                 {/* ##########ENTRY############### */}
-                <div className="px-10 mt-4">
+                <div className="px-10 ">
                     <LandReference register={register} />
                 </div>
 
@@ -390,7 +392,7 @@ const Add = () => {
                 {/* ##########ENTRY############### */}
 
                 {/* General Description Section - Collapsible */}
-                <div className="px-10 mt-4">
+                <div className="px-10">
                     <button
                         type="button"
                         className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
@@ -426,7 +428,7 @@ const Add = () => {
                 {/* ###########END############## */}
 
                 {/* Structural Material Checklist Section - Collapsible */}
-                <div className="px-10 mt-4">
+                <div className="px-10">
                     <button
                         type="button"
                         className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
@@ -450,7 +452,7 @@ const Add = () => {
                 </div>
 
                 {/* Property Appraisal Section - Collapsible */}
-                <div className="mt-4 px-10">
+                <div className="px-10">
                     <button
                         type="button"
                         className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
@@ -473,7 +475,7 @@ const Add = () => {
                     )}
                 </div>
                 {/* Additional Item Section - Collapsible */}
-                <div className="px-10 mt-8">
+                <div className="px-10">
                     <button
                         type="button"
                         className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
@@ -497,7 +499,7 @@ const Add = () => {
                 </div>
 
                 {/* Property Assessment Section - Collapsible */}
-                <div className="mt-4 px-10">
+                <div className="px-10">
                     <button
                         type="button"
                         className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
@@ -523,7 +525,7 @@ const Add = () => {
 
 
                 {/* Approval Section */}
-                <div className="px-10 mt-8">
+                <div className="px-10 ">
                     <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-6 bg-white dark:bg-[#0e1726]">
                         <div className="grid grid-cols-3 gap-6">
                             {/* Appraised/Assessed by */}
@@ -533,14 +535,14 @@ const Add = () => {
                                     type="text"
                                     className="form-input text-center"
                                     placeholder="Enter name"
-                                    {...register('appraisedBy')}
+                                    {...register('approvalSection.appraisedBy')}
                                 />
                                 <label className="mb-2  mt-3 font-semibold text-center">Appraised/Assessed by:</label>
                                 <div className="mt-2">
                                     <input
                                         type="date"
                                         className="form-input text-center"
-                                        {...register('appraisedDate')}
+                                        {...register('approvalSection.appraisedDate')}
                                     />
                                 </div>
                             </div>
@@ -552,14 +554,14 @@ const Add = () => {
                                     type="text"
                                     className="form-input text-center"
                                     placeholder="Enter name"
-                                    {...register('recommendingApproval')}
+                                    {...register('approvalSection.recommendingApproval')}
                                 />
                                 <label className="mb-2  mt-3 font-semibold text-center">Municipality Assessor</label>
                                 <div className="mt-2">
                                     <input
                                         type="date"
                                         className="form-input text-center"
-                                        {...register('municipalityAssessorDate')}
+                                        {...register('approvalSection.municipalityAssessorDate')}
                                     />
                                 </div>
                             </div>
@@ -571,14 +573,14 @@ const Add = () => {
                                     type="text"
                                     className="form-input text-center"
                                     placeholder="Enter name"
-                                    {...register('approvedByProvince')}
+                                    {...register('approvalSection.approvedByProvince')}
                                 />
                                 <label className="mb-2  mt-3 font-semibold text-center">Provincial Assessor</label>
                                 <div className="mt-2">
                                     <input
                                         type="date"
                                         className="form-input text-center"
-                                        {...register('provincialAssessorDate')}
+                                        {...register('approvalSection.provincialAssessorDate')}
                                     />
                                 </div>
 
@@ -590,7 +592,7 @@ const Add = () => {
                 </div>
 
                 {/* Memoranda Section - Collapsible */}
-                <div className="px-10 mt-8">
+                <div className="px-10 mt-4">
                     <button
                         type="button"
                         className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"
@@ -608,13 +610,13 @@ const Add = () => {
                     </button>
                     {showMemorada && (
                         <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-                            <Memoranda onMemorandaChange={handleMemorandaChange} />
+                            <Memoranda setValue={setValue} watch={watch} register={register} onMemorandaChange={handleMemorandaChange} />
                         </div>
                     )}
                 </div>
 
                 {/* Record of Superseded Section - Collapsible */}
-                <div className="px-10 mt-8">
+                <div className="px-10">
                     <button
                         type="button"
                         className="mb-4 flex items-center w-full justify-between p-4 bg-white dark:bg-[#0e1726] border border-[#e0e6ed] dark:border-[#17263c] rounded-lg hover:bg-gray-50 dark:hover:bg-[#121e32] transition-all duration-300"

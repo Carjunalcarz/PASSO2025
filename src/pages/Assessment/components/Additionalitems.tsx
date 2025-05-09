@@ -260,7 +260,7 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
                     <table className="table-striped">
                         <thead>
                             <tr>
-                                <th className='text-center w-full'>Item</th>
+                                <th className='text-center'>Item</th>
                                 <th>Description</th>
                                 <th>Quantity</th>
                                 <th>Rate</th>

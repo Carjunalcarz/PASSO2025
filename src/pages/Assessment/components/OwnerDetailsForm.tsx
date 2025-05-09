@@ -1,118 +1,102 @@
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-
+import InputField from './shared/InputField';
 const OwnerDetailsForm: React.FC<{ register: any }> = ({ register }) => {
 
 
     return (
         <div className="flex justify-between lg:flex-row flex-col border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-10 bg-white dark:bg-[#0e1726]">
-            <div className="lg:w-1/2 w-full ltr:lg:mr-6 rtl:lg:ml-6 ">
-                <div className="flex items-center">
-                    <label htmlFor="tdArpNo" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                        TD / ARP NO. :
-                    </label>
-                    <input
+            <div className="lg:w-1/2 w-full">
+                <div className="flex items-center mt-4">
+                    <InputField
+                        label="TD / ARP NO."
                         id="tdArpNo"
                         type="text"
-                        {...register("tdArpNo")}
-                        className="form-input flex-1"
                         placeholder="Enter TD / ARP NO."
+                        {...register('ownerDetails.td')}
                     />
                 </div>
-                <div className="mt-4 flex items-center">
-                    <label htmlFor="owner" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                        OWNER :
-                    </label>
-                    <input
+                <div className="flex items-center">
+                    <InputField
+                        label="Owner:"
                         id="owner"
                         type="text"
-                        {...register("owner")}
-                        className="form-input flex-1"
                         placeholder="Enter Owner"
+                        {...register('ownerDetails.owner')}
                     />
                 </div>
-                <div className="mt-4 flex items-center">
-                    <label htmlFor="ownerAddress" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                        Address
-                    </label>
+                <div className="items-center mr-9">
+                    <div className="p-2 flex justify-center items-center  px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                        Owner Address
+                    </div>
                     <textarea
                         id="ownerAddress"
-                        {...register("ownerAddress")}
-                        className="form-textarea flex-1 resize-none rounded-lg border border-[#e0e6ed] bg-white px-4 py-2 text-sm font-normal text-black focus:border-primary focus:outline-none dark:border-[#17263c] dark:bg-[#121e32] dark:text-white-dark"
-                        placeholder="Enter address here..."
+                        name="ownerAddress"
+                        className="form-input ltr:rounded-l-none rtl:rounded-r-none flex-1"
+                        placeholder="Enter Owner"
+                        {...register("ownerDetails.ownerAddress")}
                     ></textarea>
                 </div>
-                <div className="mt-4 flex items-center">
-                    <label htmlFor="adminUser" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                        Administrator / Benificial User :
-                    </label>
-                    <input
-                        id="adminUser"
+                <div className="mt-4 items-center mr-9">
+                    <div className="p-2 flex justify-center items-center  px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                        Administrator / Benificial User
+                    </div>
+                    <InputField
+                        label="..."
+                        id="admin_ben_user"
                         type="text"
-                        {...register("adminUser")}
-                        className="form-input flex-1"
                         placeholder="Enter Administrator / Benificial User"
+                        {...register('ownerDetails.admin_ben_user')}
                     />
                 </div>
-                <div className="mt-4 flex items-center">
-                    <label htmlFor="adminAddress" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                        Address:
-                    </label>
+                <div className="items-center mr-9">
+                    <div className="p-2 flex justify-center items-center  px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                        Admin Address
+                    </div>
                     <textarea
-                        id="adminAddress"
-                        {...register("adminAddress")}
-                        className="form-textarea flex-1 resize-none rounded-lg border border-[#e0e6ed] bg-white px-4 py-2 text-sm font-normal text-black focus:border-primary focus:outline-none dark:border-[#17263c] dark:bg-[#121e32] dark:text-white-dark"
-                        placeholder="Enter address here..."
+                        id="ownerAddress"
+                        name="ownerAddress"
+                        className="form-input ltr:rounded-l-none rtl:rounded-r-none flex-1"
+                        placeholder="Enter Owner"
+                        {...register("ownerDetail.ownerAddress")}
                     ></textarea>
                 </div>
             </div>
             <div className="lg:w-1/2 w-full">
-                <div className="flex items-center ">
-                    <label htmlFor="transactionCode" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                        TRANSACTION CODE :
-                    </label>
-                    <input
+                <div className="flex items-center mt-4">
+                    <InputField
+                        label="Transaction Code"
                         id="transactionCode"
                         type="text"
-                        {...register("transactionCode")}
-                        className="form-input flex-1"
-                        placeholder="Enter  Transaction Code"
+                        placeholder="Enter Code"
+                        {...register('ownerDetails.transactionCode')}
                     />
                 </div>
-                <div className="flex items-center mt-4">
-                    <label htmlFor="pin" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                        PIN:
-                    </label>
-                    <input
+                <div className="flex items-center">
+                    <InputField
+                        label="PIN:"
                         id="pin"
                         type="text"
-                        {...register("pin")}
-                        className="form-input flex-1"
                         placeholder="Enter PIN"
+                        {...register('ownerDetails.pin')}
                     />
                 </div>
-                <div className="flex items-center mt-4">
-                    <label htmlFor="tin" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                        TIN
-                    </label>
-                    <input
+                <div className="flex items-center">
+                    <InputField
+                        label="TIN"
                         id="tin"
                         type="text"
-                        {...register("tin")}
-                        className="form-input flex-1"
                         placeholder="Enter TIN"
+                        {...register('ownerDetails.tin')}
                     />
                 </div>
-                <div className="flex items-center mt-4">
-                    <label htmlFor="telNo" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                        Tel No.
-                    </label>
-                    <input
+                <div className="flex items-center">
+                    <InputField
+                        label="Tel No."
                         id="telNo"
                         type="text"
-                        {...register("telNo")}
-                        className="form-input flex-1"
                         placeholder="Enter Tel No."
+                        {...register('ownerDetails.telNo')}
                     />
                 </div>
             </div>

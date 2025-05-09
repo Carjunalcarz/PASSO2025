@@ -24,30 +24,29 @@ const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
         className = "flex-1",
         labelClassName = "w-1/4",
         required = false,
+        register,
         ...rest
     }, ref) => {
         return (
-            <div className="mt-4 flex items-center">
-                <label
-                    htmlFor={id}
-                    className={`ltr:mr-2 rtl:ml-2 ${labelClassName} mb-0`}
-                >
-                    {label}
-                    {required && <span className="text-red-500"></span>}
-                </label>
-                <input
-                    id={id}
-                    type={type}
-                    name={id}
-                    value={value}
-                    onChange={onChange}
-                    className={`form-input ${className}`}
-                    placeholder={placeholder}
-                    required={required}
-                    ref={ref}
-                    {...rest}
-                />
-            </div>
+            <div className="w-full ltr:lg:mr-6 rtl:lg:ml-6 mb-6">
+                <div className="flex">
+                    <div className='flex justify-center items-center ltr:rounded-l-md rtl:rounded-r-md px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]'>
+                        {label}
+                    </div>
+                    <input
+                        id={id}
+                        type={type}
+                        name={id}
+                        value={value}
+                        onChange={onChange}
+                        className={`form-input ${className} ltr:rounded-l-none rtl:rounded-r-none`}
+                        placeholder={placeholder}
+                        required={required}
+                        ref={ref}
+                        {...rest}
+                    />
+                </div>
+            </div >
         );
     }
 );
