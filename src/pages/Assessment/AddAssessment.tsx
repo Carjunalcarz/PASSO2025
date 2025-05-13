@@ -634,7 +634,7 @@ const Add = () => {
                     </button>
                     {showSuperseded && (
                         <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-                            <RecordOfSupersededAssessment />
+                            <RecordOfSupersededAssessment register={register} setValue={setValue} watch={watch} />
                         </div>
                     )}
                 </div>
