@@ -4,7 +4,7 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "dev": "cross-env vite --host 192.168.1.32 --port 5173 ",
+        "dev": "cross-env vite --host 192.168.1.47 --port 5173 ",
         "build": "vite build && tsc",
         "preview": "vite preview",
         "lint": "eslint . --ext .ts,.tsx",

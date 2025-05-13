@@ -128,6 +128,7 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
     useEffect(() => {
         const subtotal = tableItems.reduce((sum, item) => sum + calculateTotal(item), 0);
         setValue('additionalItems.subTotal', subtotal);
+        setValue('additionalItems.items', tableItems); // ✅ Save entire items array to form
     }, [tableItems, setValue]);
 
     // Add item to table
