@@ -119,16 +119,23 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
     const selectedItem = items.find((item) => item.label === selectedLabel);
     const unitValue = watch("generalDescription.unitValue") || 0;
 
-    // Add state for table items
-    const [tableItems, setTableItems] = useState<TableItem[]>([]);
-    // Add a counter for unique IDs
-    const [nextId, setNextId] = useState(1);
+    // Watch the table items from the form
+    const tableItems = watch("additionalItems.items") || [];
+    const subTotal = watch('additionalItems.subTotal');
+    const total = watch('additionalItems.total');
+    const [nextId, setNextId] = useState(() => {
+        // Initialize with max id + 1 from existing items
+        const existingItems = tableItems || [];
+        return existingItems.length > 0
+            ? Math.max(...existingItems.map((item: TableItem) => item.id)) + 1
+            : 1;
+    });
 
-    // Add useEffect to update subtotal
+    // Update subtotal and total whenever table items change
     useEffect(() => {
-        const subtotal = tableItems.reduce((sum, item) => sum + calculateTotal(item), 0);
+        const subtotal = tableItems.reduce((sum: number, item: TableItem) => sum + item.amount, 0);
         setValue('additionalItems.subTotal', subtotal);
-        setValue('additionalItems.items', tableItems); // ✅ Save entire items array to form
+        setValue('additionalItems.total', subtotal);
     }, [tableItems, setValue]);
 
     // Add item to table
@@ -136,30 +143,45 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
         if (!selectedItem) return;
 
         const newItem: TableItem = {
-            id: nextId,  // Use the counter instead of array length
+            id: nextId,
             label: selectedItem.label,
             value: selectedItem.value,
             quantity: 1,
-            amount: 0,
+            amount: calculateTotal({ // Initialize with calculated total
+                id: nextId,
+                label: selectedItem.label,
+                value: selectedItem.value,
+                quantity: 1,
+                amount: 0,
+                description: ''
+            }),
             description: ''
         };
-        setTableItems([...tableItems, newItem]);
-        setNextId(nextId + 1);  // Increment the counter
+
+        // Update the form with the new items array
+        const updatedItems = [...tableItems, newItem];
+        setValue('additionalItems.items', updatedItems);
+        setNextId(nextId + 1);
     };
 
     // Remove item from table
     const removeTableItem = (id: number) => {
-        setTableItems(tableItems.filter(item => item.id !== id));
+        const updatedItems = tableItems.filter((item: TableItem) => item.id !== id);
+        setValue('additionalItems.items', updatedItems);
     };
 
     // Update item values
     const updateTableItem = (id: number, field: keyof TableItem, value: any) => {
-        setTableItems(tableItems.map(item => {
+        const updatedItems = tableItems.map((item: TableItem) => {
             if (item.id === id) {
-                return { ...item, [field]: value };
+                const updatedItem = { ...item, [field]: value };
+                // Recalculate the amount whenever any field changes
+                updatedItem.amount = calculateTotal(updatedItem);
+                return updatedItem;
             }
             return item;
-        }));
+        });
+        setValue('additionalItems.items', updatedItems);
     };
 
     // Calculate total for an item
@@ -277,7 +299,7 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
                                     </td>
                                 </tr>
                             )}
-                            {tableItems.map((item) => (
+                            {tableItems.map((item: TableItem) => (
 
                                 <tr key={item.id}>
                                     <td>{item.label}</td>
@@ -312,7 +334,7 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
                                                             ? `-${(item.value.deductRange * 100).toFixed(0)}%`
                                                             : 'N/A'}
                                     </td>
-                                    <td>{formatPHP(calculateTotal(item))}</td>
+                                    <td>{formatPHP(item.amount)}</td>
                                     <td>
                                         <button
                                             type="button"
@@ -328,7 +350,7 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
                                 <tr className="font-bold">
                                     <td colSpan={4} className="text-right">Subtotal:</td>
 
-                                    <td>{formatPHP(tableItems.reduce((sum, item) => sum + calculateTotal(item), 0))}</td>
+                                    <td>{formatPHP(subTotal)}</td>
                                     <td></td>
                                 </tr>
                             )}
@@ -336,6 +358,10 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
                     </table>
                 </div>
             </div>
+
+            {/* Make sure the table items array is registered */}
+            <input type="hidden" {...register('additionalItems.items')} />
+            <input type="hidden" {...register('additionalItems.total')} />
         </React.Fragment>
     );
 };

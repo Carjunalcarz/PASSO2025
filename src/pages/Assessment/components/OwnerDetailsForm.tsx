@@ -1,19 +1,26 @@
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import InputField from './shared/InputField';
-const OwnerDetailsForm: React.FC<{ register: any }> = ({ register }) => {
 
 
+const OwnerDetailsForm: React.FC<{ register: any, watch: any, setValue: any }> = ({ register, watch, setValue }) => {
+
+    const td_barangay = watch('buildingLocation.address_barangay');
+    const td_municipality = watch('buildingLocation.address_municipality');
+
+    console.log(td_barangay);
     return (
         <div className="flex justify-between lg:flex-row flex-col border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-10 bg-white dark:bg-[#0e1726]">
             <div className="lg:w-1/2 w-full">
                 <div className="flex items-center mt-4">
                     <InputField
+                        value={`${!td_municipality ? 'Municipality' : td_municipality} / ${!td_barangay ? 'Barangay' : td_barangay}`}
                         label="TD / ARP NO."
                         id="tdArpNo"
                         type="text"
                         placeholder="Enter TD / ARP NO."
                         {...register('ownerDetails.td')}
+                        disabled={true}
                     />
                 </div>
                 <div className="flex items-center">

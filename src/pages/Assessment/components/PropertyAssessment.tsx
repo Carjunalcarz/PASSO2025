@@ -74,7 +74,9 @@ const quarters = [
 ];
 
 const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setValue, watch }) => {
-    const [items, setItems] = useState<PropertyAssessmentItem[]>([]);
+    // Instead of using local state for items, we'll use the form's values
+    const formItems = watch('propertyAssessment.items') || [];
+    const [items, setItems] = useState<PropertyAssessmentItem[]>(formItems);
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [selectedType, setSelectedType] = useState<string>('');
 
@@ -150,12 +152,26 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setVa
             marketValue: 0,
             buildingCategory: '',
         };
-        setItems([...items, newItem]);
+        const newItems = [...items, newItem];
+        setItems(newItems);
+        // Store items in form data
+        setValue('propertyAssessment.items', newItems);
     };
 
     const removeItem = (item: PropertyAssessmentItem) => {
-        setItems(items.filter((i) => i.id !== item.id));
+        const newItems = items.filter((i) => i.id !== item.id);
+        setItems(newItems);
+        // Update form data when removing items
+        setValue('propertyAssessment.items', newItems);
     };
+
+    // Sync items with form data when component mounts or form data changes
+    useEffect(() => {
+        const formItems = watch('propertyAssessment.items');
+        if (formItems && formItems.length > 0) {
+            setItems(formItems);
+        }
+    }, [watch('propertyAssessment.items')]);
 
     const totalMarketValue = watch('propertyAppraisal.marketValue');
     const buildingCategory = watch('buildingCategory');

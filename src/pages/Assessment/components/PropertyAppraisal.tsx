@@ -81,7 +81,7 @@ const PropertyAppraisal: React.FC<PropertyAppraisalProps> = ({ register, setValu
                                     {buildingStructure ? buildingStructure : <span className="text-gray-500">Empty</span>}
                                 </td>
                                 <td className='text-center p-5'>
-                                    {numberFormat.format(totalArea)}
+                                    {totalArea}
                                 </td>
                                 <td className='text-center p-5'>
                                     {numberFormat.format(unitValue)}

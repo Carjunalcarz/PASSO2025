@@ -50,9 +50,9 @@ const BuildingLocation = ({
     const province = watch("address_province")
     useEffect(() => {
         setValue("buildingLocation.address_municipality", municipality);
-        setValue("buildingLocation.adress_barangay", barangay);
+        setValue("buildingLocation.address_barangay", barangay);
         setValue("buildingLocation.street", street);
-        setValue("buildingLocation.province", province);
+        setValue("buildingLocation.address_province", province);
     }, [municipality, barangay, street, province, setValue])
 
     return (

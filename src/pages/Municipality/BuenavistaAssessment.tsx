@@ -253,7 +253,7 @@ const BuenavistaAssessment = () => {
     };
 
     return (
-        <div className="panel">
+        <div className="panel md:w-[920px] xl:w-full">
             <div className="flex md:items-center md:flex-row flex-col mb-5 gap-5">
                 <h5 className="font-semibold text-lg dark:text-white-light">Buenavista Assessment Data-2025</h5>
                 <div className="flex items-center gap-5 ltr:ml-auto rtl:mr-auto">
