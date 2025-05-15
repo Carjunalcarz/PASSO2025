@@ -4,7 +4,7 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "dev": "cross-env vite --host 192.168.1.47 --port 5173 ",
+        "dev": "cross-env vite",
         "build": "vite build && tsc",
         "preview": "vite preview",
         "lint": "eslint . --ext .ts,.tsx",
@@ -34,7 +34,7 @@
         "@types/react-text-mask": "^5.4.11",
         "@x1mrdonut1x/nouislider-react": "^3.4.3",
         "apexcharts": "^3.54.0",
-        "axios": "^1.8.4",
+        "axios": "^1.9.0",
         "cross-env": "^7.0.3",
         "easymde": "^2.18.0",
         "formik": "^2.2.9",

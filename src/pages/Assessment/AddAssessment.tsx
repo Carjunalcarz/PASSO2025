@@ -23,6 +23,8 @@ import OwnerDetailsForm from './components/OwnerDetailsForm';
 import { useForm } from 'react-hook-form';
 import { UseFormRegister, FieldValues } from 'react-hook-form';
 import AdditionalItems from './components/Additionalitems';
+import useAssessmentSubmit from './hooks/useAssessmentSubmit';
+import SubmitAssessment from './components/SubmitAssessment';
 
 // Type definitions
 type BarangayData = {
@@ -36,7 +38,71 @@ export interface GeneralDescriptionData {
     building_permit_date: string;
 }
 
+// Add this with your other type definitions at the top
+export interface AssessmentFormData {
+    approvalSection: {
+        appraisedBy: string;
+        appraisedDate: string;
+        recommendingApproval: string;
+        municipalityAssessorDate: string;
+        approvedByProvince: string;
+        provincialAssessorDate: string;
+    };
+    street: string;
+    ownerDetails: {
+        td: string;
+        owner: string;
+        ownerAddress: string;
+        admin_ben_user: string;
+        transactionCode: string;
+        pin: string;
+        tin: string;
+        telNo: string;
+    };
+    ownerDetail: {
+        ownerAddress: string;
+    };
+    landReference: {
+        land_owner: string;
+        block_no: string;
+        tdn_no: string;
+        pin: string;
+        lot_no: string;
+        survey_no: string;
+        area: string;
+    };
+    buildingLocation: {
+        address_municipality: string;
+        address_barangay: string;
+        street: string;
+    };
+    address_municipality: string;
+    address_barangay: string;
+    address_province: string;
+    generalDescription: {
+        building_permit_no: string;
+        certificate_of_completion_issued_on: string;
+        certificate_of_occupancy_issued_on: string;
+        date_of_occupied: string;
+        bldg_age: string;
+        no_of_storeys: string;
+        area_of_1st_floor: string;
+        area_of_2nd_floor: string;
+        area_of_3rd_floor: string;
+        area_of_4th_floor: string;
+        total_floor_area: string;
+    };
+    memoranda: Array<{
+        date: string;
+        details: string;
+    }>;
+    recordOfSupersededAssessment: {
+        records: Array<any>;
+    };
+}
+
 const Add = () => {
+    const token = localStorage.getItem('token');
     const dispatch = useDispatch();
     useEffect(() => {
         dispatch(setPageTitle('Invoice Add'));
@@ -291,10 +357,7 @@ const Add = () => {
         building_permit_date: ''
     });
 
-    const handleLandReferenceChange = (field: string, value: string) => {
-        // Handle form state updates here
-        console.log(field, value);
-    };
+   
 
     const handleGeneralDescriptionChange = (field: keyof GeneralDescriptionData, value: string) => {
         setGeneralDescriptionData(prev => ({
@@ -332,13 +395,8 @@ const Add = () => {
     // Add this state for the new section
     const [showSuperseded, setShowSuperseded] = useState(false);
 
-    // Add this handler if you want to manage data for this section
-    const handleSupersededChange = (data: any) => {
-        console.log('Superseded record updated:', data);
-        // Handle the data as needed
-    };
-
-    const { register, handleSubmit, watch, setValue, ...rest } = useForm();
+ 
+    const { register, handleSubmit, watch, setValue, ...rest } = useForm<AssessmentFormData>();
 
     // Real-time logging
     const allValues = watch();
@@ -347,6 +405,37 @@ const Add = () => {
     }, [allValues]);
 
     const [showAdditionalItem, setShowAdditionalItem] = useState(false);
+
+    const { submitAssessment, isSubmitting } = useAssessmentSubmit();
+
+    const onSubmit = async () => {
+        console.log('Sending allValues to API:', allValues);
+        try {
+            const response = await fetch('http://localhost:8000/assessment/add', {
+                method: 'POST',
+                headers: {
+                    
+                     Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(allValues),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to submit');
+            }
+
+            const result = await response.json();
+            console.log('Submission successful:', result);
+
+            // Optional: Add success notification or redirect
+            // navigate('/assessments');
+
+        } catch (error) {
+            console.error('Submission error:', error);
+            // Add error handling UI feedback here
+        }
+    };
 
     return (
         <div className="panel hidden sm:block md:w-[900px] lg:w-[1200px]">
@@ -639,6 +728,13 @@ const Add = () => {
                         </div>
                     )}
                 </div>
+
+                {/* Submit button component */}
+                <SubmitAssessment
+                    handleSubmit={handleSubmit}
+                    onSubmit={onSubmit}
+                    isSubmitting={isSubmitting} 
+                />
 
             </div>
 
