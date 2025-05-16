@@ -197,11 +197,11 @@ const municipalityBarangayCodes: { [key: string]: { code: string, barangays: { [
                         Admin Address
                     </div>
                     <textarea
-                        id="ownerAddress"
-                        name="ownerAddress"
+                        id="adminAddress"
+                        name="adminAddress"
                         className="form-input ltr:rounded-l-none rtl:rounded-r-none flex-1"
-                        placeholder="Enter Owner"
-                        {...register("ownerDetails.ownerAddress")}
+                        placeholder="Enter Admin Address"
+                        {...register("ownerDetails.adminAddress")}
                     ></textarea>
                 </div>
             </div>

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../store/themeConfigSlice';
 import TableauDashboard from './TableauDashboard';
+import FoodDeliveryForm from './test';
 
 const Index = () => {
     const dispatch = useDispatch();
@@ -17,6 +18,8 @@ const Index = () => {
                 height="1000px"  // or a number like 800
                 width="100%"    // or a specific width like "1200px" or 1200
             />
+
+            <FoodDeliveryForm />
         </div>
     );
 };
