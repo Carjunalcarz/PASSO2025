@@ -211,28 +211,9 @@ const Add = () => {
         setValue('address_province', suggestion); // ← very important
     };
 
-    const addItem = () => {
-        let maxId = 0;
-        maxId = items?.length ? items.reduce((max: number, character: any) => (character.id > max ? character.id : max), items[0].id) : 0;
 
-        setItems([...items, { id: maxId + 1, title: '', description: '', rate: 0, quantity: 0, amount: 0 }]);
-    };
 
-    const removeItem = (item: any = null) => {
-        setItems(items.filter((d: any) => d.id !== item.id));
-    };
-
-    const changeQuantityPrice = (type: string, value: string, id: number) => {
-        const list = items;
-        const item = list.find((d: any) => d.id === id);
-        if (type === 'quantity') {
-            item.quantity = Number(value);
-        }
-        if (type === 'price') {
-            item.amount = Number(value);
-        }
-        setItems([...list]);
-    };
+ 
 
     // First add this state for barangay suggestions
     const [barangaySuggestions, setBarangaySuggestions] = useState<string[]>([]);
@@ -369,13 +350,7 @@ const Add = () => {
     // Add this to your component's state declarations
     const [structuralMaterials, setStructuralMaterials] = useState<Record<string, boolean | string>>({});
 
-    // Add this handler function
-    const handleStructuralMaterialChange = (field: string, value: boolean | string) => {
-        setStructuralMaterials(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    };
+  
 
     // Add these new state variables for component visibility
     const [showGeneralDescription, setShowGeneralDescription] = useState(false);

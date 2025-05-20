@@ -19,7 +19,7 @@ const Index = () => {
                 width="100%"    // or a specific width like "1200px" or 1200
             />
 
-            <FoodDeliveryForm />
+            {/* <FoodDeliveryForm /> */}
         </div>
     );
 };
