@@ -106,6 +106,14 @@ import BuenavistaAssessment from '../pages/Municipality/BuenavistaAssessment';
 import CarmenAssessment from '../pages/Municipality/CarmenAssessment';
 import EditAssessment from '../pages/Municipality/EditAssessment';
 import AddAssessment from '../pages/Assessment/AddAssessment';
+import KitcharaoAssessment from '../pages/Municipality/KitcharaoAssessment';
+import JabongaAssessment from '../pages/Municipality/JabongaAssessment';
+import RTRAssessment from '../pages/Municipality/RTRAssessment';
+import LasnievesAssessment from '../pages/Municipality/LasnievesAssessment';
+import MagallanesAssessment from '../pages/Municipality/MagallanessAssessment';
+import SantiagoAssessment from '../pages/Municipality/SantiagoAssessment';
+import TubayAssessment from '../pages/Municipality/TubayAssessment';
+import NasipitAssessment from '../pages/Municipality/NasipitAssessment';
 const routes = [
     // dashboard
     {
@@ -597,6 +605,70 @@ const routes = [
         element: (
             <ProtectedRoute>
                 <CarmenAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/jabonga',
+        element: (
+            <ProtectedRoute>
+                <JabongaAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/kitcharao',
+        element: (
+            <ProtectedRoute>
+                <KitcharaoAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/remedios_t_romualdez',
+        element: (
+            <ProtectedRoute>
+                <RTRAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/lasnieves',
+        element: (
+            <ProtectedRoute>
+                <LasnievesAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/magallanes',
+        element: (
+            <ProtectedRoute>
+                <MagallanesAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/santiago',
+        element: (
+            <ProtectedRoute>
+                <SantiagoAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/tubay',
+        element: (
+            <ProtectedRoute>
+                <TubayAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/nasipit',
+        element: (
+            <ProtectedRoute>
+                <NasipitAssessment />
             </ProtectedRoute>
         ),
     },

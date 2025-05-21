@@ -157,15 +157,51 @@ const Sidebar = () => {
                                             </NavLink>
                                         </div>
                                         <div className="py-2 -mx-4">
-                                            <NavLink to="/assessment/buenavista" className="flex items-center gap-2">
-                                                <img src="/mun_logo/buenavista.jpg" alt="Buenavista Logo" className="w-5 h-5" />
-                                                {t('Buenavista')}
+                                            <NavLink to="/assessment/jabonga" className="flex items-center gap-2">
+                                                <img src="/mun_logo/jabonga.png" alt="Jabonga Logo" className="w-5 h-5" />
+                                                {t('Jabonga')}
                                             </NavLink>
                                         </div>
                                         <div className="py-2 -mx-4">
-                                            <NavLink to="/assessment/carmen" className="flex items-center gap-2">
-                                                <img src="/mun_logo/carmen.jpg" alt="Carmen Logo" className="w-5 h-5" />
-                                                {t('Carmen')}
+                                            <NavLink to="/assessment/kitcharao" className="flex items-center gap-2">
+                                                <img src="/mun_logo/kitcharao.png" alt="Kitcharao Logo" className="w-5 h-5" />
+                                                {t('Kitcharao')}
+                                            </NavLink>
+                                        </div>
+                                        <div className="py-2 -mx-4">
+                                            <NavLink to="/assessment/lasnieves" className="flex items-center gap-2">
+                                                <img src="/mun_logo/las-nieves.png" alt="Lasnieves Logo" className="w-5 h-5" />
+                                                {t('Lasnieves')}
+                                            </NavLink>
+                                        </div>
+                                        <div className="py-2 -mx-4">
+                                            <NavLink to="/assessment/magallanes" className="flex items-center gap-2">
+                                                <img src="/mun_logo/magallanes.png" alt="Magallanes Logo" className="w-5 h-5" />
+                                                {t('Magallanes')}
+                                            </NavLink>
+                                        </div>
+                                        <div className="py-2 -mx-4">
+                                            <NavLink to="/assessment/nasipit" className="flex items-center gap-2">
+                                                <img src="/mun_logo/nasipit.png" alt="Nasipit Logo" className="w-5 h-5" />
+                                                {t('Nasipit')}
+                                            </NavLink>
+                                        </div>
+                                        <div className="py-2 -mx-4">
+                                            <NavLink to="/assessment/remedios_t_romualdez" className="flex items-center gap-2">
+                                                <img src="/mun_logo/rtr.png" alt="RTR Logo" className="w-5 h-5" />
+                                                {t('RTR')}
+                                            </NavLink>
+                                        </div>
+                                        <div className="py-2 -mx-4">
+                                            <NavLink to="/assessment/santiago" className="flex items-center gap-2">
+                                                <img src="/mun_logo/santiago.png" alt="Santiago Logo" className="w-5 h-5" />
+                                                {t('Santiago')}
+                                            </NavLink>
+                                        </div>
+                                        <div className="py-2 -mx-4">
+                                            <NavLink to="/assessment/tubay" className="flex items-center gap-2">
+                                                <img src="/mun_logo/tubay.png" alt="Tubay Logo" className="w-5 h-5" />
+                                                {t('Tubay')}
                                             </NavLink>
                                         </div>
                                     </div>

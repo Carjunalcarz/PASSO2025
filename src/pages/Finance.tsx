@@ -4,7 +4,7 @@ import ReactApexChart from 'react-apexcharts';
 import { useDispatch, useSelector } from 'react-redux';
 import { IRootState } from '../store';
 import { setPageTitle } from '../store/themeConfigSlice';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import IconHorizontalDots from '../components/Icon/IconHorizontalDots';
 import IconEye from '../components/Icon/IconEye';
 import IconBitcoin from '../components/Icon/IconBitcoin';
@@ -15,9 +15,22 @@ import IconTether from '../components/Icon/IconTether';
 import IconSolana from '../components/Icon/IconSolana';
 import IconCircleCheck from '../components/Icon/IconCircleCheck';
 import IconInfoCircle from '../components/Icon/IconInfoCircle';
+import axios from 'axios';
 
 const Finance = () => {
+    const token = localStorage.getItem('token');
     const dispatch = useDispatch();
+    const [totalRpus, setTotalRpus] = useState(0);
+    const [taxable, setTaxable] = useState(0);
+    const [exempt, setExempt] = useState(0);
+    const [taxableMarketValue, setTaxableMarketValue] = useState(0);
+    const [exemptMarketValue, setExemptMarketValue] = useState(0);
+    const [taxableAssessmentValue, setTaxableAssessmentValue] = useState(0);
+    const [exemptAssessmentValue, setExemptAssessmentValue] = useState(0);
+    const [taxableArea, setTaxableArea] = useState(0);
+    const [exemptArea, setExemptArea] = useState(0);
+    const [countTaxableCarmenRpu, setCountTaxableCarmenRpu] = useState(0);
+    const [countExemptCarmenRpu, setCountExemptCarmenRpu] = useState(0);
     useEffect(() => {
         dispatch(setPageTitle('Finance'));
     });
@@ -25,7 +38,7 @@ const Finance = () => {
     const bitcoin: any = {
         series: [
             {
-                data: [21, 9, 36, 12, 44, 25, 59, 41, 25, 66],
+                data: [204440, 400333, 33333],
             },
         ],
         options: {
@@ -388,6 +401,113 @@ const Finance = () => {
     };
 
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl' ? true : false;
+    // Add currency formatter
+    const formatCurrencyPHP = (amount: number) => {
+        return new Intl.NumberFormat('en-PH', {
+            style: 'currency',
+            currency: 'PHP',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(amount);
+    };
+
+    // ... existing code ...
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('en-PH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(amount);
+    };
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const response = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
+
+            const count_taxable = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/count/taxable`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
+            const count_exempt = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/count/exempt`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
+
+
+            const taxable_market_value = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/market-value/taxable`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
+
+            const exempt_market_value = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/market-value/exempt`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
+
+            const taxable_assessment_value = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/assessment-value/taxable`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
+
+            const exempt_assessment_value = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/assessment-value/exempt`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
+
+            const taxable_area = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/area/taxable`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
+
+            const exempt_area = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/area/exempt`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
+
+            const count_taxable_carmen_rpu = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/count/taxable?municipality=carmen`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
+
+            const count_exempt_carmen_rpu = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/count/exempt?municipality=carmen`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
+
+
+
+            setTotalRpus(response.data.total);
+            setTaxable(count_taxable.data.count);
+            setExempt(count_exempt.data.count);
+            setTaxableMarketValue(taxable_market_value.data.taxable_market_value);
+            setExemptMarketValue(exempt_market_value.data.exempt_market_value);
+            setTaxableAssessmentValue(taxable_assessment_value.data.taxable_assessment_value);
+            setExemptAssessmentValue(exempt_assessment_value.data.exempt_assessment_value);
+            setTaxableArea(taxable_area.data.taxable_area);
+            setExemptArea(exempt_area.data.exempt_area);
+
+
+
+            setCountTaxableCarmenRpu(count_taxable_carmen_rpu.data.count);
+            setCountExemptCarmenRpu(count_exempt_carmen_rpu.data.count);
+        };
+        fetchData();
+    }, []);
+
+
 
     return (
         <div>
@@ -405,128 +525,77 @@ const Finance = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-6 text-white">
                     <div className="panel bg-gradient-to-r from-cyan-500 to-cyan-400">
                         <div className="flex justify-between">
-                            <div className="ltr:mr-1 rtl:ml-1 text-md font-semibold">Users Visit</div>
-                            <div className="dropdown">
-                                <Dropdown
-                                    offset={[0, 5]}
-                                    placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`}
-                                    btnClassName="hover:opacity-80"
-                                    button={<IconHorizontalDots className="hover:opacity-80 opacity-70" />}
-                                >
-                                    <ul className="text-black dark:text-white-dark">
-                                        <li>
-                                            <button type="button">View Report</button>
-                                        </li>
-                                        <li>
-                                            <button type="button">Edit Report</button>
-                                        </li>
-                                    </ul>
-                                </Dropdown>
+                            <img src="/mun_logo/pgan.webp" alt="Agusan Logo" className="w-[70px] h-[70px] opacity-2" />
+                            <div className="text-2xl flex-rows text-md font-semibold">RPUS</div>
+
+                        </div>
+                        <p className="p-2 text-md font-semibold">Province of Agusan del Norte</p>
+                        <div className="flex items-center">
+
+                            <div className="text-xl font-bold ltr:mr-[100px]">{formatCurrency(taxable)}</div>
+                            <div className="badge bg-white/30 flex items-center gap-1">
+                                <IconCircleCheck className="w-4 h-4" />
+                                TAXABLE
                             </div>
+
                         </div>
                         <div className="flex items-center mt-5">
-                            <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3"> $170.46 </div>
-                            <div className="badge bg-white/30">+ 2.35% </div>
-                        </div>
-                        <div className="flex items-center font-semibold mt-5">
-                            <IconEye className="ltr:mr-2 rtl:ml-2 shrink-0" />
-                            Last Week 44,700
+                            <div className="text-xl font-bold ltr:mr-[115px]">{formatCurrency(exempt)}</div>
+                            <div className="badge bg-yellow-500/60 flex items-center gap-1">
+                                <IconInfoCircle className="w-4 h-4" />
+                                EXEMPT
+                            </div>
                         </div>
                     </div>
 
                     {/* Sessions */}
                     <div className="panel bg-gradient-to-r from-violet-500 to-violet-400">
                         <div className="flex justify-between">
-                            <div className="ltr:mr-1 rtl:ml-1 text-md font-semibold">Sessions</div>
-                            <div className="dropdown">
-                                <Dropdown
-                                    offset={[0, 5]}
-                                    placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`}
-                                    btnClassName="hover:opacity-80"
-                                    button={<IconHorizontalDots className="hover:opacity-80 opacity-70" />}
-                                >
-                                    <ul className="text-black dark:text-white-dark">
-                                        <li>
-                                            <button type="button">View Report</button>
-                                        </li>
-                                        <li>
-                                            <button type="button">Edit Report</button>
-                                        </li>
-                                    </ul>
-                                </Dropdown>
+                            <div className="ltr:mr-1 rtl:ml-1 text-md font-semibold">Market Value</div>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4 mt-5">
+                            <div>
+                                <div className="text-2xl font-bold">{formatCurrencyPHP(taxableMarketValue)}</div>
+                                <div className="badge bg-yellow-500/60 mt-2">TAXABLE</div>
                             </div>
-                        </div>
-                        <div className="flex items-center mt-5">
-                            <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3"> 74,137 </div>
-                            <div className="badge bg-white/30">- 2.35% </div>
-                        </div>
-                        <div className="flex items-center font-semibold mt-5">
-                            <IconEye className="ltr:mr-2 rtl:ml-2 shrink-0" />
-                            Last Week 84,709
+                            <div>
+                                <div className="text-2xl font-bold">{formatCurrencyPHP(exemptMarketValue)}</div>
+                                <div className="badge bg-white/30 mt-2">EXEMPT</div>
+                            </div>
                         </div>
                     </div>
 
                     {/*  Time On-Site */}
                     <div className="panel bg-gradient-to-r from-blue-500 to-blue-400">
                         <div className="flex justify-between">
-                            <div className="ltr:mr-1 rtl:ml-1 text-md font-semibold">Time On-Site</div>
-                            <div className="dropdown">
-                                <Dropdown
-                                    offset={[0, 5]}
-                                    placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`}
-                                    btnClassName="hover:opacity-80"
-                                    button={<IconHorizontalDots className="hover:opacity-80 opacity-70" />}
-                                >
-                                    <ul className="text-black dark:text-white-dark">
-                                        <li>
-                                            <button type="button">View Report</button>
-                                        </li>
-                                        <li>
-                                            <button type="button">Edit Report</button>
-                                        </li>
-                                    </ul>
-                                </Dropdown>
+                            <div className="ltr:mr-1 rtl:ml-1 text-md font-semibold">Assessment Value</div>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4 mt-5">
+                            <div>
+                                <div className="text-2xl font-bold">{formatCurrencyPHP(taxableAssessmentValue)}</div>
+                                <div className="badge bg-yellow-500/60 mt-2">TAXABLE</div>
                             </div>
-                        </div>
-                        <div className="flex items-center mt-5">
-                            <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3"> 38,085 </div>
-                            <div className="badge bg-white/30">+ 1.35% </div>
-                        </div>
-                        <div className="flex items-center font-semibold mt-5">
-                            <IconEye className="ltr:mr-2 rtl:ml-2 shrink-0" />
-                            Last Week 37,894
+                            <div>
+                                <div className="text-2xl font-bold">{formatCurrencyPHP(exemptAssessmentValue)}</div>
+                                <div className="badge bg-white/30 mt-2">EXEMPT</div>
+                            </div>
                         </div>
                     </div>
 
                     {/* Bounce Rate */}
                     <div className="panel bg-gradient-to-r from-fuchsia-500 to-fuchsia-400">
                         <div className="flex justify-between">
-                            <div className="ltr:mr-1 rtl:ml-1 text-md font-semibold">Bounce Rate</div>
-                            <div className="dropdown">
-                                <Dropdown
-                                    offset={[0, 5]}
-                                    placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`}
-                                    btnClassName="hover:opacity-80"
-                                    button={<IconHorizontalDots className="hover:opacity-80 opacity-70" />}
-                                >
-                                    <ul className="text-black dark:text-white-dark">
-                                        <li>
-                                            <button type="button">View Report</button>
-                                        </li>
-                                        <li>
-                                            <button type="button">Edit Report</button>
-                                        </li>
-                                    </ul>
-                                </Dropdown>
+                            <div className="ltr:mr-1 rtl:ml-1 text-md font-semibold">Area</div>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4 mt-5">
+                            <div>
+                                <div className="text-2xl font-bold">{formatCurrency(taxableArea)}</div>
+                                <div className="badge bg-yellow-500/60 mt-2">TAXABLE</div>
                             </div>
-                        </div>
-                        <div className="flex items-center mt-5">
-                            <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3"> 49.10% </div>
-                            <div className="badge bg-white/30">- 0.35% </div>
-                        </div>
-                        <div className="flex items-center font-semibold mt-5">
-                            <IconEye className="ltr:mr-2 rtl:ml-2 shrink-0" />
-                            Last Week 50.01%
+                            <div>
+                                <div className="text-2xl font-bold">{formatCurrency(exemptArea)}</div>
+                                <div className="badge bg-white/30 mt-2">EXEMPT</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -544,19 +613,23 @@ const Finance = () => {
                             {/*  Bitcoin  */}
                             <div className="panel">
                                 <div className="flex items-center font-semibold mb-5">
-                                    <div className="shrink-0 w-10 h-10 rounded-full grid place-content-center">
-                                        <IconBitcoin />
-                                    </div>
+                                    
+                                        <img src="/mun_logo/nasipit.png" alt="Agusan Logo" className="opacity-2 w-20 h-20" />
+                                   
                                     <div className="ltr:ml-2 rtl:mr-2">
-                                        <h6 className="text-dark dark:text-white-light">BTC</h6>
-                                        <p className="text-white-dark text-xs">Bitcoin</p>
+                                        <h6 className="text-dark dark:text-white-light">NASIPIT</h6>
+                                        <p className="text-xs text-gray-500">RPUS</p>
+                                        <div className="flex items-center space-x-2">
+                                            <p className="text-green-500 text-xs flex items-center"> <IconCircleCheck className="w-4 h-4 mr-1" /> {formatCurrency(countTaxableCarmenRpu)}</p>
+                                            <p className="text-yellow-500/60 text-xs flex items-center"> <IconInfoCircle className="w-4 h-4 mr-1" /> {formatCurrency(countExemptCarmenRpu)}</p>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="mb-5 overflow-hidden">
-                                    <ReactApexChart series={bitcoin.series} options={bitcoin.options} type="line" height={45} />
+                                    <ReactApexChart series={ethereum.series} options={ethereum.options} type="line" height={45} />
                                 </div>
                                 <div className="flex justify-between items-center font-bold text-base">
-                                    $20,000 <span className="text-success font-normal text-sm">+0.25%</span>
+                                    $21,000 <span className="text-danger font-normal text-sm">-1.25%</span>
                                 </div>
                             </div>
                             {/*  Ethereum*/}
