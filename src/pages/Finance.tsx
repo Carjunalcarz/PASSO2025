@@ -15,7 +15,10 @@ import IconTether from '../components/Icon/IconTether';
 import IconSolana from '../components/Icon/IconSolana';
 import IconCircleCheck from '../components/Icon/IconCircleCheck';
 import IconInfoCircle from '../components/Icon/IconInfoCircle';
+import IconInbox from '../components/Icon/IconInbox';
 import axios from 'axios';
+import IconTag from '../components/Icon/IconTag';
+import MunicipalityPanel from './Components/MunicipalityPanel';
 
 const Finance = () => {
     const token = localStorage.getItem('token');
@@ -475,17 +478,7 @@ const Finance = () => {
                 }
             });
 
-            const count_taxable_carmen_rpu = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/count/taxable?municipality=carmen`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
-            });
-
-            const count_exempt_carmen_rpu = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/count/exempt?municipality=carmen`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
-            });
+         
 
 
 
@@ -499,10 +492,6 @@ const Finance = () => {
             setTaxableArea(taxable_area.data.taxable_area);
             setExemptArea(exempt_area.data.exempt_area);
 
-
-
-            setCountTaxableCarmenRpu(count_taxable_carmen_rpu.data.count);
-            setCountExemptCarmenRpu(count_exempt_carmen_rpu.data.count);
         };
         fetchData();
     }, []);
@@ -583,7 +572,7 @@ const Finance = () => {
                     </div>
 
                     {/* Bounce Rate */}
-                    <div className="panel bg-gradient-to-r from-fuchsia-500 to-fuchsia-400">
+                    <div className="panel bg-gradient-to-r from-[#ea580c] to-[#c2410c]/60">
                         <div className="flex justify-between">
                             <div className="ltr:mr-1 rtl:ml-1 text-md font-semibold">Area</div>
                         </div>
@@ -600,7 +589,7 @@ const Finance = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div className="">
                     {/*  Favorites  */}
                     <div>
                         <div className="flex items-center mb-5 font-bold">
@@ -609,132 +598,47 @@ const Finance = () => {
                                 See All
                             </button>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 md:mb-5">
+                        <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 md:mb-5">
                             {/*  Bitcoin  */}
+
+                              {/* ###Nasipit### */}
                             <div className="panel">
-                                <div className="flex items-center font-semibold mb-5">
-                                    
-                                        <img src="/mun_logo/nasipit.png" alt="Agusan Logo" className="opacity-2 w-20 h-20" />
-                                   
-                                    <div className="ltr:ml-2 rtl:mr-2">
-                                        <h6 className="text-dark dark:text-white-light">NASIPIT</h6>
-                                        <p className="text-xs text-gray-500">RPUS</p>
-                                        <div className="flex items-center space-x-2">
-                                            <p className="text-green-500 text-xs flex items-center"> <IconCircleCheck className="w-4 h-4 mr-1" /> {formatCurrency(countTaxableCarmenRpu)}</p>
-                                            <p className="text-yellow-500/60 text-xs flex items-center"> <IconInfoCircle className="w-4 h-4 mr-1" /> {formatCurrency(countExemptCarmenRpu)}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="mb-5 overflow-hidden">
-                                    <ReactApexChart series={ethereum.series} options={ethereum.options} type="line" height={45} />
-                                </div>
-                                <div className="flex justify-between items-center font-bold text-base">
-                                    $21,000 <span className="text-danger font-normal text-sm">-1.25%</span>
-                                </div>
+                                 <MunicipalityPanel municipality="BUENAVISTA" logo='buenavista.jpg' />
                             </div>
+                            {/* ###Nasipit### */}
                             {/*  Ethereum*/}
                             <div className="panel">
-                                <div className="flex items-center font-semibold mb-5">
-                                    <div className="shrink-0 w-10 h-10 bg-warning rounded-full grid place-content-center p-2">
-                                        <IconEthereum />
-                                    </div>
-                                    <div className="ltr:ml-2 rtl:mr-2">
-                                        <h6 className="text-dark dark:text-white-light">ETH</h6>
-                                        <p className="text-white-dark text-xs">Ethereum</p>
-                                    </div>
-                                </div>
-                                <div className="mb-5 overflow-hidden">
-                                    <ReactApexChart series={ethereum.series} options={ethereum.options} type="line" height={45} />
-                                </div>
-                                <div className="flex justify-between items-center font-bold text-base">
-                                    $21,000 <span className="text-danger font-normal text-sm">-1.25%</span>
-                                </div>
+                                <MunicipalityPanel municipality="CARMEN" logo='carmen.jpg' />
                             </div>
                             {/*  Litecoin*/}
                             <div className="panel">
-                                <div className="flex items-center font-semibold mb-5">
-                                    <div className="shrink-0 w-10 h-10 rounded-full grid place-content-center">
-                                        <IconLitecoin />
-                                    </div>
-                                    <div className="ltr:ml-2 rtl:mr-2">
-                                        <h6 className="text-dark dark:text-white-light">LTC</h6>
-                                        <p className="text-white-dark text-xs">Litecoin</p>
-                                    </div>
-                                </div>
-                                <div className="mb-5 overflow-hidden">
-                                    <ReactApexChart series={litecoin.series} options={litecoin.options} type="line" height={45} />
-                                </div>
-                                <div className="flex justify-between items-center font-bold text-base">
-                                    $11,657 <span className="text-success font-normal text-sm">+0.25%</span>
-                                </div>
+                                <MunicipalityPanel municipality="JABONGA" logo='jabonga.png' />
                             </div>
-                        </div>
-                    </div>
-                    {/*  Prices  */}
-                    <div>
-                        <div className="flex items-center mb-5 font-bold">
-                            <span className="text-lg">Live Prices</span>
-                            <button type="button" className="ltr:ml-auto rtl:mr-auto text-primary hover:text-black dark:hover:text-white-dark">
-                                See All
-                            </button>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-                            {/*  Binance */}
                             <div className="panel">
-                                <div className="flex items-center font-semibold mb-5">
-                                    <div className="shrink-0 w-10 h-10 rounded-full grid place-content-center">
-                                        <IconBinance />
-                                    </div>
-                                    <div className="ltr:ml-2 rtl:mr-2">
-                                        <h6 className="text-dark dark:text-white-light">BNB</h6>
-                                        <p className="text-white-dark text-xs">Binance</p>
-                                    </div>
-                                </div>
-                                <div className="mb-5 overflow-hidden">
-                                    <ReactApexChart series={binance.series} options={binance.options} type="line" height={45} />
-                                </div>
-                                <div className="flex justify-between items-center font-bold text-base">
-                                    $21,000 <span className="text-danger font-normal text-sm">-1.25%</span>
-                                </div>
+                                <MunicipalityPanel municipality="KITCHARAO" logo='kitcharao.png' />
                             </div>
-                            {/*  Tether  */}
                             <div className="panel">
-                                <div className="flex items-center font-semibold mb-5">
-                                    <div className="shrink-0 w-10 h-10 rounded-full grid place-content-center">
-                                        <IconTether />
-                                    </div>
-                                    <div className="ltr:ml-2 rtl:mr-2">
-                                        <h6 className="text-dark dark:text-white-light">USDT</h6>
-                                        <p className="text-white-dark text-xs">Tether</p>
-                                    </div>
-                                </div>
-                                <div className="mb-5 overflow-hidden">
-                                    <ReactApexChart series={tether.series} options={tether.options} type="line" height={45} />
-                                </div>
-                                <div className="flex justify-between items-center font-bold text-base">
-                                    $20,000 <span className="text-success font-normal text-sm">+0.25%</span>
-                                </div>
+                                <MunicipalityPanel municipality="MAGALLANES" logo='magallanes.png' />
                             </div>
-                            {/*  Solana */}
                             <div className="panel">
-                                <div className="flex items-center font-semibold mb-5">
-                                    <div className="shrink-0 w-10 h-10 bg-warning rounded-full p-2 grid place-content-center">
-                                        <IconSolana />
-                                    </div>
-                                    <div className="ltr:ml-2 rtl:mr-2">
-                                        <h6 className="text-dark dark:text-white-light">SOL</h6>
-                                        <p className="text-white-dark text-xs">Solana</p>
-                                    </div>
-                                </div>
-                                <div className="mb-5 overflow-hidden">
-                                    <ReactApexChart series={solana.series} options={solana.options} type="line" height={45} />
-                                </div>
-                                <div className="flex justify-between items-center font-bold text-base">
-                                    $21,000 <span className="text-danger font-normal text-sm">-1.25%</span>
-                                </div>
+                                <MunicipalityPanel municipality="LAS NIEVES" logo='las-nieves.png' />
                             </div>
+                            <div className="panel">
+                                <MunicipalityPanel municipality="NASIPIT" logo='nasipit.png' />
+                            </div>  
+                            <div className="panel">
+                                <MunicipalityPanel municipality="KITCHARAO" logo='kitcharao.png' />
+                            </div>  
+                            <div className="panel">
+                                <MunicipalityPanel municipality="REMEDIOS T. ROMUALDEZ" logo='rtr.png' />
+                            </div>  
+                            <div className="panel">
+                                <MunicipalityPanel municipality="TUBAY" logo='tubay.png' />
+                            </div>  
+
+
                         </div>
-                    </div>
+                    </div>      
                 </div>
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     <div className="grid gap-6 xl:grid-flow-row">

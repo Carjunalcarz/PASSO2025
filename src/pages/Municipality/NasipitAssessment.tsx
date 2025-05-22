@@ -84,14 +84,14 @@ const NasipitAssessment = () => {
             sortable: true
         },
 
-        { accessor: 'sub_class', title: 'Sub Class', sortable: true },
         { accessor: 'eff_date', title: 'Effective Date', sortable: true },
         { accessor: 'classification', title: 'Classification', sortable: true },
+        { accessor: 'sub_class', title: 'Sub Class', sortable: true },
         { accessor: 'ass_level', title: 'Assessment Level', sortable: true },
         { accessor: 'area', title: 'Area', sortable: true },
         { accessor: 'taxability', title: 'Taxability', sortable: true },
         { accessor: 'gr_code', title: 'GR Code', sortable: true },
-        { accessor: 'gr', title: 'GR', sortable: true },
+        { accessor: 'gr', title: 'Transaction Code', sortable: true },
         { accessor: 'mun_code', title: 'Municipality Code', sortable: true },
         { accessor: 'municipality', title: 'Municipality', sortable: true },
         { accessor: 'barangay_code', title: 'Barangay Code', sortable: true },
