@@ -86,19 +86,19 @@ const BuenavistaAssessment = () => {
         {
             accessor: 'market_val',
             title: 'Market Value',
-            render: (record: Assessment) => <div>{formatCurrency(record.market_val)}</div>,
+            render: (record: Assessment) => <div>{record.market_val ? formatCurrency(record.market_val) : 0}</div>,
             sortable: true
         },
         {
             accessor: 'ass_value',
             title: 'Assessment Value',
-            render: (record: Assessment) => <div>{formatCurrency(record.ass_value)}</div>,
+            render: (record: Assessment) => <div>{record.ass_value ? formatCurrency(record.ass_value) : 0}</div>,
             sortable: true
         },
         {
             accessor: 'area',
             title: 'Area',
-            render: (record: Assessment) => <div>{record.area}</div>,
+            render: (record: Assessment) => <div>{record.area ? record.area : 0}</div>,
             sortable: true
         },
         { accessor: 'classification', title: 'Classification', sortable: true },
@@ -212,7 +212,18 @@ const BuenavistaAssessment = () => {
 
 
 
-    const sortedData = sortBy(filteredData, sortStatus.columnAccessor);
+    const sortedData = sortBy(filteredData, (item) => {
+        switch (sortStatus.columnAccessor) {
+            case 'market_val':
+                return item.market_val || 0;
+            case 'ass_value':
+                return item.ass_value || 0;
+            case 'area':
+                return item.area || 0;
+            default:
+                return item[sortStatus.columnAccessor as keyof Assessment];
+        }
+    });
     const finalData = sortStatus.direction === 'desc' ? sortedData.reverse() : sortedData;
 
     const from = (page - 1) * pageSize;
