@@ -455,7 +455,7 @@ const MagallanesAssessment = () => {
                         onSortStatusChange={setSortStatus}
                         minHeight={200}
                         paginationText={({ from, to, totalRecords }) => `Showing ${from} to ${to} of ${totalRecords} entries`}
-                        fetching={false}
+                        fetching={queryLoading}
                     />
                 </div>
 

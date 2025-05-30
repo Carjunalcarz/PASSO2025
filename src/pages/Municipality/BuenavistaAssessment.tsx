@@ -167,12 +167,14 @@ const BuenavistaAssessment = () => {
     };
 
     const { data: rowData = [], isLoading: queryLoading, refetch } = useQuery<Assessment[]>({
+
         queryKey: ['assessments', 'buenavista'],
         queryFn: fetchAssessments,
         refetchOnWindowFocus: false,
         refetchOnMount: false,
         refetchOnReconnect: false,
         staleTime: Infinity,
+
     });
 
     // const filteredData = rowData.filter((item: Assessment) => {
@@ -455,8 +457,9 @@ const BuenavistaAssessment = () => {
                         onSortStatusChange={setSortStatus}
                         minHeight={200}
                         paginationText={({ from, to, totalRecords }) => `Showing ${from} to ${to} of ${totalRecords} entries`}
-                        fetching={false}
-                    />
+                        fetching={queryLoading}
+
+                    ></DataTable>
                 </div>
 
                 {/* Rest of your modals remain the same */}

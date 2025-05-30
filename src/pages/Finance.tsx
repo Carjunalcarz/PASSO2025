@@ -14,7 +14,6 @@ import { useQueries } from '@tanstack/react-query';
 const Finance = () => {
     const token = localStorage.getItem('token');
     const dispatch = useDispatch();
-
     useEffect(() => {
         dispatch(setPageTitle('ADN-DATA'));
     }, [dispatch]);
@@ -131,7 +130,13 @@ const Finance = () => {
         exemptAssessmentValue,
         taxableArea,
         exemptArea,
-    ] = queries.map(q => isNaN(q.data) ? 0 : q.data);
+    ] = queries.map(q => {
+        const value = Number(q.data);
+        return isNaN(value) ? 0 : value;
+    });
+
+    const isLoading = queries.some(q => q.isLoading);
+
 
     return (
         <div>
@@ -147,6 +152,7 @@ const Finance = () => {
             </ul>
             <div className="pt-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-6 text-white">
+                    {/* RPUS */}
                     <div className="panel bg-gradient-to-r from-cyan-500 to-cyan-400">
                         <div className="flex justify-between">
                             <img src="/mun_logo/pgan.webp" alt="Agusan Logo" className="w-[70px] h-[70px] opacity-2" />
@@ -154,14 +160,18 @@ const Finance = () => {
                         </div>
                         <p className="p-2 text-md font-semibold">Province of Agusan del Norte</p>
                         <div className="flex items-center">
-                            <div className="text-xl font-bold ltr:mr-[100px]">{formatCurrency(taxable)}</div>
+                            <div className="text-xl font-bold ltr:mr-[100px]">
+                                {isLoading ? <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" /> : formatCurrency(taxable)}
+                            </div>
                             <div className="badge bg-white/30 flex items-center gap-1">
                                 <IconCircleCheck className="w-4 h-4" />
                                 TAXABLE
                             </div>
                         </div>
                         <div className="flex items-center mt-5">
-                            <div className="text-xl font-bold ltr:mr-[115px]">{formatCurrency(exempt)}</div>
+                            <div className="text-xl font-bold ltr:mr-[115px]">
+                                {isLoading ? <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" /> : formatCurrency(exempt)}
+                            </div>
                             <div className="badge bg-yellow-500/60 flex items-center gap-1">
                                 <IconInfoCircle className="w-4 h-4" />
                                 EXEMPT
@@ -176,11 +186,15 @@ const Finance = () => {
                         </div>
                         <div className="grid grid-cols-1 gap-4 mt-5">
                             <div>
-                                <div className="text-2xl font-bold">{formatCurrencyPHP(taxableMarketValue)}</div>
+                                <div className="text-2xl font-bold">
+                                    {isLoading ? <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" /> : formatCurrencyPHP(taxableMarketValue)}
+                                </div>
                                 <div className="badge bg-yellow-500/60 mt-2">TAXABLE</div>
                             </div>
                             <div>
-                                <div className="text-2xl font-bold">{formatCurrencyPHP(exemptMarketValue)}</div>
+                                <div className="text-2xl font-bold">
+                                    {isLoading ? <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" /> : formatCurrencyPHP(exemptMarketValue)}
+                                </div>
                                 <div className="badge bg-white/30 mt-2">EXEMPT</div>
                             </div>
                         </div>
@@ -193,11 +207,15 @@ const Finance = () => {
                         </div>
                         <div className="grid grid-cols-1 gap-4 mt-5">
                             <div>
-                                <div className="text-2xl font-bold">{formatCurrencyPHP(taxableAssessmentValue)}</div>
+                                <div className="text-2xl font-bold">
+                                    {isLoading ? <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" /> : formatCurrencyPHP(taxableAssessmentValue)}
+                                </div>
                                 <div className="badge bg-yellow-500/60 mt-2">TAXABLE</div>
                             </div>
                             <div>
-                                <div className="text-2xl font-bold">{formatCurrencyPHP(exemptAssessmentValue)}</div>
+                                <div className="text-2xl font-bold">
+                                    {isLoading ? <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" /> : formatCurrencyPHP(exemptAssessmentValue)}
+                                </div>
                                 <div className="badge bg-white/30 mt-2">EXEMPT</div>
                             </div>
                         </div>
@@ -210,11 +228,15 @@ const Finance = () => {
                         </div>
                         <div className="grid grid-cols-1 gap-4 mt-5">
                             <div>
-                                <div className="text-2xl font-bold">{formatCurrency(taxableArea)}</div>
+                                <div className="text-2xl font-bold">
+                                    {isLoading ? <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" /> : formatCurrency(taxableArea)}
+                                </div>
                                 <div className="badge bg-yellow-500/60 mt-2">TAXABLE</div>
                             </div>
                             <div>
-                                <div className="text-2xl font-bold">{formatCurrency(exemptArea)}</div>
+                                <div className="text-2xl font-bold">
+                                    {isLoading ? <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" /> : formatCurrency(exemptArea)}
+                                </div>
                                 <div className="badge bg-white/30 mt-2">EXEMPT</div>
                             </div>
                         </div>
@@ -259,7 +281,7 @@ const Finance = () => {
                                 <MunicipalityPanel municipality="KITCHARAO" logo="kitcharao.png" />
                             </div>
                             <div className="panel">
-                                <MunicipalityPanel municipality="REMEDIOS T. ROMUALDEZ" logo="rtr.png" />
+                                <MunicipalityPanel municipality="RTR" logo="rtr.png" />
                             </div>
                             <div className="panel">
                                 <MunicipalityPanel municipality="TUBAY" logo="tubay.png" />
@@ -267,8 +289,8 @@ const Finance = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

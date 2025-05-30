@@ -43,7 +43,9 @@ const MunicipalityPanel = ({ municipality, logo }: MunicipalityPanelProps) => {
     const isLoading = queries.some(q => q.isLoading);
     const isError = queries.some(q => q.isError);
 
-    if (isLoading) return <div>Loading...</div>;
+    if (isLoading) return <div>
+        <p className='text-white-dark'> Fetching Data ... - {municipality}</p>
+        <span className="animate-[spin_3s_linear_infinite] border-8 border-r-warning border-l-primary border-t-danger border-b-success rounded-full w-14 h-14 inline-block align-middle m-auto mb-10"></span></div>;
     if (isError) return <div>Error fetching data</div>;
 
     const [
