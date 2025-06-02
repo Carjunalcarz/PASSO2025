@@ -114,13 +114,13 @@ const Sidebar = () => {
                                         <li>
                                             <NavLink to="/map">{t('MAP')}</NavLink>
                                         </li>
-                                        <li>
+                                        {/* <li>
                                             <NavLink to="/analytics">{t('analytics')}</NavLink>
                                         </li>
 
                                         <li>
                                             <NavLink to="/crypto">{t('crypto')}</NavLink>
-                                        </li>
+                                        </li> */}
                                     </ul>
                                 </AnimateHeight>
                             </li>
@@ -159,7 +159,7 @@ const Sidebar = () => {
                                                 `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-gray-100 dark:bg-gray-800 text-primary font-bold' : ''
                                                 }`
                                             }>
-                                                <img src="/mun_logo/buenavista.jpg" alt="Buenavista Logo" className="w-5 h-5" />
+                                                <img src="/mun_logo/buenavista.png" alt="Buenavista Logo" className="w-5 h-5" />
                                                 {t('Buenavista')}
                                             </NavLink>
                                         </div>
@@ -171,7 +171,7 @@ const Sidebar = () => {
                                                     }`
                                                 }
                                             >
-                                                <img src="/mun_logo/carmen.jpg" alt="Carmen Logo" className="w-5 h-5" />
+                                                <img src="/mun_logo/carmen.png" alt="Carmen Logo" className="w-5 h-5" />
                                                 {t('Carmen')}
                                             </NavLink>
                                         </div>

@@ -3,6 +3,7 @@ import IconInfoCircle from '../../components/Icon/IconInfoCircle';
 import axios from 'axios';
 import { useState } from 'react';
 import { useQueries } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 
 const token = localStorage.getItem('token');
 
@@ -81,7 +82,13 @@ const MunicipalityPanel = ({ municipality, logo }: MunicipalityPanelProps) => {
 
     return (
         <div className="font-semibold mb-5">
-            <img src={`/mun_logo/${logo}`} alt={`${municipality} Logo`} className="opacity-2 w-20 h-20" />
+            <Link to={`/assessment/${municipality}`}>
+                <img
+                    src={`/mun_logo/${logo}`}
+                    alt={`${municipality} Logo`}
+                    className="opacity-90 hover:opacity-100 transition-opacity duration-200 w-20 h-20 cursor-pointer"
+                />
+            </Link>
             <div className="flex items-center font-semibold mb-5">
                 <div className="ltr:ml-2 rtl:mr-2">
                     <h6 className="text-dark dark:text-white-light">

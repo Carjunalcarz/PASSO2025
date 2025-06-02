@@ -15,6 +15,7 @@ const TaxableSwitch: React.FC<TaxableSwitchProps> = ({ setTaxabilityFilter }) =>
     return (
         <div>
             <SegmentedControl
+                className="w-full max-w-md mx-auto dark:bg-[#1b2e4b] dark:text-white-dark"
                 value={value}
                 onChange={setValue}
                 data={[
@@ -23,6 +24,7 @@ const TaxableSwitch: React.FC<TaxableSwitchProps> = ({ setTaxabilityFilter }) =>
                     { label: 'Exempt', value: 'exempt' },
                 ]}
             />
+
         </div>
     );
 };

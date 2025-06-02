@@ -6,6 +6,11 @@ import FoodDeliveryForm from './test';
 import Finance from './Finance';
 
 const Index = () => {
+    const dispatch = useDispatch();
+    useEffect(() => {
+        dispatch(setPageTitle('Analytics Dashboard'));
+    }, []);
+
     return (
         <div className='w-full h-full z-0'   >
 

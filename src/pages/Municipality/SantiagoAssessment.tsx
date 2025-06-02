@@ -359,13 +359,22 @@ const SantiagoAssessment = () => {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="panel bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-                    <div className="flex items-center">
-                        <div className="ltr:mr-3 rtl:ml-3">
-                            <div className="text-3xl font-bold">{sums.recordCount.toLocaleString()}</div>
-                            <div className="text-blue-100">Total Records</div>
+                <div className="panel bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg shadow-md">
+                    <div className="flex justify-between items-start w-full">
+
+                        {/* Left side: Image and title stacked */}
+                        <div className="flex flex-col items-start gap-2">
+                            <img src="/mun_logo/santiago.png" alt="Santiago Logo" className="w-20 h-20 rounded-sm" />
                         </div>
+
+                        {/* Right side: Number and label stacked */}
+                        <div className="flex flex-col items-end gap-1">
+                            <div className="text-3xl font-bold">{sums.recordCount.toLocaleString()}</div>
+                            <div className="text-blue-100">Total RPU Records</div>
+                        </div>
+
                     </div>
+                    <h1 className="text-xl m-2">Santiago</h1>
                 </div>
                 <div className="panel bg-gradient-to-r from-green-500 to-green-600 text-white">
                     <div className="flex items-center">
