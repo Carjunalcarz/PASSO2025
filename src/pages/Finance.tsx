@@ -136,6 +136,16 @@ const Finance = () => {
     });
 
     const isLoading = queries.some(q => q.isLoading);
+    const exempt_marketvalue_percentage = exemptMarketValue === 0 ? 0 : Math.min(100, Math.max(0, (exemptMarketValue / (exemptMarketValue + taxableMarketValue)) * 100));
+    const taxable_marketvalue_percentage = exemptMarketValue === 0 ? 0 : Math.min(100, Math.max(0, (taxableMarketValue / (exemptMarketValue + taxableMarketValue)) * 100));
+    const taxable_rpu_percentage = taxable === 0 ? 0 : Math.min(100, Math.max(0, (taxable / (exempt + taxable)) * 100));
+    const exempt_rpu_percentage = exempt === 0 ? 0 : Math.min(100, Math.max(0, (exempt / (exempt + taxable)) * 100));
+    const taxable_ass_percentage = taxableAssessmentValue === 0 ? 0 : Math.min(100, Math.max(0, (taxableAssessmentValue / (taxableAssessmentValue + exemptAssessmentValue)) * 100));
+    const exempt_ass_percentage = exemptAssessmentValue === 0 ? 0 : Math.min(100, Math.max(0, (exemptAssessmentValue / (exemptAssessmentValue + taxableAssessmentValue)) * 100));
+    const taxable_area_percentage = taxableArea === 0 ? 0 : Math.min(100, Math.max(0, (taxableArea / (taxableArea + exemptArea)) * 100));
+    const exempt_area_percentage = exemptArea === 0 ? 0 : Math.min(100, Math.max(0, (exemptArea / (exemptArea + taxableArea)) * 100));
+
+
 
 
     return (
@@ -168,31 +178,58 @@ const Finance = () => {
                         </p>
 
                         {/* TAXABLE */}
-                        <div className="mb-4">
-                            <div className="badge bg-white/30 flex items-center gap-1 px-2 py-1 rounded text-white mt-2">
-                                <IconCircleCheck className="w-4 h-4" />
-                                <span className="text-sm sm:text-base">TAXABLE    {isLoading ? (
-                                    <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
-                                ) : (
-                                    formatCurrency(taxable)
-                                )} </span>
+                        <div>
+                            <div>
+                                <div className="flex justify-between items-center text-lg sm:text-xl text-white text-right">
+                                    <h2 className="flex items-center gap-1">
+                                        <IconCircleCheck className="w-5 h-5" /> Taxable <span className='pl-2 font-bold'> {taxable_rpu_percentage.toFixed(2)} %</span>
+                                    </h2>
+
+                                    {isLoading ? (
+                                        <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
+                                    ) : (
+                                        <span>{formatCurrency(taxable)}</span>
+                                    )}
+                                </div>
+
+                                <div className="rounded-md h-6 bg-gray-100 shadow-inner overflow-hidden relative mt-1">
+                                    {exempt_rpu_percentage > 0 && (
+                                        <div
+                                            className="bg-green-500 h-full rounded-md transition-all duration-500 ease-in-out flex items-center justify-center text-white text-xs sm:text-sm font-medium"
+                                            style={{ width: `${taxable_rpu_percentage}%` }}
+                                        />
+                                    )}
+                                </div>
                             </div>
+
+
+
                         </div>
 
                         {/* EXEMPT */}
                         <div>
-                            <div className="text-lg sm:text-xl font-bold text-white">
+                            <div className="flex justify-between items-center text-lg sm:text-xl text-white text-right">
+                                <h2 className="flex items-center gap-1">
+                                    <IconInfoCircle className="w-5 h-5" /> Exempt <span className='pl-2 font-bold'> {exempt_rpu_percentage.toFixed(2)} %</span>
+                                </h2>
 
-                            </div>
-                            <div className="badge bg-yellow-500/60 flex items-center gap-1 px-2 py-1 rounded text-white mt-2">
-                                <IconInfoCircle className="w-4 h-4" />
-                                <span className="text-sm sm:text-base">EXEMPT    {isLoading ? (
+                                {isLoading ? (
                                     <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
                                 ) : (
-                                    formatCurrency(exempt)
-                                )}</span>
+                                    <span>{formatCurrency(exempt)}</span>
+                                )}
+                            </div>
+
+                            <div className="rounded-md h-6 bg-gray-100 shadow-inner overflow-hidden relative mt-1">
+                                {exempt_rpu_percentage > 0 && (
+                                    <div
+                                        className="bg-yellow-500 h-full rounded-md transition-all duration-500 ease-in-out flex items-center justify-center text-white text-xs sm:text-sm font-medium"
+                                        style={{ width: `${exempt_rpu_percentage}%` }}
+                                    />
+                                )}
                             </div>
                         </div>
+
                     </div>
 
 
@@ -204,32 +241,50 @@ const Finance = () => {
 
                         <div className="grid grid-cols-1 gap-6">
                             {/* TAXABLE */}
-                            <div>
-                                <div className=" text-xl sm:text-2xl font-bold text-white text-right">
-                                    {isLoading ? (
-                                        <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
-                                    ) : (
-                                        formatCurrencyPHP(taxableMarketValue)
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-1 badge bg-yellow-500/60 mt-2 px-2 py-1 rounded text-white text-sm sm:text-base">
-                                    <IconCircleCheck className="w-4 h-4" />TAXABLE
-                                </div>
+                            <div className="flex justify-between items-center text-lg sm:text-xl text-white text-right">
+                                <h2 className="flex items-center gap-1">
+                                    <IconCircleCheck className="w-5 h-5" /> Taxable <span className='pl-2 font-bold'> {taxable_marketvalue_percentage.toFixed(2)} %</span>
+                                </h2>
+
+                                {isLoading ? (
+                                    <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
+                                ) : (
+                                    <span>{formatCurrency(taxableMarketValue)}</span>
+                                )}
+                            </div>
+                            <div className="rounded-md h-6 bg-gray-100 shadow-inner overflow-hidden relative mt-1">
+                                {exempt_rpu_percentage > 0 && (
+                                    <div
+                                        className="bg-green-500 h-full rounded-md transition-all duration-500 ease-in-out flex items-center justify-center text-white text-xs sm:text-sm font-medium"
+                                        style={{ width: `${taxable_marketvalue_percentage}%` }}
+                                    />
+                                )}
                             </div>
 
                             {/* EXEMPT */}
                             <div>
-                                <div className="text-xl sm:text-2xl font-bold text-white text-right">
+                                <div className="flex justify-between items-center text-lg sm:text-xl text-white text-right">
+                                    <h2 className="flex items-center gap-1">
+                                        <IconInfoCircle className="w-5 h-5" /> Exempt <span className='pl-2 font-bold'> {exempt_marketvalue_percentage.toFixed(2)} %</span>
+                                    </h2>
+
                                     {isLoading ? (
                                         <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
                                     ) : (
-                                        formatCurrencyPHP(exemptMarketValue)
+                                        <span>{formatCurrency(exemptMarketValue)}</span>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-1 badge bg-white/30 mt-2 px-2 py-1 rounded text-white text-sm sm:text-base">
-                                    <IconInfoCircle className="w-4 h-4" />EXEMPT
+
+                                <div className="rounded-md h-6 bg-gray-100 shadow-inner overflow-hidden relative mt-1">
+                                    {exempt_rpu_percentage > 0 && (
+                                        <div
+                                            className="bg-yellow-500 h-full rounded-md transition-all duration-500 ease-in-out flex items-center justify-center text-white text-xs sm:text-sm font-medium"
+                                            style={{ width: `${exempt_marketvalue_percentage}%` }}
+                                        />
+                                    )}
                                 </div>
                             </div>
+
                         </div>
                     </div>
 
@@ -237,66 +292,112 @@ const Finance = () => {
                     {/* Assessment Value */}
                     <div className="panel bg-gradient-to-r from-blue-500 to-blue-400 p-4 rounded-xl shadow-md w-full max-w-2xl mx-auto">
                         <div className="flex justify-between items-center mb-4">
-                            <div className="text-md sm:text-lg font-semibold text-white">Assessment Value</div>
+                            <div className="text-md sm:text-lg font-semibold text-white">Assessment Value </div>
                         </div>
 
-                        {/* TAXABLE */}
-                        <div className="mb-4">
-                            <div className="text-xl sm:text-2xl font-bold text-white text-right">
+
+                        <div className="grid grid-cols-1 gap-6">
+                            {/* TAXABLE */}
+                            <div className="flex justify-between items-center text-lg sm:text-xl text-white text-right">
+                                <h2 className="flex items-center gap-1">
+                                    <IconCircleCheck className="w-5 h-5" /> Taxable <span className='pl-2 font-bold'> {taxable_ass_percentage.toFixed(2)} %</span>
+                                </h2>
+
                                 {isLoading ? (
                                     <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
                                 ) : (
-                                    formatCurrencyPHP(taxableAssessmentValue)
+                                    <span>{formatCurrency(taxableAssessmentValue)}</span>
                                 )}
                             </div>
-                            <div className="flex items-center gap-1 badge bg-yellow-500/60 mt-2 px-2 py-1 rounded text-white text-sm sm:text-base">
-                                <IconCircleCheck className="w-4 h-4" />TAXABLE
+                            <div className="rounded-md h-6 bg-gray-100 shadow-inner overflow-hidden relative mt-1">
+                                {exempt_rpu_percentage > 0 && (
+                                    <div
+                                        className="bg-green-500 h-full rounded-md transition-all duration-500 ease-in-out flex items-center justify-center text-white text-xs sm:text-sm font-medium"
+                                        style={{ width: `${taxable_ass_percentage}%` }}
+                                    />
+                                )}
                             </div>
-                        </div>
 
-                        {/* EXEMPT */}
-                        <div>
-                            <div className="text-xl sm:text-2xl font-bold text-white text-right">
-                                {isLoading ? (
-                                    <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
-                                ) : (
-                                    formatCurrencyPHP(exemptAssessmentValue)
-                                )}
+                            {/* EXEMPT */}
+                            <div>
+                                <div className="flex justify-between items-center text-lg sm:text-xl text-white text-right">
+                                    <h2 className="flex items-center gap-1">
+                                        <IconInfoCircle className="w-5 h-5" /> Exempt <span className='pl-2 font-bold'> {exempt_ass_percentage.toFixed(2)} %</span>
+                                    </h2>
+
+                                    {isLoading ? (
+                                        <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
+                                    ) : (
+                                        <span>{formatCurrency(exemptAssessmentValue)}</span>
+                                    )}
+                                </div>
+
+                                <div className="rounded-md h-6 bg-gray-100 shadow-inner overflow-hidden relative mt-1">
+                                    {exempt_rpu_percentage > 0 && (
+                                        <div
+                                            className="bg-yellow-500 h-full rounded-md transition-all duration-500 ease-in-out flex items-center justify-center text-white text-xs sm:text-sm font-medium"
+                                            style={{ width: `${exempt_ass_percentage}%` }}
+                                        />
+                                    )}
+                                </div>
                             </div>
-                            <div className="flex items-center gap-1 badge bg-white/30 mt-2 px-2 py-1 rounded text-white text-sm sm:text-base">
-                                <IconInfoCircle className="w-4 h-4" />EXEMPT
-                            </div>
+
                         </div>
                     </div>
 
                     {/* Area */}
                     <div className="panel bg-gradient-to-r from-[#ea580c] to-[#c2410c]/60 p-3 sm:p-4 rounded-lg shadow-md w-full max-w-2xl mx-auto">
-                        <div className="flex justify-between items-center mb-3">
+                        <div className="flex justify-between items-center mb-4">
                             <div className="text-md sm:text-lg font-semibold text-white">Area</div>
                         </div>
-                        <div className="text-xl sm:text-2xl font-bold text-white text-right"> {isLoading ? (
-                            <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
-                        ) : (
-                            formatCurrency(taxableArea)
-                        )}</div>
-                        {/* TAXABLE */}
-                        <div className="mb-3">
-                            <div className="flex items-center gap-1 badge bg-yellow-500/60 mt-1 px-3 py-1 text-white text-sm sm:text-base rounded-md">
-                                <IconCircleCheck className="w-4 h-4" />TAXABLE
+                        <div className="grid grid-cols-1 gap-6">
+                            {/* TAXABLE */}
+                            <div className="flex justify-between items-center text-lg sm:text-xl text-white text-right">
+                                <h2 className="flex items-center gap-1">
+                                    <IconCircleCheck className="w-5 h-5" /> Taxable <span className='pl-2 font-bold'> {taxable_area_percentage.toFixed(2)} %</span>
+                                </h2>
+
+                                {isLoading ? (
+                                    <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
+                                ) : (
+                                    <span>{formatCurrency(taxableArea)}</span>
+                                )}
                             </div>
+                            <div className="rounded-md h-6 bg-gray-100 shadow-inner overflow-hidden relative mt-1">
+                                {exempt_rpu_percentage > 0 && (
+                                    <div
+                                        className="bg-green-500 h-full rounded-md transition-all duration-500 ease-in-out flex items-center justify-center text-white text-xs sm:text-sm font-medium"
+                                        style={{ width: `${taxable_area_percentage}%` }}
+                                    />
+                                )}
+                            </div>
+
+                            {/* EXEMPT */}
+                            <div>
+                                <div className="flex justify-between items-center text-lg sm:text-xl text-white text-right">
+                                    <h2 className="flex items-center gap-1">
+                                        <IconInfoCircle className="w-5 h-5" /> Exempt <span className='pl-2 font-bold'> {exempt_area_percentage.toFixed(2)} %</span>
+                                    </h2>
+
+                                    {isLoading ? (
+                                        <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
+                                    ) : (
+                                        <span>{formatCurrency(exemptArea)}</span>
+                                    )}
+                                </div>
+
+                                <div className="rounded-md h-6 bg-gray-100 shadow-inner overflow-hidden relative mt-1">
+
+                                    <div
+                                        className="bg-yellow-500 h-full rounded-md transition-all duration-500 ease-in-out flex items-center justify-center text-white text-xs sm:text-sm font-medium"
+                                        style={{ width: `${exempt_area_percentage}%` }}
+                                    />
+                                </div>
+
+                            </div>
+
                         </div>
 
-                        {/* EXEMPT */}
-                        <div>
-                            <div className="text-xl sm:text-2xl font-bold text-white text-right"> {isLoading ? (
-                                <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
-                            ) : (
-                                formatCurrency(exemptArea)
-                            )}</div>
-                            <div className="flex items-center gap-1 badge bg-white/30 mt-1 px-3 py-1 text-white text-sm sm:text-base rounded-md">
-                                <IconInfoCircle className="w-4 h-4" />EXEMPT
-                            </div>
-                        </div>
                     </div>
 
 
