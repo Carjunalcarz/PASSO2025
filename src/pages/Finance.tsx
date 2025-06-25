@@ -225,7 +225,7 @@ const Finance = () => {
                                     {exempt_rpu_percentage > 0 && (
                                         <div
                                             className="bg-yellow-500 h-full rounded-md transition-all duration-500 ease-in-out flex items-center justify-center text-white text-xs sm:text-sm font-medium"
-                                            style={{ width: `${taxable_rpu_percentage}%` }}
+                                            style={{ width: `${exempt_rpu_percentage}%` }}
                                         />
                                     )}
                                 </div>

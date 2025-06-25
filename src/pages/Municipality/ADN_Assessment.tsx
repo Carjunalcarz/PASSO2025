@@ -230,19 +230,29 @@ const ADNAssessment = () => {
     const to = from + pageSize;
     const recordsData = finalData.slice(from, to);
 
-    // Calculate sums for filtered data
+    // Utility to deduplicate by tdn
+    const getUniqueByTdn = (data: Assessment[]) => {
+        const seen = new Set();
+        return data.filter(item => {
+            if (seen.has(item.tdn)) return false;
+            seen.add(item.tdn);
+            return true;
+        });
+    };
 
     const calculateSums = () => {
-
         const totalMarketValue = filteredData.reduce((sum, record) => sum + (record.market_val || 0), 0);
         const totalAssessmentValue = filteredData.reduce((sum, record) => sum + (record.ass_value || 0), 0);
         const totalArea = filteredData.reduce((sum, record) => sum + (record.area || 0), 0);
+
+        // Only count unique TDNs for recordCount
+        const uniqueTdnCount = getUniqueByTdn(filteredData).length;
 
         return {
             totalMarketValue,
             totalAssessmentValue,
             totalArea,
-            recordCount: filteredData.length
+            recordCount: uniqueTdnCount
         };
     };
 
