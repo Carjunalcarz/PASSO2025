@@ -422,6 +422,12 @@ const Finance = () => {
         }).format(amount);
     };
 
+    // Add this helper function at the top of your component
+    const calculatePercentage = (value: number, total: number): string => {
+        if (total === 0) return '0.00';
+        return ((value / total) * 100).toFixed(2);
+    };
+
     useEffect(() => {
         const fetchData = async () => {
             const response = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments`, {
@@ -478,7 +484,7 @@ const Finance = () => {
                 }
             });
 
-         
+
 
 
 
@@ -545,11 +551,15 @@ const Finance = () => {
                         <div className="grid grid-cols-1 gap-4 mt-5">
                             <div>
                                 <div className="text-2xl font-bold">{formatCurrencyPHP(taxableMarketValue)}</div>
-                                <div className="badge bg-yellow-500/60 mt-2">TAXABLE</div>
+                                <div className="badge bg-white/30 mt-2 inline-flex items-center">
+                                    TAXABLE - {calculatePercentage(taxableMarketValue, taxableMarketValue + exemptMarketValue)}%
+                                </div>
                             </div>
                             <div>
                                 <div className="text-2xl font-bold">{formatCurrencyPHP(exemptMarketValue)}</div>
-                                <div className="badge bg-white/30 mt-2">EXEMPT</div>
+                                <div className="badge bg-white/30 mt-2 inline-flex items-center">
+                                    EXEMPT - {calculatePercentage(exemptMarketValue, taxableMarketValue + exemptMarketValue)}%
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -562,29 +572,44 @@ const Finance = () => {
                         <div className="grid grid-cols-1 gap-4 mt-5">
                             <div>
                                 <div className="text-2xl font-bold">{formatCurrencyPHP(taxableAssessmentValue)}</div>
-                                <div className="badge bg-yellow-500/60 mt-2">TAXABLE</div>
+                                <div className="badge bg-white/30 mt-2 inline-flex items-center">
+                                    TAXABLE - {calculatePercentage(taxableAssessmentValue, taxableAssessmentValue + exemptAssessmentValue)}%
+                                </div>
                             </div>
                             <div>
                                 <div className="text-2xl font-bold">{formatCurrencyPHP(exemptAssessmentValue)}</div>
-                                <div className="badge bg-white/30 mt-2">EXEMPT</div>
+                                <div className="badge bg-white/30 mt-2 inline-flex items-center">
+                                    EXEMPT - {calculatePercentage(exemptAssessmentValue, taxableAssessmentValue + exemptAssessmentValue)}%
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Bounce Rate */}
-                    <div className="panel bg-gradient-to-r from-[#ea580c] to-[#c2410c]/60">
-                        <div className="flex justify-between">
-                            <div className="ltr:mr-1 rtl:ml-1 text-md font-semibold">Area</div>
-                        </div>
-                        <div className="grid grid-cols-1 gap-4 mt-5">
-                            <div>
-                                <div className="text-2xl font-bold">{formatCurrency(taxableArea)}</div>
-                                <div className="badge bg-yellow-500/60 mt-2">TAXABLE</div>
+                    <div className="panel text-white bg-gradient-to-r from-purple-500 to-purple-400">
+                        <h3 className="text-xl font-semibold text-white">AREA</h3>
+                        <div className="flex-1">
+                            <div className="flex font-semibold  mb-2"><h6 className="text-white font-bold text-xl">{formatCurrency(taxableArea)}</h6></div>
+                            <div className="rounded-full h-6 bg-dark-light dark:bg-[#1b2e4b]">
+                                <div
+                                    className="text-white badge bg-gradient-to-r from-[#ff8000] to-[#ff8000] h-full rounded-full transition-all duration-300 flex items-center justify-center text-white text-xs"
+                                    style={{ width: `${((taxableMarketValue / (taxableMarketValue + exemptMarketValue)) * 100)}%` }}
+                                >
+                                   Taxable - {((taxableMarketValue / (taxableMarketValue + exemptMarketValue) * 100).toFixed(2))}%
+                                </div>
                             </div>
-                            <div>
-                                <div className="text-2xl font-bold">{formatCurrency(exemptArea)}</div>
-                                <div className="badge bg-white/30 mt-2">EXEMPT</div>
+                            <div className="flex font-semibold  mb-2">
                             </div>
+                            <div className="flex font-semibold  mb-2"><h6 className="text-white font-bold text-xl">{formatCurrency(exemptArea)}</h6></div>
+                            <div className="rounded-full h-6 bg-dark-light dark:bg-[#1b2e4b]">
+                                <div
+                                    className="text-white badge bg-gradient-to-r from-[#ff8000] to-[#ff8000] h-full rounded-full transition-all duration-300 flex items-center justify-center text-white text-xs"
+                                    style={{ width: `${((exemptArea/ (taxableArea + exemptArea)) * 100)}%` }}
+                                >
+                                   Exempt - {((exemptArea/ (taxableArea + exemptArea)) * 100).toFixed(2)}%
+                                </div>
+                            </div>                      
+
                         </div>
                     </div>
                 </div>
@@ -598,12 +623,12 @@ const Finance = () => {
                                 See All
                             </button>
                         </div>
-                        <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 md:mb-5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4  gap-6 md:mb-4">
                             {/*  Bitcoin  */}
 
-                              {/* ###Nasipit### */}
+                            {/* ###Nasipit### */}
                             <div className="panel">
-                                 <MunicipalityPanel municipality="BUENAVISTA" logo='buenavista.jpg' />
+                                <MunicipalityPanel municipality="BUENAVISTA" logo='buenavista.jpg' />
                             </div>
                             {/* ###Nasipit### */}
                             {/*  Ethereum*/}
@@ -625,20 +650,20 @@ const Finance = () => {
                             </div>
                             <div className="panel">
                                 <MunicipalityPanel municipality="NASIPIT" logo='nasipit.png' />
-                            </div>  
+                            </div>
                             <div className="panel">
                                 <MunicipalityPanel municipality="KITCHARAO" logo='kitcharao.png' />
-                            </div>  
+                            </div>
                             <div className="panel">
                                 <MunicipalityPanel municipality="REMEDIOS T. ROMUALDEZ" logo='rtr.png' />
-                            </div>  
+                            </div>
                             <div className="panel">
                                 <MunicipalityPanel municipality="TUBAY" logo='tubay.png' />
-                            </div>  
+                            </div>
 
 
                         </div>
-                    </div>      
+                    </div>
                 </div>
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     <div className="grid gap-6 xl:grid-flow-row">
