@@ -15,6 +15,12 @@ module.exports = {
             center: true,
         },
         extend: {
+            screens: {
+                xl1360: '1360px', // ✅ Add this line
+            },
+            // (your other extensions remain unchanged)
+        },
+        extend: {
             colors: {
                 primary: {
                     DEFAULT: '#4361ee',
@@ -97,4 +103,5 @@ module.exports = {
         require('@tailwindcss/typography'),
         rotateX,
     ],
+  
 };

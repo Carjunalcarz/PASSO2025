@@ -54,7 +54,7 @@ const formatCurrency = (amount: number) => {
     }).format(amount)}`;
 };
 
-const TubayAssessment = () => {
+const ADNAssessment = () => {
     const [taxabilityFilter, setTaxabilityFilter] = useState('exempt'); // Add this line
     const [subclassFilter, setSubclassFilter] = useState<string>('all');
 
@@ -147,11 +147,11 @@ const TubayAssessment = () => {
     ];
 
     useEffect(() => {
-        dispatch(setPageTitle('Tubay'));
+        dispatch(setPageTitle('ADN'));
     }, [dispatch]);
 
     const fetchAssessments = async (): Promise<Assessment[]> => {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/get-general-revision?municipality=tubay&skip=0&limit=300000`, {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/get-general-revision?skip=0&limit=300000`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -167,7 +167,7 @@ const TubayAssessment = () => {
     };
 
     const { data: rowData = [], isLoading: queryLoading, refetch } = useQuery<Assessment[]>({
-        queryKey: ['assessments', 'Tubay'],
+        queryKey: ['assessments', 'adn'],
         queryFn: fetchAssessments,
         refetchOnWindowFocus: false,
         refetchOnMount: false,
@@ -353,7 +353,7 @@ const TubayAssessment = () => {
                     </Link>
                 </li>
                 <li className="before:content-['/'] ltr:before:mr-2 rtl:before:ml-2">
-                    <span>Tubay Assessment Data-2025</span>
+                    <span>Province of Agusan del Norte Assessment Data-2025</span>
                 </li>
             </ul>
 
@@ -364,7 +364,8 @@ const TubayAssessment = () => {
 
                         {/* Left side: Image and title stacked */}
                         <div className="flex flex-col items-start gap-2">
-                            <img src="/mun_logo/tubay.png" alt="Tubay Logo" className="w-20 h-20 rounded-sm" />
+                            <img src="/mun_logo/pgan.webp" alt="ADN Logo" className="w-20 h-20 rounded-sm" />
+
                         </div>
 
                         {/* Right side: Number and label stacked */}
@@ -373,7 +374,8 @@ const TubayAssessment = () => {
                             <div className="text-blue-100">Total RPU Records</div>
                         </div>
                     </div>
-                    <h1 className="text-xl m-2">Tubay</h1>
+
+                    <p className="text-left text-xl  m-2">Province of Agusan del Norte</p>
                 </div>
                 <div className="panel bg-gradient-to-r from-green-500 to-green-600 text-white">
                     <div className="flex items-center">
@@ -705,8 +707,8 @@ const TubayAssessment = () => {
                     </div>
                 </Modal>
             </div>
-        </div>
+        </div >
     );
 };
 
-export default TubayAssessment;
+export default ADNAssessment;

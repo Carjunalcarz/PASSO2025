@@ -114,6 +114,8 @@ import MagallanesAssessment from '../pages/Municipality/MagallanessAssessment';
 import SantiagoAssessment from '../pages/Municipality/SantiagoAssessment';
 import TubayAssessment from '../pages/Municipality/TubayAssessment';
 import NasipitAssessment from '../pages/Municipality/NasipitAssessment';
+import ADNAssessment from '../pages/Municipality/ADN_Assessment';
+import Map from '../pages/Map'
 const routes = [
     // dashboard
     {
@@ -139,10 +141,18 @@ const routes = [
     },
     // finance page
     {
-        path: '/finance',
+        path: '/adn-data',
         element: (
             <ProtectedRoute>
                 <Finance />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/map',
+        element: (
+            <ProtectedRoute>
+                <Map />
             </ProtectedRoute>
         ),
     },
@@ -669,6 +679,14 @@ const routes = [
         element: (
             <ProtectedRoute>
                 <NasipitAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/adn',
+        element: (
+            <ProtectedRoute>
+                <ADNAssessment />
             </ProtectedRoute>
         ),
     },

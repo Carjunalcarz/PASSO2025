@@ -70,7 +70,7 @@ const Sidebar = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location]);
-
+    // console.log(document.title);
     return (
         <div className={semidark ? 'dark' : ''}>
             <nav
@@ -109,17 +109,18 @@ const Sidebar = () => {
                                 <AnimateHeight duration={300} height={currentMenu === 'dashboard' ? 'auto' : 0}>
                                     <ul className="sub-menu text-gray-500">
                                         <li>
-                                            <NavLink to="/">{t('MAP')}</NavLink>
+                                            <NavLink to="/adn-data">{t('Agusan del Norte')}</NavLink>
                                         </li>
                                         <li>
+                                            <NavLink to="/map">{t('MAP')}</NavLink>
+                                        </li>
+                                        {/* <li>
                                             <NavLink to="/analytics">{t('analytics')}</NavLink>
                                         </li>
-                                        <li>
-                                            <NavLink to="/finance">{t('finance')}</NavLink>
-                                        </li>
+
                                         <li>
                                             <NavLink to="/crypto">{t('crypto')}</NavLink>
-                                        </li>
+                                        </li> */}
                                     </ul>
                                 </AnimateHeight>
                             </li>
@@ -144,62 +145,104 @@ const Sidebar = () => {
 
                                 <AnimateHeight duration={300} height={currentMenu === 'Municipality' ? 'auto' : 0}>
                                     <div className="sub-menu text-gray-500 px-4 ml-4">
-                                        <div className="py-2 -mx-4">
-                                            <NavLink to="/assessment/buenavista" className="flex items-center gap-2">
-                                                <img src="/mun_logo/buenavista.jpg" alt="Buenavista Logo" className="w-5 h-5" />
+                                        <div className="py-2">
+                                            <NavLink to="/assessment/adn" className={({ isActive }) =>
+                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-gray-100 dark:bg-gray-800 text-primary font-bold' : ''
+                                                }`
+                                            }>
+                                                <img src="/mun_logo/pgan.webp" alt="PGAN Logo" className="w-5 h-5" />
+                                                {t('Agusan del Norte')}
+                                            </NavLink>
+                                        </div>
+                                        <div className="py-2">
+                                            <NavLink to="/assessment/buenavista" className={({ isActive }) =>
+                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-gray-100 dark:bg-gray-800 text-primary font-bold' : ''
+                                                }`
+                                            }>
+                                                <img src="/mun_logo/buenavista.png" alt="Buenavista Logo" className="w-5 h-5" />
                                                 {t('Buenavista')}
                                             </NavLink>
                                         </div>
-                                        <div className="py-2 -mx-4">
-                                            <NavLink to="/assessment/carmen" className="flex items-center gap-2">
-                                                <img src="/mun_logo/carmen.jpg" alt="Carmen Logo" className="w-5 h-5" />
+                                        <div className="py-2">
+                                            <NavLink
+                                                to="/assessment/carmen"
+                                                className={({ isActive }) =>
+                                                    `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-gray-100 dark:bg-gray-800 text-primary font-bold' : ''
+                                                    }`
+                                                }
+                                            >
+                                                <img src="/mun_logo/carmen.png" alt="Carmen Logo" className="w-5 h-5" />
                                                 {t('Carmen')}
                                             </NavLink>
                                         </div>
-                                        <div className="py-2 -mx-4">
-                                            <NavLink to="/assessment/jabonga" className="flex items-center gap-2">
+                                        <div className="py-2">
+                                            <NavLink to="/assessment/jabonga" className={({ isActive }) =>
+                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-gray-100 dark:bg-gray-800 text-primary font-bold' : ''
+                                                }`
+                                            }>
                                                 <img src="/mun_logo/jabonga.png" alt="Jabonga Logo" className="w-5 h-5" />
                                                 {t('Jabonga')}
                                             </NavLink>
                                         </div>
-                                        <div className="py-2 -mx-4">
-                                            <NavLink to="/assessment/kitcharao" className="flex items-center gap-2">
+                                        <div className="py-2">
+                                            <NavLink to="/assessment/kitcharao" className={({ isActive }) =>
+                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-gray-100 dark:bg-gray-800 text-primary font-bold' : ''
+                                                }`
+                                            }>
                                                 <img src="/mun_logo/kitcharao.png" alt="Kitcharao Logo" className="w-5 h-5" />
                                                 {t('Kitcharao')}
                                             </NavLink>
                                         </div>
-                                        <div className="py-2 -mx-4">
-                                            <NavLink to="/assessment/lasnieves" className="flex items-center gap-2">
+                                        <div className="py-2">
+                                            <NavLink to="/assessment/lasnieves" className={({ isActive }) =>
+                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-gray-100 dark:bg-gray-800 text-primary font-bold' : ''
+                                                }`
+                                            }>
                                                 <img src="/mun_logo/las-nieves.png" alt="Lasnieves Logo" className="w-5 h-5" />
                                                 {t('Lasnieves')}
                                             </NavLink>
                                         </div>
-                                        <div className="py-2 -mx-4">
-                                            <NavLink to="/assessment/magallanes" className="flex items-center gap-2">
+                                        <div className="py-2">
+                                            <NavLink to="/assessment/magallanes" className={({ isActive }) =>
+                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-gray-100 dark:bg-gray-800 text-primary font-bold' : ''
+                                                }`
+                                            }>
                                                 <img src="/mun_logo/magallanes.png" alt="Magallanes Logo" className="w-5 h-5" />
                                                 {t('Magallanes')}
                                             </NavLink>
                                         </div>
-                                        <div className="py-2 -mx-4">
-                                            <NavLink to="/assessment/nasipit" className="flex items-center gap-2">
+                                        <div className="py-2">
+                                            <NavLink to="/assessment/nasipit" className={({ isActive }) =>
+                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-gray-100 dark:bg-gray-800 text-primary font-bold' : ''
+                                                }`
+                                            }>
                                                 <img src="/mun_logo/nasipit.png" alt="Nasipit Logo" className="w-5 h-5" />
                                                 {t('Nasipit')}
                                             </NavLink>
                                         </div>
-                                        <div className="py-2 -mx-4">
-                                            <NavLink to="/assessment/remedios_t_romualdez" className="flex items-center gap-2">
+                                        <div className="py-2">
+                                            <NavLink to="/assessment/remedios_t_romualdez" className={({ isActive }) =>
+                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-gray-100 dark:bg-gray-800 text-primary font-bold' : ''
+                                                }`
+                                            }>
                                                 <img src="/mun_logo/rtr.png" alt="RTR Logo" className="w-5 h-5" />
                                                 {t('RTR')}
                                             </NavLink>
                                         </div>
-                                        <div className="py-2 -mx-4">
-                                            <NavLink to="/assessment/santiago" className="flex items-center gap-2">
+                                        <div className="py-2">
+                                            <NavLink to="/assessment/santiago" className={({ isActive }) =>
+                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-gray-100 dark:bg-gray-800 text-primary font-bold' : ''
+                                                }`
+                                            }>
                                                 <img src="/mun_logo/santiago.png" alt="Santiago Logo" className="w-5 h-5" />
                                                 {t('Santiago')}
                                             </NavLink>
                                         </div>
-                                        <div className="py-2 -mx-4">
-                                            <NavLink to="/assessment/tubay" className="flex items-center gap-2">
+                                        <div className="py-2">
+                                            <NavLink to="/assessment/tubay" className={({ isActive }) =>
+                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-gray-100 dark:bg-gray-800 text-primary font-bold' : ''
+                                                }`
+                                            }>
                                                 <img src="/mun_logo/tubay.png" alt="Tubay Logo" className="w-5 h-5" />
                                                 {t('Tubay')}
                                             </NavLink>
@@ -225,7 +268,13 @@ const Sidebar = () => {
                                 <AnimateHeight duration={300} height={currentMenu === 'Assessment' ? 'auto' : 0}>
                                     <div className="sub-menu text-gray-500 px-4 ml-4">
                                         <div className="py-2 -mx-4">
-                                            <NavLink to="/assessment/add_assessment" className="flex items-center gap-2">
+                                            <NavLink
+                                                to="/assessment/add_assessment"
+                                                className={({ isActive }) =>
+                                                    `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-gray-100 dark:bg-gray-800 text-primary font-bold' : ''
+                                                    }`
+                                                }
+                                            >
                                                 <IconPlus className="w-5 h-5" />
                                                 {t('Add Assessment')}
                                             </NavLink>
@@ -238,8 +287,8 @@ const Sidebar = () => {
                     </PerfectScrollbar>
 
                 </div>
-            </nav>
-        </div>
+            </nav >
+        </div >
     );
 };
 

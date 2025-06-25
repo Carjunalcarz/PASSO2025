@@ -2,37 +2,45 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { IRootState } from '../../store';
 import { useEffect, useState } from 'react';
-import { setPageTitle, toggleRTL } from '../../store/themeConfigSlice';
+import { setPageTitle } from '../../store/themeConfigSlice';
 import IconMail from '../../components/Icon/IconMail';
 import IconLockDots from '../../components/Icon/IconLockDots';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
+import { useQuery, useMutation } from '@tanstack/react-query';
+
 // Form Schema
 const loginSchema = yup.object().shape({
     email: yup.string().email('Invalid email').required('Email is required'),
     password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
 });
+
 type LoginFormInputs = {
     email: string;
     password: string;
 };
+
 const LoginBoxed = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const [loginError, setLoginError] = useState<string>('');
 
     const isDark = useSelector((state: IRootState) => state.themeConfig.theme === 'dark' || state.themeConfig.isDarkMode);
-    const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl' ? true : false;
-    const themeConfig = useSelector((state: IRootState) => state.themeConfig);
-    // Validate
+    const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl';
+
     useEffect(() => {
-        const verifyToken = async () => {
+        dispatch(setPageTitle('Login Boxed'));
+    }, [dispatch]);
+
+    // Token verification query
+    const { data: tokenValid, isLoading: verifyingToken } = useQuery({
+        queryKey: ['verifyToken'],
+        queryFn: async () => {
             const token = localStorage.getItem('token');
-            console.log("Token:", token);
 
             if (!token) {
-                navigate('/auth/boxed-signin');
-                return;
+                return false;
             }
 
             try {
@@ -44,34 +52,32 @@ const LoginBoxed = () => {
                 });
 
                 if (!response.ok) {
-                    throw new Error('Token verification failed');
+                    localStorage.removeItem('token');
+                    return false;
                 }
-                navigate('/');
+
+                return true;
             } catch (error) {
                 console.error("Token verification failed:", error);
                 localStorage.removeItem('token');
-                navigate('/auth/boxed-signin');
+                return false;
             }
-        };
+        },
+        retry: false, // Don't retry token verification
+        refetchOnWindowFocus: false, // Don't refetch when window gains focus
+        staleTime: 0, // Always check token freshness
+    });
 
-        verifyToken();
-    }, [navigate]);
-    //Validate
+    // Redirect if token is valid
     useEffect(() => {
-        dispatch(setPageTitle('Login Boxed'));
-    });
+        if (tokenValid === true) {
+            navigate('/');
+        }
+    }, [tokenValid, navigate]);
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm<LoginFormInputs>({
-        resolver: yupResolver(loginSchema),
-    });
-
-    const submitForm = async (data: LoginFormInputs) => {
-        console.log('Form Data:', data);
-        try {
+    // Login mutation
+    const loginMutation = useMutation({
+        mutationFn: async (data: LoginFormInputs) => {
             const formData = new URLSearchParams();
             formData.append('username', data.email);
             formData.append('password', data.password);
@@ -85,20 +91,50 @@ const LoginBoxed = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Invalid credentials');
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Invalid credentials');
             }
 
-            const result = await response.json();
+            return response.json();
+        },
+        onSuccess: (result) => {
             console.log("Login Success", result);
-
-            // Save token
             localStorage.setItem('token', result.access_token);
+            setLoginError('');
             navigate('/');
+        },
+        onError: (error: Error) => {
+            console.error('Login failed:', error);
+            setLoginError(error.message || 'Login failed. Please check your credentials.');
+        },
+    });
 
-        } catch (error) {
-            alert('Login failed. Please check your credentials.');
-        }
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<LoginFormInputs>({
+        resolver: yupResolver(loginSchema),
+    });
+
+    const submitForm = (data: LoginFormInputs) => {
+        setLoginError('');
+        loginMutation.mutate(data);
     };
+
+    // Show loading while verifying token
+    if (verifyingToken) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    // Don't render login form if token is valid (will redirect)
+    if (tokenValid === true) {
+        return null;
+    }
 
     return (
         <div>
@@ -118,6 +154,14 @@ const LoginBoxed = () => {
                                 <h1 className="text-3xl font-extrabold uppercase !leading-snug text-primary md:text-4xl">Sign in</h1>
                                 <p className="text-base font-bold leading-normal text-white-dark">Enter your email and password to login</p>
                             </div>
+
+                            {/* Error Message */}
+                            {loginError && (
+                                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                                    {loginError}
+                                </div>
+                            )}
+
                             <form className="space-y-5 dark:text-white" onSubmit={handleSubmit(submitForm)}>
                                 <div>
                                     <label htmlFor="Email">Email</label>
@@ -127,9 +171,8 @@ const LoginBoxed = () => {
                                             id="Email"
                                             type="email"
                                             placeholder="Enter Email"
-                                            className="form-input ps-10
-                                          placeholder:text-white-dark"
-                                            required
+                                            className="form-input ps-10 placeholder:text-white-dark"
+                                            disabled={loginMutation.isPending}
                                         />
                                         <span className="absolute start-4 top-1/2 -translate-y-1/2">
                                             <IconMail fill={true} />
@@ -137,6 +180,7 @@ const LoginBoxed = () => {
                                     </div>
                                     {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
                                 </div>
+
                                 <div>
                                     <label htmlFor="Password">Password</label>
                                     <div className="relative text-white-dark">
@@ -146,7 +190,7 @@ const LoginBoxed = () => {
                                             type="password"
                                             placeholder="Enter Password"
                                             className="form-input ps-10 placeholder:text-white-dark"
-                                            required
+                                            disabled={loginMutation.isPending}
                                         />
                                         <span className="absolute start-4 top-1/2 -translate-y-1/2">
                                             <IconLockDots fill={true} />
@@ -155,13 +199,26 @@ const LoginBoxed = () => {
                                     {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
                                 </div>
 
-                                <button type="submit" className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]">
-                                    Sign in
+                                <button
+                                    type="submit"
+                                    className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]"
+                                    disabled={loginMutation.isPending}
+                                >
+                                    {loginMutation.isPending ? (
+                                        <span className="flex items-center justify-center">
+                                            <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                                            Signing in...
+                                        </span>
+                                    ) : (
+                                        'Sign in'
+                                    )}
                                 </button>
                             </form>
+
                             <div className="relative my-7 text-center md:mb-9">
                                 <span className="absolute inset-x-0 top-1/2 h-px w-full -translate-y-1/2 bg-white-light dark:bg-white-dark"></span>
                             </div>
+
                             <div className="text-center dark:text-white">
                                 Don't have an account ?&nbsp;
                                 <Link to="/auth/boxed-signup" className="uppercase text-primary underline transition hover:text-black dark:hover:text-white">
