@@ -16,7 +16,7 @@ import SuggesstionSearchInput from './Components/SuggesstionSearchInput';
 import TaxableSwitch from './Components/TaxableSwitch';
 import { Link } from 'react-router-dom';
 import SubclassSuggesstion from './Components/SubclassSuggesstion';
-
+import GRFilter from './Components/GRFilter';
 // Define column interface
 interface Column {
     accessor: keyof Assessment | 'actions';
@@ -57,7 +57,7 @@ const formatCurrency = (amount: number) => {
 const TubayAssessment = () => {
     const [taxabilityFilter, setTaxabilityFilter] = useState('exempt'); // Add this line
     const [subclassFilter, setSubclassFilter] = useState<string>('all');
-
+    const [grFilter, setGrFilter] = useState<string>('all');
     const token = localStorage.getItem('token');
     const dispatch = useDispatch();
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl';
@@ -204,8 +204,10 @@ const TubayAssessment = () => {
 
         const matchesSubclass =
             subclassFilter === 'all' || item.sub_class?.toLowerCase() === subclassFilter.toLowerCase();
+            const matchesGR =
+            grFilter === 'all' || item.gr?.toLowerCase() === grFilter.toLowerCase();
 
-        return matchesTaxability && matchesSubclass;
+        return matchesTaxability && matchesSubclass && matchesGR;
     });
 
 
@@ -410,14 +412,29 @@ const TubayAssessment = () => {
                         </div>
                     </div>
                 </div>
-                <div className='flex gap-2'>
-                    <TaxableSwitch setTaxabilityFilter={setTaxabilityFilter} />
-                    <SubclassSuggesstion setSubclassFilter={setSubclassFilter} />
-                </div>
-
-
             </div>
-
+            <div className="mb-6">
+                <div className='flex gap-4 flex-wrap'>
+                    <div className="flex flex-col min-w-[200px]">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Taxability Filter
+                        </label>
+                        <TaxableSwitch setTaxabilityFilter={setTaxabilityFilter} />
+                    </div>
+                    <div className="flex flex-col min-w-[200px]">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Subclass Filter
+                        </label>
+                        <SubclassSuggesstion setSubclassFilter={setSubclassFilter} />
+                    </div>
+                    <div className="flex flex-col min-w-[200px]">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            GR Filter
+                        </label>
+                        <GRFilter setGrFilter={setGrFilter} />
+                    </div>
+                </div>
+            </div>
             <div className="panel md:w-[920px] xl:w-full">
                 <div className="flex md:items-center md:flex-row flex-col mb-5 gap-5">
                     <div className="flex items-center gap-5 ltr:ml-auto rtl:mr-auto">

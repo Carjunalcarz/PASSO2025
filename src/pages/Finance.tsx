@@ -442,7 +442,7 @@ const Finance = () => {
                                 <MunicipalityPanel municipality="MAGALLANES" logo="magallanes.png" />
                             </div>
                             <div className="panel">
-                                <MunicipalityPanel municipality="LAS NIEVES" logo="las-nieves.png" />
+                                <MunicipalityPanel municipality="LASNIEVES" logo="las-nieves.png" />
                             </div>
                             <div className="panel">
                                 <MunicipalityPanel municipality="NASIPIT" logo="nasipit.png" />

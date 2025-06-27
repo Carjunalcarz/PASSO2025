@@ -14,6 +14,7 @@ import { Modal } from '@mantine/core';
 import { toast } from 'react-toastify';
 import SuggesstionSearchInput from './Components/SuggesstionSearchInput';
 import TaxableSwitch from './Components/TaxableSwitch';
+import GRFilter from './Components/GRFilter';
 import { Link } from 'react-router-dom';
 import SubclassSuggesstion from './Components/SubclassSuggesstion';
 
@@ -55,8 +56,9 @@ const formatCurrency = (amount: number) => {
 };
 
 const ADNAssessment = () => {
-    const [taxabilityFilter, setTaxabilityFilter] = useState('exempt'); // Add this line
+    const [taxabilityFilter, setTaxabilityFilter] = useState('exempt');
     const [subclassFilter, setSubclassFilter] = useState<string>('all');
+    const [grFilter, setGrFilter] = useState<string>('all');
 
     const token = localStorage.getItem('token');
     const dispatch = useDispatch();
@@ -195,7 +197,7 @@ const ADNAssessment = () => {
     // });
 
 
-    // 2. Filter by taxability and subclass
+    // 2. Filter by taxability, subclass, and gr
     const filteredData = searchFilteredData.filter((item: Assessment) => {
         const matchesTaxability =
             taxabilityFilter === 'all' ||
@@ -205,8 +207,12 @@ const ADNAssessment = () => {
         const matchesSubclass =
             subclassFilter === 'all' || item.sub_class?.toLowerCase() === subclassFilter.toLowerCase();
 
-        return matchesTaxability && matchesSubclass;
+        const matchesGr =
+            grFilter === 'all' || item.gr === grFilter;
+
+        return matchesTaxability && matchesSubclass && matchesGr;
     });
+    
 
 
 
@@ -411,12 +417,30 @@ const ADNAssessment = () => {
                         </div>
                     </div>
                 </div>
-                <div className='flex gap-2'>
-                    <TaxableSwitch setTaxabilityFilter={setTaxabilityFilter} />
-                    <SubclassSuggesstion setSubclassFilter={setSubclassFilter} />
+            </div>
+
+            {/* Filter Section with Labels */}
+            <div className="mb-6">
+                <div className='flex gap-4 flex-wrap'>
+                    <div className="flex flex-col min-w-[200px]">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Taxability Filter
+                        </label>
+                        <TaxableSwitch setTaxabilityFilter={setTaxabilityFilter} />
+                    </div>
+                    <div className="flex flex-col min-w-[200px]">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Subclass Filter
+                        </label>
+                        <SubclassSuggesstion setSubclassFilter={setSubclassFilter} />
+                    </div>
+                    <div className="flex flex-col min-w-[200px]">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            GR Filter
+                        </label>
+                        <GRFilter setGrFilter={setGrFilter} />
+                    </div>
                 </div>
-
-
             </div>
 
             <div className="panel md:w-[920px] xl:w-full">
