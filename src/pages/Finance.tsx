@@ -165,11 +165,14 @@ const Finance = () => {
                     {/* RPUS */}
                     <div className="panel bg-gradient-to-r from-cyan-500 to-cyan-400 p-4 rounded-xl shadow-md w-full max-w-2xl mx-auto">
                         <div className="flex justify-between items-center mb-2">
-                            <img
-                                src="/mun_logo/pgan.webp"
-                                alt="Agusan Logo"
-                                className="w-14 h-14 opacity-90 sm:w-16 sm:h-16"
-                            />
+
+                            <Link to={`/assessment/adn`}>
+                                <img
+                                    src={`/mun_logo/pgan.webp`}
+                                    alt={`pgan Logo`}
+                                    className="opacity-90 hover:opacity-100 transition-opacity duration-200 w-20 h-20 cursor-pointer"
+                                />
+                            </Link>
                             <h2 className='text-lg text-white'>Agusan del Norte</h2>
                             <div className="text-xl sm:text-2xl font-semibold text-white">
 

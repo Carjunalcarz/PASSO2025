@@ -709,3 +709,24 @@ pre.hljs {
     @apply p-6 rounded-md overflow-x-auto !bg-[#191e3a];
 }
 
+/* Hide scrollbar by default */
+.scrollbar-hidden {
+    scrollbar-width: none; /* Firefox */
+  }
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
+  
+  /* Show scrollbar on hover */
+  .scrollbar-hover:hover {
+    scrollbar-width: thin;
+  }
+  .scrollbar-hover:hover::-webkit-scrollbar {
+    display: block;
+    height: 8px;
+  }
+  .scrollbar-hover:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(100, 100, 100, 0.4);
+    border-radius: 4px;
+  }
+  

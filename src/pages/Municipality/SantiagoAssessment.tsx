@@ -32,19 +32,23 @@ interface Assessment {
     tdn: string;
     market_val: number;
     ass_value: number;
-    sub_class: string;
-    eff_date: string;
-    classification: string;
-    ass_level: string;
     area: number;
+    unit_value: number;
+    kind: string;
+    ass_level:number;
+    classification: string;
+    sub_class: string;
     taxability: string;
     trans_cd: string;
-    gr_code: string;
-    gr: string;
+    tax_beg_yr: number;
+    eff_date: string;
+    owner_no: string;
     mun_code: string;
     municipality: string;
     barangay_code: string;
     barangay: string;
+    gr_code: string;
+    gr: string;
 }
 
 const formatCurrency = (amount: number) => {
@@ -67,7 +71,7 @@ const SantiagoAssessment = () => {
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
     const [search, setSearch] = useState('');
     const [searchColumn, setSearchColumn] = useState('tdn');
-    const [hideCols, setHideCols] = useState<Array<keyof Assessment>>(['name', 'barangay_code', 'mun_code', 'gr_code', 'eff_date']);
+    const [hideCols, setHideCols] = useState<Array<keyof Assessment>>(['name', 'barangay_code', 'mun_code', 'gr_code', 'eff_date' , 'owner_no']);
     const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
         columnAccessor: 'tdn',
         direction: 'asc',
@@ -101,6 +105,25 @@ const SantiagoAssessment = () => {
             render: (record: Assessment) => <div>{record.area ? record.area : 0}</div>,
             sortable: true
         },
+        {
+            accessor: 'unit_value',
+            title: 'Unit Value',
+            render: (record: Assessment) => <div>{record.unit_value ? record.unit_value : 0}</div>,
+            sortable: true
+        },
+        {
+            accessor: 'kind',
+            title: 'Kind',
+            render: (record: Assessment) => <div>{record.kind ? record.kind : 0}</div>,
+            sortable: true
+        },
+        {
+            accessor: 'ass_level',
+            title: 'Ass Level',
+            render: (record: Assessment) => <div>{record.ass_level ? record.ass_level : 0}</div>,
+            sortable: true
+        },
+        
         { accessor: 'classification', title: 'Classification', sortable: true },
         { accessor: 'sub_class', title: 'Sub Class', sortable: true },
         {
@@ -113,12 +136,32 @@ const SantiagoAssessment = () => {
             title: 'Transaction Code',
             sortable: true,
         },
-        { accessor: 'gr_code', title: 'GR Code', sortable: true },
-        { accessor: 'gr', title: 'GR', sortable: true },
+        {
+            accessor: 'tax_beg_yr',
+            title: 'Tax Beg Yr',
+            render: (record: Assessment) => <div>{record.tax_beg_yr ? record.tax_beg_yr : 0}</div>,
+            sortable: true
+        },
+        {
+            accessor: 'eff_date',
+            title: 'Eff Date',
+            render: (record: Assessment) => <div>{record.eff_date ? record.eff_date : 0}</div>,
+            sortable: true
+        },
+        {
+            accessor: 'owner_no',
+            title: 'Owner No',
+            render: (record: Assessment) => <div>{record.owner_no ? record.owner_no : 0}</div>,
+            sortable: true
+        },
+     
         { accessor: 'mun_code', title: 'Municipality Code', sortable: true },
         { accessor: 'municipality', title: 'Municipality', sortable: true },
         { accessor: 'barangay_code', title: 'Barangay Code', sortable: true },
         { accessor: 'barangay', title: 'Barangay', sortable: true },
+        { accessor: 'gr_code', title: 'GR Code', sortable: true },
+        { accessor: 'gr', title: 'GR', sortable: true },
+
         {
             accessor: 'actions',
             sortable: false,
@@ -206,7 +249,7 @@ const SantiagoAssessment = () => {
             subclassFilter === 'all' || item.sub_class?.toLowerCase() === subclassFilter.toLowerCase();
 
             const matchesGR =
-            grFilter === 'all' || item.gr?.toLowerCase() === grFilter.toLowerCase();
+            grFilter === 'all' || item.gr_code?.toLowerCase() === grFilter.toLowerCase();
 
         return matchesTaxability && matchesSubclass && matchesGR;
     });
@@ -372,47 +415,47 @@ const SantiagoAssessment = () => {
             </ul>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="panel bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg shadow-md">
-                    <div className="flex justify-between items-start w-full">
+             {/* Summary Cards */}
+             <div className="overflow-x-auto scrollbar-hidden scrollbar-hover">
+                <div className="grid grid-flow-col auto-cols-[minmax(250px,1fr)] gap-4 mb-6 w-max min-w-full">
+                    {/* Panel 1 */}
+                    <div className="panel bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg shadow-md">
+                        <div className="flex justify-between items-start w-full">
+                            <div className="flex flex-col items-start gap-2">
+                                <img src="/mun_logo/santiago.png" alt="santiago Logo" className="w-20 h-20 rounded-sm" />
+                            </div>
+                            <div className="flex flex-col items-end gap-1">
+                                <div className="text-3xl font-bold">{sums.recordCount.toLocaleString()}</div>
+                                <div className="text-blue-100">Total RPU Records</div>
+                            </div>
+                        </div>
+                        <p className="text-left text-xl m-2">Santiago</p>
+                    </div>
 
-                        {/* Left side: Image and title stacked */}
-                        <div className="flex flex-col items-start gap-2">
-                            <img src="/mun_logo/santiago.png" alt="Santiago Logo" className="w-20 h-20 rounded-sm" />
-                        </div>
+                    {/* Panel 2 */}
+                    <div className="panel bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-lg shadow-md">
+                        <div className="text-xl font-bold">{formatCurrency(sums.totalMarketValue)}</div>
+                        <div className="text-green-100">Total Market Value</div>
+                    </div>
 
-                        {/* Right side: Number and label stacked */}
-                        <div className="flex flex-col items-end gap-1">
-                            <div className="text-3xl font-bold">{sums.recordCount.toLocaleString()}</div>
-                            <div className="text-blue-100">Total RPU Records</div>
-                        </div>
+                    {/* Panel 3 */}
+                    <div className="panel bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-lg shadow-md">
+                        <div className="text-xl font-bold">{formatCurrency(sums.totalAssessmentValue)}</div>
+                        <div className="text-purple-100">Total Assessment Value</div>
+                    </div>
 
+                    {/* Panel 4 */}
+                    <div className="panel bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 rounded-lg shadow-md">
+                        <div className="text-xl font-bold">{sums.totalArea.toLocaleString()} sqm</div>
+                        <div className="text-orange-100">Total Area</div>
                     </div>
-                    <h1 className="text-xl m-2">Santiago</h1>
-                </div>
-                <div className="panel bg-gradient-to-r from-green-500 to-green-600 text-white">
-                    <div className="flex items-center">
-                        <div className="ltr:mr-3 rtl:ml-3">
-                            <div className="text-xl font-bold">{formatCurrency(sums.totalMarketValue)}</div>
-                            <div className="text-green-100">Total Market Value</div>
-                        </div>
+
+                    {/* Panel 5 */}
+                    <div className="panel bg-gradient-to-r from-pink-500 to-pink-600 text-white p-4 rounded-lg shadow-md">
+                        <div className="text-xl font-bold">{formatCurrency(sums.totalAssessmentValue*0.02)}</div>
+                        <div className="text-pink-100">Tax Due 1% SEF + 1 % Basic</div>
                     </div>
-                </div>
-                <div className="panel bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-                    <div className="flex items-center">
-                        <div className="ltr:mr-3 rtl:ml-3">
-                            <div className="text-xl font-bold">{formatCurrency(sums.totalAssessmentValue)}</div>
-                            <div className="text-purple-100">Total Assessment Value</div>
-                        </div>
-                    </div>
-                </div>
-                <div className="panel bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-                    <div className="flex items-center">
-                        <div className="ltr:mr-3 rtl:ml-3">
-                            <div className="text-xl font-bold">{sums.totalArea.toLocaleString()} sqm</div>
-                            <div className="text-orange-100">Total Area</div>
-                        </div>
-                    </div>
+
                 </div>
             </div>
             <div className="mb-6">

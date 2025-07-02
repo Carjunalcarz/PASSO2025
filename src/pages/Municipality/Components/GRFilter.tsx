@@ -129,7 +129,7 @@ function GRFilter({ setGrFilter }: { setGrFilter: (value: string) => void }) {
                 onKeyDown={handleKeyDown}
                 onBlur={handleBlur}
                 onFocus={handleFocus}
-                className="form-input w-full dark:bg-white text-black"
+                className="form-input w-full  text-black"
             />
             {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
