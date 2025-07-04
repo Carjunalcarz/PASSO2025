@@ -115,6 +115,8 @@ interface TableItem {
 
 const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue, watch }) => {
     const items = flattenAdditionalItems();
+    
+    // Get current form values
     const selectedLabel = watch("additionalItem");
     const selectedItem = items.find((item) => item.label === selectedLabel);
     const unitValue = watch("generalDescription.unitValue") || 0;
@@ -123,6 +125,7 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
     const tableItems = watch("additionalItems.items") || [];
     const subTotal = watch('additionalItems.subTotal');
     const total = watch('additionalItems.total');
+    
     const [nextId, setNextId] = useState(() => {
         // Initialize with max id + 1 from existing items
         const existingItems = tableItems || [];
@@ -147,7 +150,7 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
             label: selectedItem.label,
             value: selectedItem.value,
             quantity: 1,
-            amount: calculateTotal({ // Initialize with calculated total
+            amount: calculateTotal({
                 id: nextId,
                 label: selectedItem.label,
                 value: selectedItem.value,
@@ -242,9 +245,14 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
 
     return (
         <React.Fragment>
-            <h1 className='text-xl'>Additional Items</h1>
+            <h2 className='text-xl px-5 text-wrap text-left mb-4'>ADDITIONAL ITEMS</h2>
             <label htmlFor="additionalItem">Select Additional Item:</label>
-            <select className='form-input' id="additionalItem" {...register("additionalItem")}>
+            <select 
+                className='form-input' 
+                id="additionalItem" 
+                value={selectedLabel || ""}
+                onChange={(e) => setValue("additionalItem", e.target.value)}
+            >
                 <option value="">-- Select an item --</option>
                 {items.map((item, idx) => (
                     <option key={idx} value={item.label}>
@@ -300,7 +308,6 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
                                 </tr>
                             )}
                             {tableItems.map((item: TableItem) => (
-
                                 <tr key={item.id}>
                                     <td>{item.label}</td>
                                     <td>
@@ -349,7 +356,6 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
                             {tableItems.length > 0 && (
                                 <tr className="font-bold">
                                     <td colSpan={4} className="text-right">Subtotal:</td>
-
                                     <td>{formatPHP(subTotal)}</td>
                                     <td></td>
                                 </tr>

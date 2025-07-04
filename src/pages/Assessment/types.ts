@@ -18,9 +18,6 @@ export interface AssessmentFormData {
         tin: string;
         telNo: string;
     };
-    ownerDetail: {
-        ownerAddress: string;
-    };
     landReference: {
         land_owner: string;
         block_no: string;

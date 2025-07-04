@@ -46,7 +46,7 @@ const RecordOfSupersededAssessment: React.FC<RecordOfSupersededAssessmentProps> 
     return (
         <div className="p-4">
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-center">Record of Superseded Assessment</h2>
+            <h2 className='text-xl px-5 text-wrap text-left mb-8'>RECORD OF SUPERSEDED ASSESSMENT</h2>
                 <button
                     type="button"
                     className="btn btn-primary"

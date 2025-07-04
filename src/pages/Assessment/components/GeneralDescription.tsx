@@ -87,12 +87,26 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
         onChange1(imageList); // keep this if you need to update parent
     };
 
-    // Helper function to render input fields with proper typing
+    // Get current form values
+    const buildingPermitNo = watch('generalDescription.building_permit_no');
+    const certificateOfCompletion = watch('generalDescription.certificate_of_completion_issued_on');
+    const certificateOfOccupancy = watch('generalDescription.certificate_of_occupancy_issued_on');
+    const dateOfOccupied = watch('generalDescription.date_of_occupied');
+    const bldgAge = watch('generalDescription.bldg_age');
+    const noOfStoreys = watch('generalDescription.no_of_storeys');
+    const areaOf1stFloor = watch('generalDescription.area_of_1st_floor');
+    const areaOf2ndFloor = watch('generalDescription.area_of_2nd_floor');
+    const areaOf3rdFloor = watch('generalDescription.area_of_3rd_floor');
+    const areaOf4thFloor = watch('generalDescription.area_of_4th_floor');
+    const totalFloorArea = watch('generalDescription.total_floor_area');
+
+    // Helper function to render input fields with proper typing and current values
     const renderInputField = (
         id: keyof FormValues,
         label: string,
         type: string = 'text',
-        placeholder: string = ''
+        placeholder: string = '',
+        currentValue?: string
     ) => (
         <InputField
             label={label}
@@ -101,6 +115,7 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
             placeholder={placeholder}
             className="w-1/2"
             labelClassName="w-1/3"
+            value={currentValue || ""}
             {...register(`generalDescription.${id}`)}
         />
     );
@@ -140,7 +155,7 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                         <tr>
                             <td className="border border-gray-300 p-3 w-1/3">Building Permit No.</td>
                             <td className="p-3">
-                                {renderInputField('building_permit_no', 'Building Permit No.', 'text', 'Enter Building Permit No.')}
+                                {renderInputField('building_permit_no', 'Building Permit No.', 'text', 'Enter Building Permit No.', buildingPermitNo)}
                             </td>
                         </tr>
 
@@ -211,21 +226,21 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                         <tr>
                             <td className="border border-gray-300 p-3 w-1/3">Certificate of Completion Issued On</td>
                             <td className="p-3">
-                                {renderInputField('certificate_of_completion_issued_on', 'Certificate of Completion', 'date')}
+                                {renderInputField('certificate_of_completion_issued_on', 'Certificate of Completion', 'date', '', certificateOfCompletion)}
                             </td>
                         </tr>
 
                         <tr>
                             <td className="border border-gray-300 p-3 w-1/3">Certificate of Occupancy Issued On</td>
                             <td className="p-3">
-                                {renderInputField('certificate_of_occupancy_issued_on', 'Certificate of Occupancy', 'date')}
+                                {renderInputField('certificate_of_occupancy_issued_on', 'Certificate of Occupancy', 'date', '', certificateOfOccupancy)}
                             </td>
                         </tr>
                         {/* Date of Occupied */}
                         <tr>
                             <td className="border border-gray-300 p-3 w-1/3">Date of Occupied</td>
                             <td className="p-3">
-                                {renderInputField('date_of_occupied', 'Date of Occupied', 'date')}
+                                {renderInputField('date_of_occupied', 'Date of Occupied', 'date', '', dateOfOccupied)}
                             </td>
                         </tr>
 
@@ -233,14 +248,14 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                         <tr>
                             <td className="border border-gray-300 p-3 w-1/3">Building Age</td>
                             <td className="p-3">
-                                {renderInputField('bldg_age', 'Building Age', 'number', 'Enter Building Age')}
+                                {renderInputField('bldg_age', 'Building Age', 'number', 'Enter Building Age', bldgAge)}
                             </td>
                         </tr>
 
                         <tr>
                             <td className="border border-gray-300 p-3 w-1/3">Number of Storeys</td>
                             <td className="p-3">
-                                {renderInputField('no_of_storeys', 'Number of Storeys', 'number', 'Enter Number of Storeys')}
+                                {renderInputField('no_of_storeys', 'Number of Storeys', 'number', 'Enter Number of Storeys', noOfStoreys)}
                             </td>
                         </tr>
 
@@ -249,10 +264,10 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                             <td className="border border-gray-300 p-3 w-1/3">Floor Areas (sqm)</td>
                             <td className="p-3">
                                 <div className="space-y-2">
-                                    {renderInputField('area_of_1st_floor', '1st Floor', 'number', '1st Floor')}
-                                    {renderInputField('area_of_2nd_floor', '2nd Floor', 'number', '2nd Floor')}
-                                    {renderInputField('area_of_3rd_floor', '3rd Floor', 'number', '3rd Floor')}
-                                    {renderInputField('area_of_4th_floor', '4th Floor', 'number', '4th Floor')}
+                                    {renderInputField('area_of_1st_floor', '1st Floor', 'number', '1st Floor', areaOf1stFloor)}
+                                    {renderInputField('area_of_2nd_floor', '2nd Floor', 'number', '2nd Floor', areaOf2ndFloor)}
+                                    {renderInputField('area_of_3rd_floor', '3rd Floor', 'number', '3rd Floor', areaOf3rdFloor)}
+                                    {renderInputField('area_of_4th_floor', '4th Floor', 'number', '4th Floor', areaOf4thFloor)}
                                 </div>
                             </td>
                         </tr>
@@ -260,7 +275,7 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                         <tr>
                             <td className="border border-gray-300 p-3 w-1/3">Total Floor Area</td>
                             <td className="p-3">
-                                {renderInputField('total_floor_area', 'Total Floor Area', 'number', 'Total Floor Area')}
+                                {renderInputField('total_floor_area', 'Total Floor Area', 'number', 'Total Floor Area', totalFloorArea)}
                             </td>
                         </tr>
 

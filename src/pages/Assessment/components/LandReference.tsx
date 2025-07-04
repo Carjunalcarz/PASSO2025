@@ -6,7 +6,7 @@ import InputField from './shared/InputField';
 const LandReference: React.FC<{ register: any }> = ({ register }) => {
     return (
         <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-            <h2 className="text-xl px-5 text-wrap text-left">LAND REFERENCE</h2>
+            <h2 className='text-xl px-10 text-wrap text-left mb-8'>LAND REFERENCE</h2>
             <div className="flex justify-between lg:flex-row flex-col m-5">
                 {/* Left Column */}
                 <div className="lg:w-1/2 w-full ltr:lg:mr-6 rtl:lg:ml-6 mb-6">

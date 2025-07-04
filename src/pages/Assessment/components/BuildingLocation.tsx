@@ -4,6 +4,7 @@ import SuggestionInput from './shared/SuggestionInput';
 import { set } from 'lodash';
 
 interface BuildingLocationProps {
+    reset : any
     register: any;
     setValue: any;
     watch: any;
@@ -72,6 +73,7 @@ const BuildingLocation = ({
                         onInputChange={handleInputChangeMunicipality}
                         onSuggestionClick={handleSuggestionClickMunicipality}
                         setShowSuggestions={setShowMunicipalitySuggestions}
+                        value={municipality || ""}
                     />
 
                     <SuggestionInput
@@ -84,7 +86,7 @@ const BuildingLocation = ({
                         onSuggestionClick={handleSuggestionClickBarangay}
                         setShowSuggestions={setShowBarangaySuggestions}
                         labelClassName="w-1/4"
-
+                        value={barangay || ""}
                     />
 
                     <div className="mt-4 items-center">
@@ -111,6 +113,7 @@ const BuildingLocation = ({
                         onInputChange={handleInputChangeProvince}
                         onSuggestionClick={handleSuggestionClickProvince}
                         setShowSuggestions={setShowProvinceSuggestions}
+                        value={province || ""}
                     />
                 </div>
             </div>

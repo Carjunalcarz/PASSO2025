@@ -1,4 +1,4 @@
-import { Link , useNavigate} from 'react-router-dom';
+import { Link , useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
@@ -30,6 +30,8 @@ import { useAssessmentValidation } from './hooks/useAssessmentValidation';
 import ValidationDebug from './components/ValidationDebug';
 import FillDummyButton from './components/testing/FillDummyButton';
 import ErrorValidator from './components/error_validator/ErrorValidator';
+import axios from 'axios';
+
 
 // Type definitions
 type BarangayData = {
@@ -96,6 +98,9 @@ export interface AssessmentFormData {
         area_of_3rd_floor: string;
         area_of_4th_floor: string;
         total_floor_area: string;
+        kind_of_bldg: string;
+        structural_type: string;
+        unitValue: number;
     };
     memoranda: Array<{
         date: string;
@@ -104,14 +109,168 @@ export interface AssessmentFormData {
     recordOfSupersededAssessment: {
         records: Array<any>;
     };
+    buildingCategory: string;
+    effectivityOfAssessment: {
+        quarter: string;
+        year: string;
+    };
+    structuralMaterial: Record<string, boolean | string>;
+    additionalItems: {
+        items: Array<{
+            id: number;
+            label: string;
+            value: any;
+            quantity: number;
+            amount: number;
+            description: string;
+        }>;
+        subTotal: number;
+        total: number;
+    };
 }
 
-const Add = () => {
+const UpdateAssessment = () => {
+    const { id } = useParams(); // Assuming route is like /assessment/update/:id
     const token = localStorage.getItem('token');
     const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    const {
+        register,
+        handleSubmit,
+        watch,
+        setValue,
+        reset,
+        control,
+        errors,
+        isValid,
+        isDirty,
+        isSubmitting,
+        trigger,
+        getNestedError,
+        validateField,
+    } = useAssessmentValidation();
+
     useEffect(() => {
-        dispatch(setPageTitle('Invoice Add'));
-    }, [dispatch]);
+        const fetchData = async () => {
+            if (!id) return;
+            try {
+                const response = await axios.get(
+                    `http://localhost:8000/assessment/get-assessment/${id}`,
+                    {
+                        headers: { Authorization: `Bearer ${token}` }
+                    }
+                );
+                const data = response.data;
+                
+                // Map API data to your form structure here
+                const mappedData = {
+                    approvalSection: {
+                        appraisedBy: data.approval_section?.appraised_by || "",
+                        appraisedDate: data.approval_section?.appraised_date || "",
+                        recommendingApproval: data.approval_section?.recommending_approval || "",
+                        municipalityAssessorDate: data.approval_section?.municipality_assessor_date || "",
+                        approvedByProvince: data.approval_section?.approved_by_province || "",
+                        provincialAssessorDate: data.approval_section?.provincial_assessor_date || "",
+                    },
+                    street: data.building_assessment?.street || "",
+                    ownerDetails: {
+                        td: data.owner_details?.td || "",
+                        owner: data.owner_details?.owner || "",
+                        ownerAddress: data.owner_details?.owner_address || "",
+                        admin_ben_user: data.owner_details?.admin_ben_user || "",
+                        transactionCode: data.owner_details?.transaction_code || "",
+                        pin: data.owner_details?.pin || "",
+                        tin: data.owner_details?.tin || "",
+                        telNo: data.owner_details?.tel_no || "",
+                    },
+                    ownerDetail: {
+                        ownerAddress: data.owner_details?.owner_address || "",
+                    },
+                    landReference: {
+                        land_owner: data.land_reference?.land_owner || "",
+                        block_no: data.land_reference?.block_no || "",
+                        tdn_no: data.land_reference?.tdn_no || "",
+                        pin: data.land_reference?.pin || "",
+                        lot_no: data.land_reference?.lot_no || "",
+                        survey_no: data.land_reference?.survey_no || "",
+                        area: data.land_reference?.area || "",
+                    },
+                    buildingLocation: {
+                        address_municipality: data.building_assessment?.building_location?.address_municipality || "",
+                        address_barangay: data.building_assessment?.building_location?.address_barangay || "",
+                        street: data.building_assessment?.building_location?.street || "",
+                    },
+                    address_municipality: data.building_assessment?.address_municipality || "",
+                    address_barangay: data.building_assessment?.address_barangay || "",
+                    address_province: data.building_assessment?.address_province || "",
+                    generalDescription: {
+                        building_permit_no: data.building_assessment?.general_description?.building_permit_no || "",
+                        certificate_of_completion_issued_on: data.building_assessment?.general_description?.certificate_of_completion_issued_on || "",
+                        certificate_of_occupancy_issued_on: data.building_assessment?.general_description?.certificate_of_occupancy_issued_on || "",
+                        date_of_occupied: data.building_assessment?.general_description?.date_of_occupied || "",
+                        bldg_age: data.building_assessment?.general_description?.bldg_age || "",
+                        no_of_storeys: data.building_assessment?.general_description?.no_of_storeys || "",
+                        area_of_1st_floor: data.building_assessment?.general_description?.area_of_1st_floor || "",
+                        area_of_2nd_floor: data.building_assessment?.general_description?.area_of_2nd_floor || "",
+                        area_of_3rd_floor: data.building_assessment?.general_description?.area_of_3rd_floor || "",
+                        area_of_4th_floor: data.building_assessment?.general_description?.area_of_4th_floor || "",
+                        total_floor_area: data.building_assessment?.general_description?.total_floor_area?.toString() || "",
+                        kind_of_bldg: data.building_assessment?.general_description?.kind_of_bldg || "",
+                        structural_type: data.building_assessment?.general_description?.structural_type || "",
+                        unitValue: data.building_assessment?.general_description?.unit_value || 0,
+                    },
+                    memoranda: data.building_assessment?.memoranda?.map((memo: any) => ({
+                        date: memo.date || "",
+                        details: memo.details || ""
+                    })) || [],
+                    recordOfSupersededAssessment: {
+                        records: data.building_assessment?.superseded_records?.map((record: any) => ({
+                            pin: record.pin || "",
+                            td_arp_no: record.td_arp_no || "",
+                            total_assessed_value: record.total_assessed_value || "",
+                            previous_owner: record.previous_owner || "",
+                            date_of_effectivity: record.date_of_effectivity || "",
+                            record_date: record.record_date || "",
+                            assessment: record.assessment || "",
+                            tax_mapping: record.tax_mapping || "",
+                            records: record.records || ""
+                        })) || [],
+                    },
+                    propertyAssessment: {
+                        id: data.building_assessment?.property_assessment_items?.[0]?.id || 1,
+                        market_value: data.building_assessment?.property_assessment_items?.[0]?.market_value || 0,
+                        building_category: data.building_assessment?.property_assessment_items?.[0]?.building_category || "",
+                        assessment_level: data.building_assessment?.property_assessment_items?.[0]?.assessment_level?.toString() || "",
+                        assessment_value: data.building_assessment?.property_assessment_items?.[0]?.assessment_value || 0,
+                        taxable: data.building_assessment?.property_assessment_items?.[0]?.taxable ?? 1,
+                        eff_year: data.building_assessment?.property_assessment_items?.[0]?.eff_year || new Date().getFullYear().toString(),
+                        eff_quarter: data.building_assessment?.property_assessment_items?.[0]?.eff_quarter || "QTR1",
+                        total_area: data.building_assessment?.property_assessment_items?.[0]?.total_area || 0
+                        
+                    },
+                    structuralMaterial: data.building_assessment?.structural_material?.material_data || {},
+                    additionalItems: {
+                        items: data.building_assessment?.additional_items?.map((item: any) => ({
+                            id: item.id,
+                            label: item.label,
+                            value: item.item_value,
+                            quantity: item.quantity,
+                            amount: item.amount,
+                            description: item.description || ""
+                        })) || [],
+                        subTotal: data.building_assessment?.additional_items_summary?.sub_total || 0,
+                        total: data.building_assessment?.additional_items_summary?.total || 0
+                    },
+                };
+                reset(mappedData); // This will pre-fill your form
+            } catch (error) {
+                toast.error('Failed to load assessment data');
+                console.error(error);
+            }
+        };
+        fetchData();
+    }, [id, reset, token]);
 
     const currencyList = ['USD - US Dollar', 'GBP - British Pound', 'IDR - Indonesian Rupiah', 'INR - Indian Rupee', 'BRL - Brazilian Real', 'EUR - Germany (Euro)', 'TRY - Turkish Lira'];
 
@@ -376,21 +535,6 @@ const Add = () => {
     const [showSuperseded, setShowSuperseded] = useState(false);
 
  
-    const {
-        register,
-        handleSubmit,
-        watch,
-        setValue,
-        reset,
-        control,
-        errors,
-        isValid,
-        isDirty,
-        isSubmitting,
-        trigger,
-        getNestedError,
-        validateField,
-    } = useAssessmentValidation();
 
     // Real-time logging
     const allValues = watch();
@@ -404,46 +548,26 @@ const Add = () => {
     const [showAdditionalItem, setShowAdditionalItem] = useState(false);
 
     const { submitAssessment, isSubmitting: oldIsSubmitting } = useAssessmentSubmit();
-    const navigate = useNavigate();
+
     const onSubmit = async (data: AssessmentFormData) => {
-        console.log('Sending form data to API:', data);
-        
-        // Validate all fields before submission
         const isValidForm = await trigger();
         if (!isValidForm) {
             toast.error('Please fix validation errors before submitting');
-            console.log('Validation errors:', errors);
             return;
         }
-
         try {
-            const response = await fetch('http://localhost:8000/assessment/add', {
-                method: 'POST',
+            const url = `${import.meta.env.VITE_API_URL_FASTAPI}/assessment/update/${id}`;
+            const response = await axios.put(url, data, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
+                }
             });
-
-            if (!response.ok) {
-                throw new Error('Failed to submit');
-            }
-
-            const result = await response.json();
-            console.log('Submission successful:', result);
-
-            // ✅ Show success toast
-            toast.success('Assessment submitted successfully!');
-
-            // ✅ Clear form fields after successful submit
-            reset();
-            navigate(0); // This will reload the current route
-
+            toast.success('Assessment updated successfully!');
+            navigate(-1); // Go back or redirect as needed
         } catch (error) {
-            console.error('Submission error:', error);
-            // ❌ Show error toast
-            toast.error('Failed to submit assessment.');
+            toast.error('Failed to update assessment.');
+            console.error(error);
         }
     };
 
@@ -553,7 +677,11 @@ const Add = () => {
                     </button>
                     {showStructuralMaterial && (
                         <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-                            <StructuralMaterialChecklist register={register} />
+                            <StructuralMaterialChecklist 
+                                register={register} 
+                                watch={watch}
+                                setValue={setValue}
+                            />
                         </div>
                     )}
                 </div>
@@ -778,4 +906,4 @@ const Add = () => {
     );
 };
 
-export default Add;
+export default UpdateAssessment;

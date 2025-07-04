@@ -9,7 +9,13 @@ const useAssessmentSubmit = () => {
     const submitAssessment = async (data: AssessmentFormData) => {
         try {
             setIsSubmitting(true);
-            const response = await axios.post('YOUR_API_ENDPOINT/assessment', data);
+            const token = localStorage.getItem('token');
+            const response = await axios.post('http://localhost:8000/assessment/add', data, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
             toast.success('Assessment submitted successfully!');
             return response.data;
         } catch (error: any) {

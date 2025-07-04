@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface StructuralMaterialChecklistProps {
     register: any;
+    watch?: any;
+    setValue?: any;
 }
 
-const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = ({ register }) => {
+const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = ({ register, watch, setValue }) => {
     const [additionalFloors, setAdditionalFloors] = useState<{ [key: string]: number[] }>({
         walls_rc: [],
         walls_pc: [],
@@ -44,7 +46,45 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
         roof_nipa: [],
         roof_other: []
     });
+    
     const [mainChecked, setMainChecked] = useState<{ [key: string]: boolean }>({});
+
+    // Get current form values safely
+    const structuralMaterialValues = React.useMemo(() => {
+        if (typeof watch === 'function') {
+            try {
+                return watch('structuralMaterial') || {};
+            } catch (error) {
+                console.warn('Error watching structuralMaterial:', error);
+                return {};
+            }
+        }
+        return {};
+    }, [watch]);
+
+    // Update mainChecked state when form values change
+    useEffect(() => {
+        const newMainChecked: { [key: string]: boolean } = {};
+        
+        // Check all the main checkbox fields
+        const mainFields = [
+            'walls_reinforced_concrete', 'walls_plain_concrete', 'walls_chpb', 'walls_gi',
+            'walls_build_wall', 'walls_sawali', 'walls_bamboo', 'walls_other_checked',
+            'foundation_reinforced_concrete', 'foundation_plain_concrete', 'foundation_other_checked',
+            'columns_steel', 'columns_concrete', 'columns_wood', 'columns_other_checked',
+            'beams_steel', 'beams_concrete', 'beams_wood', 'beams_other_checked',
+            'floor_reinforced_concrete', 'floor_plain_concrete', 'floor_marble', 'floor_wood',
+            'floor_tiles', 'floor_other_checked', 'truss_steel', 'truss_wood', 'truss_other_checked',
+            'roof_reinforced_concrete', 'roof_tiles', 'roof_gi', 'roof_aluminum', 'roof_asbestos',
+            'roof_long_span', 'roof_concrete', 'roof_nipa', 'roof_other_checked'
+        ];
+        
+        mainFields.forEach(field => {
+            newMainChecked[field] = !!structuralMaterialValues[field];
+        });
+        
+        setMainChecked(newMainChecked);
+    }, [structuralMaterialValues]);
 
     const handleAddFloor = (section: string) => {
         setAdditionalFloors(prev => {
@@ -64,10 +104,26 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
         return (
             <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-4">
-                    <input type="checkbox" className="form-checkbox h-4 w-4" {...register(`structuralMaterial.${section}_1st`)} />
-                    <input type="checkbox" className="form-checkbox h-4 w-4" {...register(`structuralMaterial.${section}_2nd`)} />
-                    <input type="checkbox" className="form-checkbox h-4 w-4" {...register(`structuralMaterial.${section}_3rd`)} />
-                    <input type="checkbox" className="form-checkbox h-4 w-4" {...register(`structuralMaterial.${section}_4th`)} />
+                    <input 
+                        type="checkbox" 
+                        className="form-checkbox h-4 w-4" 
+                        {...register(`structuralMaterial.${section}_1st`)}
+                    />
+                    <input 
+                        type="checkbox" 
+                        className="form-checkbox h-4 w-4" 
+                        {...register(`structuralMaterial.${section}_2nd`)}
+                    />
+                    <input 
+                        type="checkbox" 
+                        className="form-checkbox h-4 w-4" 
+                        {...register(`structuralMaterial.${section}_3rd`)}
+                    />
+                    <input 
+                        type="checkbox" 
+                        className="form-checkbox h-4 w-4" 
+                        {...register(`structuralMaterial.${section}_4th`)}
+                    />
                 </div>
                 {additionalFloors[section].length > 0 && (
                     <div className="flex items-center gap-4 mt-2">
@@ -114,7 +170,7 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
 
     return (
         <div className="px-4">
-            <h2 className="text-lg font-bold mb-4">Structural Material Checklist</h2>
+            <h2 className='text-xl px-5 text-wrap text-left mb-8'>STRUCTURAL MATERIAL CHECKLIST</h2>
             <div className="flex flex-wrap -mx-2">
                 {/* First Column */}
                 <div className="w-1/2 px-2">
@@ -648,7 +704,7 @@ const StructuralMaterialChecklist: React.FC<StructuralMaterialChecklistProps> = 
                                                 type="text"
                                                 className="form-input text-sm w-24"
                                                 placeholder="Specify"
-                                                {...register('truss_other')}
+                                                {...register('structuralMaterial.truss_other')}
                                             />
                                         </div>
                                     </td>

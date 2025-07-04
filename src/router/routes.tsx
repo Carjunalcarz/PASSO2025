@@ -116,6 +116,7 @@ import TubayAssessment from '../pages/Municipality/TubayAssessment';
 import NasipitAssessment from '../pages/Municipality/NasipitAssessment';
 import ADNAssessment from '../pages/Municipality/ADN_Assessment';
 import Map from '../pages/Map'
+import UpdateAssessment from '../pages/Assessment/UpdateAssessment';
 const routes = [
     // dashboard
     {
@@ -707,6 +708,14 @@ const routes = [
             </ProtectedRoute>
         ),
 
+    },
+    {
+        path: '/assessment/update/:id',
+        element: (
+            <ProtectedRoute>
+                <UpdateAssessment />
+            </ProtectedRoute>
+        ),
     },
 ];
 
