@@ -11,15 +11,15 @@ import IconPlus from '../../components/Icon/IconPlus';
 import ImageUploading, { ImageListType } from 'react-images-uploading';
 import Header from './components/Header';
 import ImagePreviewModal from './components/ImagePreviewModal';
-import BuildingLocation from './components/BuildingLocation';
+import UpdateBuildingLocation from './components/UpdateBuildingLocation';
 import LandReference from './components/LandReference';
 import GeneralDescription from './components/GeneralDescription';
 import StructuralMaterialChecklist from './components/StructuralMaterialChecklist';
 import PropertyAppraisal from './components/PropertyAppraisal';
-import PropertyAssessment from './components/PropertyAssessment';
+import UpdatePropertyAssessment from './components/UpdatePropertyAssessment';
 import Memoranda from './components/Memoranda';
 import RecordOfSupersededAssessment from './components/RecordOfSupersededAssessment';
-import OwnerDetailsForm from './components/OwnerDetailsForm';
+import UpdateOwnerDetails from './components/UpdateOwnerDetails';
 import { useForm } from 'react-hook-form';
 import { UseFormRegister, FieldValues } from 'react-hook-form';
 import AdditionalItems from './components/Additionalitems';
@@ -175,10 +175,11 @@ const UpdateAssessment = () => {
                     },
                     street: data.building_assessment?.street || "",
                     ownerDetails: {
-                        td: data.owner_details?.td || "",
+                        id: data.owner_details?.id || "",
                         owner: data.owner_details?.owner || "",
                         ownerAddress: data.owner_details?.owner_address || "",
                         admin_ben_user: data.owner_details?.admin_ben_user || "",
+                        admin_ben_user_address: data.owner_details?.admin_ben_user_address || "",
                         transactionCode: data.owner_details?.transaction_code || "",
                         pin: data.owner_details?.pin || "",
                         tin: data.owner_details?.tin || "",
@@ -196,14 +197,12 @@ const UpdateAssessment = () => {
                         survey_no: data.land_reference?.survey_no || "",
                         area: data.land_reference?.area || "",
                     },
-                    buildingLocation: {
-                        address_municipality: data.building_assessment?.building_location?.address_municipality || "",
-                        address_barangay: data.building_assessment?.building_location?.address_barangay || "",
-                        street: data.building_assessment?.building_location?.street || "",
+                    update_buildingLocation: {
+                        update_address_province: data.building_assessment?.address_province || "",
+                        update_address_municipality: data.building_assessment?.address_municipality || "",
+                        update_address_barangay: data.building_assessment?.address_barangay || "",
+                        update_street: data.building_assessment?.street || "",
                     },
-                    address_municipality: data.building_assessment?.address_municipality || "",
-                    address_barangay: data.building_assessment?.address_barangay || "",
-                    address_province: data.building_assessment?.address_province || "",
                     generalDescription: {
                         building_permit_no: data.building_assessment?.general_description?.building_permit_no || "",
                         certificate_of_completion_issued_on: data.building_assessment?.general_description?.certificate_of_completion_issued_on || "",
@@ -237,7 +236,7 @@ const UpdateAssessment = () => {
                             records: record.records || ""
                         })) || [],
                     },
-                    propertyAssessment: {
+                    update_propertyAssessment: {
                         id: data.building_assessment?.property_assessment_items?.[0]?.id || 1,
                         market_value: data.building_assessment?.property_assessment_items?.[0]?.market_value || 0,
                         building_category: data.building_assessment?.property_assessment_items?.[0]?.building_category || "",
@@ -582,7 +581,7 @@ const UpdateAssessment = () => {
                 {/* ###########ENTRY############## */}
 
                 <div className="px-10 mt-2">
-                    <BuildingLocation
+                    <UpdateBuildingLocation
                         reset = {reset}
                         register={register}
                         watch={watch}
@@ -606,7 +605,7 @@ const UpdateAssessment = () => {
                 </div>
                 {/* ##########END############### */}
                 <div className="p-10">
-                    <OwnerDetailsForm 
+                    <UpdateOwnerDetails 
                         register={register} 
                         watch={watch} 
                         setValue={setValue}
@@ -752,7 +751,7 @@ const UpdateAssessment = () => {
                     </button>
                     {showPropertyAssessment && (
                         <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-                            <PropertyAssessment register={register} setValue={setValue} watch={watch} />
+                            <UpdatePropertyAssessment register={register} setValue={setValue} watch={watch} />
                         </div>
                     )}
                 </div>

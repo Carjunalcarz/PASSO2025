@@ -25,7 +25,7 @@ interface BuildingLocationProps {
     setShowBarangaySuggestions: (show: boolean) => void;
 }
 
-const BuildingLocation = ({
+const UpdateBuildingLocation = ({
     setValue,
     watch,
     register,
@@ -45,10 +45,25 @@ const BuildingLocation = ({
     setShowProvinceSuggestions,
     setShowBarangaySuggestions,
 }: BuildingLocationProps) => {
-    const municipality = watch("address_municipality");
-    const barangay = watch("address_barangay");
-    const street = watch("street");
-    const province = watch("address_province")
+    const update_municipality = watch("update_buildingLocation.update_address_municipality");
+    const update_barangay = watch("update_buildingLocation.update_address_barangay");
+    const update_street = watch("update_buildingLocation.update_street");
+    const update_province = watch("update_buildingLocation.update_address_province");
+
+    const handleMunicipalityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setValue("update_buildingLocation.update_address_municipality", e.target.value);
+        handleInputChangeMunicipality(e);
+    };
+
+    const handleBarangayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setValue("update_buildingLocation.update_address_barangay", e.target.value);
+        handleInputChangeBarangay(e);
+    };
+
+    const handleProvinceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setValue("update_buildingLocation.update_address_province", e.target.value);
+        handleInputChangeProvince(e);
+    };
 
     return (
         <div className="px-10 border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
@@ -64,18 +79,13 @@ const BuildingLocation = ({
                         placeholder="Enter Municipality"
                         suggestions={municipalitySuggestions}
                         showSuggestions={showMunicipalitySuggestions}
-                        onInputChange={(e) => {
-                            handleInputChangeMunicipality(e);
-                            setValue("address_municipality", e.target.value);
-                            setValue("buildingLocation.address_municipality", e.target.value);
-                        }}
+                        onInputChange={handleMunicipalityChange}
                         onSuggestionClick={(suggestion) => {
+                            setValue("update_buildingLocation.update_address_municipality", suggestion);
                             handleSuggestionClickMunicipality(suggestion);
-                            setValue("address_municipality", suggestion);
-                            setValue("buildingLocation.address_municipality", suggestion);
                         }}
                         setShowSuggestions={setShowMunicipalitySuggestions}
-                        value={municipality || ""}
+                        value={update_municipality || ""}
                     />
 
                     <SuggestionInput
@@ -84,19 +94,14 @@ const BuildingLocation = ({
                         placeholder="Enter Barangay"
                         suggestions={barangaySuggestions}
                         showSuggestions={showBarangaySuggestions}
-                        onInputChange={(e) => {
-                            handleInputChangeBarangay(e);
-                            setValue("address_barangay", e.target.value);
-                            setValue("buildingLocation.address_barangay", e.target.value);
-                        }}
+                        onInputChange={handleBarangayChange}
                         onSuggestionClick={(suggestion) => {
+                            setValue("update_buildingLocation.update_address_barangay", suggestion);
                             handleSuggestionClickBarangay(suggestion);
-                            setValue("address_barangay", suggestion);
-                            setValue("buildingLocation.address_barangay", suggestion);
                         }}
                         setShowSuggestions={setShowBarangaySuggestions}
                         labelClassName="w-1/4"
-                        value={barangay || ""}
+                        value={update_barangay || ""}
                     />
 
                     <div className="mt-4 items-center">
@@ -104,11 +109,12 @@ const BuildingLocation = ({
                             Street No. / Street
                         </div>
                         <textarea
+                            value={update_street || ""}
                             id="street"
                             name="street"
                             className="form-input ltr:rounded-l-none rtl:rounded-r-none flex-1"
                             placeholder="Enter No. / Street"
-                            {...register("street")}
+                            {...register("update_buildingLocation.update_street")}
                         ></textarea>
                     </div>
                 </div>
@@ -120,18 +126,13 @@ const BuildingLocation = ({
                         placeholder="Enter Province"
                         suggestions={provinceSuggestions}
                         showSuggestions={showProvinceSuggestions}
-                        onInputChange={(e) => {
-                            handleInputChangeProvince(e);
-                            setValue("address_province", e.target.value);
-                            setValue("buildingLocation.address_province", e.target.value);
-                        }}
+                        onInputChange={handleProvinceChange}
                         onSuggestionClick={(suggestion) => {
+                            setValue("update_buildingLocation.update_address_province", suggestion);
                             handleSuggestionClickProvince(suggestion);
-                            setValue("address_province", suggestion);
-                            setValue("buildingLocation.address_province", suggestion);
                         }}
                         setShowSuggestions={setShowProvinceSuggestions}
-                        value={province || ""}
+                        value={update_province || ""}
                     />
                 </div>
             </div>
@@ -139,4 +140,4 @@ const BuildingLocation = ({
     );
 };
 
-export default BuildingLocation;
+export default UpdateBuildingLocation;

@@ -11,7 +11,7 @@ interface OwnerDetailsFormProps {
     getNestedError?: (path: string) => FieldError | undefined;
 }
 
-const OwnerDetailsForm: React.FC<OwnerDetailsFormProps> = ({
+const UpdateOwnerDetails: React.FC<OwnerDetailsFormProps> = ({
     register,
     watch,
     setValue,
@@ -19,8 +19,9 @@ const OwnerDetailsForm: React.FC<OwnerDetailsFormProps> = ({
     getNestedError
 }) => {
 
-    const td_barangay = watch('buildingLocation.address_barangay');
-    const td_municipality = watch('buildingLocation.address_municipality');
+    const update_td_barangay = watch('update_buildingLocation.update_address_barangay');
+    const update_td_municipality = watch('update_buildingLocation.update_address_municipality');
+    const update_id = watch('ownerDetails.id');
 
     // Add municipality and barangay code mapping
     const municipalityBarangayCodes: { [key: string]: { code: string, barangays: { [key: string]: string } } } = {
@@ -121,62 +122,103 @@ const OwnerDetailsForm: React.FC<OwnerDetailsFormProps> = ({
         }
     };
 
-
     // Function to get municipality code
     const getMunicipalityCode = (municipality: string): string => {
-        return municipalityBarangayCodes[municipality?.toUpperCase()]?.code || '000';
+        const code = municipalityBarangayCodes[municipality?.toUpperCase()]?.code || '000';
+        console.log('Getting municipality code:', { municipality, code });
+        return code;
     };
 
     // Function to get barangay code
     const getBarangayCode = (municipality: string, barangay: string): string => {
-        if (!municipality || !barangay) return '000';
+        if (!municipality || !barangay) {
+            console.log('Missing municipality or barangay:', { municipality, barangay });
+            return '000';
+        }
 
         const municipalityUpper = municipality.toUpperCase().trim();
         const barangayUpper = barangay.toUpperCase().trim();
-
-        return municipalityBarangayCodes[municipalityUpper]?.barangays[barangayUpper] || '000';
+        const code = municipalityBarangayCodes[municipalityUpper]?.barangays[barangayUpper] || '000';
+        
+        console.log('Getting barangay code:', { 
+            municipality: municipalityUpper, 
+            barangay: barangayUpper, 
+            code 
+        });
+        
+        return code;
     };
 
     // Modified function to generate TDN
     const generateTDN = () => {
-        if (!td_municipality || !td_barangay) return '';
+        console.log('Generating TDN:', {
+            municipality: update_td_municipality,
+            barangay: update_td_barangay
+        });
 
-        const munCode = getMunicipalityCode(td_municipality);
-        const brgCode = getBarangayCode(td_municipality, td_barangay);
-        setValue('buildingLocation.bcode', brgCode);
-        setValue('buildingLocation.mun_code',munCode);
+        if (!update_td_municipality || !update_td_barangay) {
+            console.log('Missing required values for TDN generation');
+            return '';
+        }
+
+        const munCode = getMunicipalityCode(update_td_municipality);
+        const brgCode = getBarangayCode(update_td_municipality, update_td_barangay);
+        
+        console.log('Generated codes:', { munCode, brgCode });
+        
+        // Update the setValue paths to match the update form structure
+        setValue('update_buildingLocation.bcode', brgCode);
+        setValue('update_buildingLocation.mun_code', munCode);
 
         // Get current year
         const year = new Date().getFullYear();
 
-        // Generate a random 4-digit number
-        // const sequence = String(Math.floor(1000 + Math.random() * 9000));
-
-        // Format: MUNCODE-BRGCODE-YEAR-SEQUENCE
-        return `${year}-${munCode}-${brgCode}`;
+        // Format: YEAR-MUNCODE-BRGCODE
+        const tdn = `${year}-${munCode}-${brgCode}-${update_id}`;
+        console.log('Generated TDN:', tdn);
+        return tdn;
     };
 
+    // Add this useEffect to handle initial values
     useEffect(() => {
-        if (td_municipality && td_barangay) {  // Only set value if we have both values
-            setValue('ownerDetails.td', generateTDN());
+        // Force initial TDN generation once the form is loaded with values
+        if (update_td_municipality && update_td_barangay) {
+            const newTDN = generateTDN();
+            if (newTDN) {
+                setValue('UpdateOwnerDetails.td', newTDN);
+                // Also set the codes again to ensure they're persisted
+                const munCode = getMunicipalityCode(update_td_municipality);
+                const brgCode = getBarangayCode(update_td_municipality, update_td_barangay);
+                setValue('update_buildingLocation.bcode', brgCode);
+                setValue('update_buildingLocation.mun_code', munCode);
+            }
         }
-    }, [td_municipality, td_barangay, setValue]); // Change dependencies to what actually changes
+    }, []); // This will run once on mount
+
+    // Keep your existing useEffect for handling changes
+    useEffect(() => {
+        if (update_td_municipality && update_td_barangay) {
+            const newTDN = generateTDN();
+            if (newTDN) {
+                setValue('UpdateOwnerDetails.td', newTDN);
+            }
+        }
+    }, [update_td_municipality, update_td_barangay, setValue]);
 
     return (
         <div className='px-10 border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]'>
-               <h2 className='text-xl px-5 text-wrap text-left'>OWNER DETAILS</h2>
+            <h2 className='text-xl px-5 text-wrap text-left'>OWNER DETAILS</h2>
             <div className="mt-5 flex justify-between lg:flex-row flex-col">
                 <div className="lg:w-1/2 w-full">
-
                     <div className="flex items-center mt-4">
                         <InputField
-                            value={watch('ownerDetails.td')}
+                            value={watch('UpdateOwnerDetails.td')}
                             label="TD / ARP NO."
                             id="tdArpNo"
                             type="text"
                             placeholder="Enter TD / ARP NO."
                             disabled={true}
-                            error={getNestedError?.('ownerDetails.td')}
+                            error={getNestedError?.('UpdateOwnerDetails.td')}
                         />
                     </div>
                     <div className="flex items-center">
@@ -190,7 +232,7 @@ const OwnerDetailsForm: React.FC<OwnerDetailsFormProps> = ({
                         />
                     </div>
                     <div className="items-center mr-9">
-                        <div className="p-2 flex justify-center items-center  px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                        <div className="p-2 flex justify-center items-center px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
                             Owner Address
                         </div>
                         <textarea
@@ -203,7 +245,7 @@ const OwnerDetailsForm: React.FC<OwnerDetailsFormProps> = ({
                         ></textarea>
                     </div>
                     <div className="mt-4 items-center mr-9">
-                        <div className="p-2 flex justify-center items-center  px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                        <div className="p-2 flex justify-center items-center px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
                             Administrator / Benificial User
                         </div>
                         <InputField
@@ -216,11 +258,12 @@ const OwnerDetailsForm: React.FC<OwnerDetailsFormProps> = ({
                         />
                     </div>
                     <div className="items-center mr-9">
-                        <div className="p-2 flex justify-center items-center  px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                        <div className="p-2 flex justify-center items-center px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
                             Admin Address
                         </div>
                         <textarea
                             id="adminAddress"
+                            value={watch('ownerDetails.admin_ben_user_address')}
                             name="adminAddress"
                             className="form-input ltr:rounded-l-none rtl:rounded-r-none flex-1"
                             placeholder="Enter Admin Address"
@@ -278,4 +321,4 @@ const OwnerDetailsForm: React.FC<OwnerDetailsFormProps> = ({
     );
 };
 
-export default OwnerDetailsForm;
+export default UpdateOwnerDetails;
