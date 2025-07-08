@@ -158,6 +158,7 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setVa
     // Use a single object for propertyAssessment
     const propertyAssessment = watch('propertyAssessment') || {};
 
+    // Fix: Ensure we get the correct building category value
     const currentBuildingCategory = propertyAssessment.building_category || buildingCategory || '';
     const currentQuarter = propertyAssessment.eff_quarter || '';
     const currentYear = propertyAssessment.eff_year || '';
@@ -265,7 +266,12 @@ const PropertyAssessment: React.FC<PropertyAssessmentProps> = ({ register, setVa
                                     onChange={(e) => {
                                         const newValue = e.target.value;
                                         console.log('Setting building category to:', newValue);
-                                        setValue('propertyAssessment', { ...propertyAssessment, building_category: newValue });
+                                        // Fix: Update both propertyAssessment and buildingCategory consistently
+                                        const updatedPropertyAssessment = {
+                                            ...propertyAssessment,
+                                            building_category: newValue
+                                        };
+                                        setValue('propertyAssessment', updatedPropertyAssessment);
                                         setValue('buildingCategory', newValue);
                                     }}
                                 >

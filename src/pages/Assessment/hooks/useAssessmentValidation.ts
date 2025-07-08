@@ -31,7 +31,7 @@ export const useAssessmentValidation = () => {
                 approvedByProvince: '',
                 provincialAssessorDate: '',
             },
-            street: '',
+          
             ownerDetails: {
                 td: '',
                 owner: '',

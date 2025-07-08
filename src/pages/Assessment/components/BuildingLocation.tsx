@@ -108,7 +108,7 @@ const BuildingLocation = ({
                             name="street"
                             className="form-input ltr:rounded-l-none rtl:rounded-r-none flex-1"
                             placeholder="Enter No. / Street"
-                            {...register("street")}
+                            {...register("buildingLocation.street")}
                         ></textarea>
                     </div>
                 </div>

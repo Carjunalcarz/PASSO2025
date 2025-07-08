@@ -417,7 +417,7 @@ const Add = () => {
         }
 
         try {
-            const response = await fetch('http://localhost:8000/assessment/add', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL_FASTAPI}/assessment/add`, {
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -438,7 +438,7 @@ const Add = () => {
 
             // ✅ Clear form fields after successful submit
             reset();
-            navigate(0); // This will reload the current route
+            // navigate(0); // This will reload the current route
 
         } catch (error) {
             console.error('Submission error:', error);

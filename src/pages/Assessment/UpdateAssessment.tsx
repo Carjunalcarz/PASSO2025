@@ -18,7 +18,7 @@ import StructuralMaterialChecklist from './components/StructuralMaterialChecklis
 import PropertyAppraisal from './components/PropertyAppraisal';
 import UpdatePropertyAssessment from './components/UpdatePropertyAssessment';
 import Memoranda from './components/Memoranda';
-import RecordOfSupersededAssessment from './components/RecordOfSupersededAssessment';
+import UpdateRecordOfSupersededAssessment from './components/UpdateRecordOfSupersededAssessment';
 import UpdateOwnerDetails from './components/UpdateOwnerDetails';
 import { useForm } from 'react-hook-form';
 import { UseFormRegister, FieldValues } from 'react-hook-form';
@@ -156,7 +156,7 @@ const UpdateAssessment = () => {
             if (!id) return;
             try {
                 const response = await axios.get(
-                    `http://localhost:8000/assessment/get-assessment/${id}`,
+                    `${import.meta.env.VITE_API_URL_FASTAPI}/assessment/get-assessment/${id}`,
                     {
                         headers: { Authorization: `Bearer ${token}` }
                     }
@@ -224,15 +224,16 @@ const UpdateAssessment = () => {
                         details: memo.details || ""
                     })) || [],
                     recordOfSupersededAssessment: {
-                        records: data.building_assessment?.superseded_records?.map((record: any) => ({
+                        records: data.building_assessment?.recordOfSupersededAssessment?.records?.map((record: any) => ({
+                            id: record.id || "",
                             pin: record.pin || "",
-                            td_arp_no: record.td_arp_no || "",
-                            total_assessed_value: record.total_assessed_value || "",
-                            previous_owner: record.previous_owner || "",
-                            date_of_effectivity: record.date_of_effectivity || "",
-                            record_date: record.record_date || "",
+                            tdArpNo: record.tdArpNo || "",
+                            totalAssessedValue: record.totalAssessedValue || "",
+                            previousOwner: record.previousOwner || "",
+                            dateOfEffectivity: record.dateOfEffectivity || "",
+                            date: record.date || "",
                             assessment: record.assessment || "",
-                            tax_mapping: record.tax_mapping || "",
+                            taxMapping: record.taxMapping || "",
                             records: record.records || ""
                         })) || [],
                     },
@@ -868,7 +869,7 @@ const UpdateAssessment = () => {
                     </button>
                     {showSuperseded && (
                         <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
-                            <RecordOfSupersededAssessment register={register} setValue={setValue} watch={watch} />
+                            <UpdateRecordOfSupersededAssessment register={register} setValue={setValue} watch={watch} />
                         </div>
                     )}
                 </div>

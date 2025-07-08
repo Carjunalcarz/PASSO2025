@@ -168,10 +168,6 @@ export const memorandaSchema = yup.array().of(
 // Main assessment validation schema - only validate required fields
 export const assessmentSchema = yup.object({
     approvalSection: approvalSectionSchema,
-    street: yup.string()
-        .required('Street is required')
-        .min(5, 'Street must be at least 5 characters')
-        .max(100, 'Street must not exceed 100 characters'),
     ownerDetails: ownerDetailsSchema,
     landReference: landReferenceSchema,
     buildingLocation: buildingLocationSchema,
