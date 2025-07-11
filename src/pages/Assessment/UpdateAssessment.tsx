@@ -181,6 +181,7 @@ const UpdateAssessment = () => {
                         admin_ben_user: data.owner_details?.admin_ben_user || "",
                         admin_ben_user_address: data.owner_details?.admin_ben_user_address || "",
                         transactionCode: data.owner_details?.transaction_code || "",
+                        image_list: data.owner_details?.image_list || [],
                         pin: data.owner_details?.pin || "",
                         tin: data.owner_details?.tin || "",
                         telNo: data.owner_details?.tel_no || "",
@@ -202,6 +203,8 @@ const UpdateAssessment = () => {
                         update_address_municipality: data.building_assessment?.address_municipality || "",
                         update_address_barangay: data.building_assessment?.address_barangay || "",
                         update_street: data.building_assessment?.street || "",
+                        image_list: data.building_assessment.building_location?.image_list || [],
+
                     },
                     generalDescription: {
                         building_permit_no: data.building_assessment?.general_description?.building_permit_no || "",
@@ -583,10 +586,12 @@ const UpdateAssessment = () => {
 
                 <div className="px-10 mt-2">
                     <UpdateBuildingLocation
-                        reset = {reset}
                         register={register}
                         watch={watch}
                         setValue={setValue}
+                        reset={reset}
+                        trigger={trigger}
+                        getNestedError={getNestedError}
                         municipalitySuggestions={municipalitySuggestions}
                         provinceSuggestions={provinceSuggestions}
                         barangaySuggestions={barangaySuggestions}
@@ -610,13 +615,18 @@ const UpdateAssessment = () => {
                         register={register} 
                         watch={watch} 
                         setValue={setValue}
-                        errors={errors}
                         getNestedError={getNestedError}
                     />
                 </div>
                 {/* ##########ENTRY############### */}
                 <div className="px-10 ">
-                    <LandReference register={register} />
+                    <LandReference 
+                        register={register} 
+                        getNestedError={getNestedError}
+                        watch={watch}
+                        setValue={setValue}
+                        trigger={trigger}
+                    />
                 </div>
 
                 {/* ###########END############## */}
@@ -889,8 +899,9 @@ const UpdateAssessment = () => {
 
             {previewImage && (
                 <ImagePreviewModal
-                    previewImage={previewImage}
-                    setPreviewImage={setPreviewImage}
+                    isOpen={!!previewImage}
+                    imageUrl={previewImage}
+                    onClose={() => setPreviewImage(null)}
                 />
             )}
 

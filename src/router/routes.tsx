@@ -99,6 +99,7 @@ const QuillEditor = lazy(() => import('../pages/Forms/QuillEditor'));
 const MarkDownEditor = lazy(() => import('../pages/Forms/MarkDownEditor'));
 const DateRangePicker = lazy(() => import('../pages/Forms/DateRangePicker'));
 const Clipboard = lazy(() => import('../pages/Forms/Clipboard'));
+const ImageUploadGalleryDemo = lazy(() => import('../pages/Components/ImageUploadGalleryDemo'));
 import ProtectedRoute from './protectedRoute';
 import Buenavista from '../pages/DataTables/Buenavista_table';
 import Carmen from '../pages/DataTables/Carmen_table';
@@ -268,6 +269,10 @@ const routes = [
     {
         path: '/components/lightbox',
         element: <LightBox />,
+    },
+    {
+        path: '/components/image-upload-gallery',
+        element: <ImageUploadGalleryDemo />,
     },
     // elements page
     {

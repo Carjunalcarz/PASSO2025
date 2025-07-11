@@ -1,38 +1,44 @@
+import React, { useEffect } from 'react';
 import IconX from '../../../components/Icon/IconX';
 
 interface ImagePreviewModalProps {
-    previewImage: string | null;
-    setPreviewImage: (image: string | null) => void;
+  isOpen: boolean;
+  imageUrl: string;
+  onClose: () => void;
+  title?: string;
 }
 
-const ImagePreviewModal = ({ previewImage, setPreviewImage }: ImagePreviewModalProps) => {
-    if (!previewImage) return null;
-
-    const modalStyles = {
-        modal: "fixed inset-0 bg-black bg-opacity-50 z-[999] flex items-center justify-center p-4",
-        modalContent: "relative bg-white rounded-lg max-w-[90%] max-h-[90vh] overflow-auto",
-        closeButton: "absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 cursor-pointer",
-        image: "max-w-full h-auto max-h-[85vh] object-contain"
+const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({ isOpen, imageUrl, onClose, title }) => {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
     };
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'auto';
+    };
+  }, [isOpen, onClose]);
 
-    return (
-        <div className={modalStyles.modal} onClick={() => setPreviewImage(null)}>
-            <div className={modalStyles.modalContent} onClick={(e) => e.stopPropagation()}>
-                <button
-                    type="button"
-                    className={modalStyles.closeButton}
-                    onClick={() => setPreviewImage(null)}
-                >
-                    <IconX className="w-5 h-5" />
-                </button>
-                <img
-                    src={previewImage}
-                    alt="Large preview"
-                    className={modalStyles.image}
-                />
-            </div>
-        </div>
-    );
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[999] flex items-center justify-center p-4" onClick={onClose}>
+      <div className="relative bg-white rounded-lg max-w-[90%] max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
+        <button
+          type="button"
+          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 cursor-pointer"
+          onClick={onClose}
+        >
+          <IconX className="w-5 h-5" />
+        </button>
+        {title && <div className="text-lg font-semibold mb-2 text-center">{title}</div>}
+        <img src={imageUrl} alt="Large preview" className="max-w-full h-auto max-h-[85vh] object-contain" />
+      </div>
+    </div>
+  );
 };
 
 export default ImagePreviewModal;

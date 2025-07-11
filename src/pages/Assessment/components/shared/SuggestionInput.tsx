@@ -9,6 +9,7 @@ interface SuggestionInputProps {
     setShowSuggestions: (show: boolean) => void;
     labelClassName?: string;
     value?: string;
+    error?: any; // Add this line
 }
 
 const SuggestionInput = ({
@@ -21,7 +22,8 @@ const SuggestionInput = ({
     onSuggestionClick,
     setShowSuggestions,
     labelClassName = "w-1/4",
-    value = ""
+    value = "",
+    error
 }: SuggestionInputProps) => {
     return (
         <div className="w-full ltr:lg:mr-6 rtl:lg:ml-6 mb-6">
@@ -54,6 +56,11 @@ const SuggestionInput = ({
                     </div>
                 )}
             </div>
+            {error && (
+                <div className="text-red-500 text-sm mt-1 ml-4">
+                    {error}
+                </div>
+            )}
         </div>
     );
 };

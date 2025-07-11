@@ -438,6 +438,13 @@ const Add = () => {
 
             // ✅ Clear form fields after successful submit
             reset();
+            
+            // ✅ Clear image states after successful submit
+            setLocationPhotos([]);
+            setOwnerPhotos([]);
+            setImages1([]);
+            setImages2([]);
+
             // navigate(0); // This will reload the current route
 
         } catch (error) {
@@ -445,6 +452,19 @@ const Add = () => {
             // ❌ Show error toast
             toast.error('Failed to submit assessment.');
         }
+    };
+
+    // Add these state declarations (around line 329 where other image states are)
+    const [ownerPhotos, setOwnerPhotos] = useState<ImageListType>([]);
+    const [locationPhotos, setLocationPhotos] = useState<ImageListType>([]);
+
+    // Add this handler (around line 333 where other onChange handlers are)
+    const handleOwnerPhotosChange = (imageList: ImageListType) => {
+        setOwnerPhotos(imageList);
+    };
+
+    const handleLocationPhotosChange = (imageList: ImageListType) => {
+        setLocationPhotos(imageList);
     };
 
     return (
@@ -478,6 +498,9 @@ const Add = () => {
                         setShowMunicipalitySuggestions={setShowMunicipalitySuggestions}
                         setShowProvinceSuggestions={setShowProvinceSuggestions}
                         setShowBarangaySuggestions={setShowBarangaySuggestions}
+                        locationPhotos={locationPhotos}
+                        onLocationPhotosChange={handleLocationPhotosChange}
+                        onPreviewImage={setPreviewImage}
                     />
                 </div>
                 {/* ##########END############### */}
@@ -486,13 +509,22 @@ const Add = () => {
                         register={register} 
                         watch={watch} 
                         setValue={setValue}
-                        errors={errors}
+                        trigger={trigger} // Add trigger function
                         getNestedError={getNestedError}
+                        ownerPhotos={ownerPhotos}
+                        onOwnerPhotosChange={handleOwnerPhotosChange}
+                        onPreviewImage={setPreviewImage}
                     />
                 </div>
                 {/* ##########ENTRY############### */}
                 <div className="px-10 ">
-                    <LandReference register={register} />
+                    <LandReference 
+                        register={register} 
+                        getNestedError={getNestedError}
+                        watch={watch}
+                        setValue={setValue}
+                        trigger={trigger}
+                    />
                 </div>
 
                 {/* ###########END############## */}
@@ -761,8 +793,9 @@ const Add = () => {
 
             {previewImage && (
                 <ImagePreviewModal
-                    previewImage={previewImage}
-                    setPreviewImage={setPreviewImage}
+                    isOpen={!!previewImage}
+                    imageUrl={previewImage}
+                    onClose={() => setPreviewImage(null)}
                 />
             )}
 

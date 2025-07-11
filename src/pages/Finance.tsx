@@ -161,7 +161,7 @@ const Finance = () => {
                 </li>
             </ul>
             <div className="pt-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl1360:grid-cols-4 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl1360:grid-cols-4 gap-4 mb-6">
                     {/* RPUS */}
                     <div className="panel bg-gradient-to-r from-cyan-500 to-cyan-400 p-4 rounded-xl shadow-md w-full max-w-2xl mx-auto">
                         <div className="flex justify-between items-center mb-2">
@@ -428,7 +428,7 @@ const Finance = () => {
                                 See All
                             </button>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 md:mb-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-6 md:mb-5">
                             <div className="panel">
                                 <MunicipalityPanel municipality="BUENAVISTA" logo="buenavista.png" />
                             </div>

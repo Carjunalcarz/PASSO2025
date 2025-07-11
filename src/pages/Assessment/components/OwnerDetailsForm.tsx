@@ -1,13 +1,15 @@
-import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useEffect, useState } from 'react';
 import InputField from './shared/InputField';
 import { FieldError } from 'react-hook-form';
+import ImageUploadGallery from '../../../components/ImageUploadGallery';
+import ImagePreviewModal from './ImagePreviewModal';
+import { ImageListType } from 'react-images-uploading';
 
 interface OwnerDetailsFormProps {
     register: any;
     watch: any;
     setValue: any;
-    errors?: any;
+    trigger?: any;
     getNestedError?: (path: string) => FieldError | undefined;
 }
 
@@ -15,12 +17,23 @@ const OwnerDetailsForm: React.FC<OwnerDetailsFormProps> = ({
     register,
     watch,
     setValue,
-    errors,
+    trigger,
     getNestedError
 }) => {
 
     const td_barangay = watch('buildingLocation.address_barangay');
     const td_municipality = watch('buildingLocation.address_municipality');
+    const image_list = watch('ownerDetails.image_list');
+    
+    const imageListForPreview = Array.isArray(image_list)
+      ? image_list.map(b64 => {
+          let prefix = 'data:image/png;base64,';
+          if (b64.startsWith('/9j/')) {
+            prefix = 'data:image/jpeg;base64,';
+          }
+          return { data_url: `${prefix}${b64}` };
+        })
+      : [];
 
     // Add municipality and barangay code mapping
     const municipalityBarangayCodes: { [key: string]: { code: string, barangays: { [key: string]: string } } } = {
@@ -121,7 +134,6 @@ const OwnerDetailsForm: React.FC<OwnerDetailsFormProps> = ({
         }
     };
 
-
     // Function to get municipality code
     const getMunicipalityCode = (municipality: string): string => {
         return municipalityBarangayCodes[municipality?.toUpperCase()]?.code || '000';
@@ -137,6 +149,59 @@ const OwnerDetailsForm: React.FC<OwnerDetailsFormProps> = ({
         return municipalityBarangayCodes[municipalityUpper]?.barangays[barangayUpper] || '000';
     };
 
+    // Function to format PIN input
+    const formatPIN = (value: string): string => {
+        // Remove all non-digit characters
+        const digits = value.replace(/\D/g, '');
+        
+        // Format as 123-45-0123-456-789
+        if (digits.length <= 3) return digits;
+        if (digits.length <= 5) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+        if (digits.length <= 9) return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`;
+        if (digits.length <= 12) return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5, 9)}-${digits.slice(9)}`;
+        if (digits.length <= 15) return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5, 9)}-${digits.slice(9, 12)}-${digits.slice(12)}`;
+        
+        // Limit to 15 digits
+        return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5, 9)}-${digits.slice(9, 12)}-${digits.slice(12, 15)}`;
+    };
+
+    // Function to format TIN input
+    const formatTIN = (value: string): string => {
+        // Remove all non-digit characters
+        const digits = value.replace(/\D/g, '');
+        
+        // Format as XXX-XXX-XXX-XXX (12 digits total)
+        if (digits.length <= 3) return digits;
+        if (digits.length <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+        if (digits.length <= 9) return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+        if (digits.length <= 12) return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 9)}-${digits.slice(9)}`;
+        
+        // Limit to 12 digits
+        return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 9)}-${digits.slice(9, 12)}`;
+    };
+
+    // Handle TIN input change
+    const handleTINChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const formattedValue = formatTIN(e.target.value);
+        setValue('ownerDetails.tin', formattedValue);
+        
+        // Trigger validation after setting the value
+        if (trigger) {
+            trigger('ownerDetails.tin');
+        }
+    };
+
+    // Handle PIN input change
+    const handlePINChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const formattedValue = formatPIN(e.target.value);
+        setValue('ownerDetails.pin', formattedValue);
+        
+        // Trigger validation after setting the value
+        if (trigger) {
+            trigger('ownerDetails.pin');
+        }
+    };
+
     // Modified function to generate TDN
     const generateTDN = () => {
         if (!td_municipality || !td_barangay) return '';
@@ -144,30 +209,62 @@ const OwnerDetailsForm: React.FC<OwnerDetailsFormProps> = ({
         const munCode = getMunicipalityCode(td_municipality);
         const brgCode = getBarangayCode(td_municipality, td_barangay);
         setValue('buildingLocation.bcode', brgCode);
-        setValue('buildingLocation.mun_code',munCode);
+        setValue('buildingLocation.mun_code', munCode);
 
         // Get current year
         const year = new Date().getFullYear();
 
-        // Generate a random 4-digit number
-        // const sequence = String(Math.floor(1000 + Math.random() * 9000));
-
-        // Format: MUNCODE-BRGCODE-YEAR-SEQUENCE
+        // Format: YEAR-MUNCODE-BRGCODE
         return `${year}-${munCode}-${brgCode}`;
     };
 
     useEffect(() => {
-        if (td_municipality && td_barangay) {  // Only set value if we have both values
-            setValue('ownerDetails.td', generateTDN());
+        if (td_municipality && td_barangay) {
+            const newTDN = generateTDN();
+            setValue('ownerDetails.td', newTDN);
+            
+            // Trigger validation for the TD field after setting the value
+            if (trigger && newTDN) {
+                trigger('ownerDetails.td');
+            }
         }
-    }, [td_municipality, td_barangay, setValue]); // Change dependencies to what actually changes
+    }, [td_municipality, td_barangay, setValue, trigger]);
+
+    // Handle image list changes and convert to base64
+    const handleOwnerPhotosChange = (imageList: ImageListType, addUpdateIndex: number[] | undefined) => {
+        const base64List = imageList.map(img => img.data_url.split(',')[1]);
+        // Get the current value
+        const currentImageList = watch('ownerDetails.image_list') || [];
+        // Only update if different
+        if (JSON.stringify(currentImageList) !== JSON.stringify(base64List)) {
+            setValue('ownerDetails.image_list', base64List);
+            if (trigger) trigger('ownerDetails.image_list');
+        }
+    };
+
+    // Modal state
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [previewImageUrl, setPreviewImageUrl] = useState('');
+
+    // Handle image preview
+    const handleImagePreview = (imageUrl: string) => {
+        setPreviewImageUrl(imageUrl);
+        setIsPreviewOpen(true);
+    };
+
+    // Handle close preview
+    const handleClosePreview = () => {
+        setIsPreviewOpen(false);
+        setPreviewImageUrl('');
+    };
 
     return (
         <div className='px-10 border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]'>
-               <h2 className='text-xl px-5 text-wrap text-left'>OWNER DETAILS</h2>
-            <div className="mt-5 flex justify-between lg:flex-row flex-col">
-                <div className="lg:w-1/2 w-full">
-
+            <h2 className='text-xl px-5 text-wrap text-left'>OWNER DETAILS</h2>
+            
+            <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left Side - Form Inputs */}
+                <div className="space-y-4">
                     <div className="flex items-center mt-4">
                         <InputField
                             value={watch('ownerDetails.td')}
@@ -190,45 +287,62 @@ const OwnerDetailsForm: React.FC<OwnerDetailsFormProps> = ({
                         />
                     </div>
                     <div className="items-center mr-9">
-                        <div className="p-2 flex justify-center items-center  px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                        <div className="p-2 flex justify-center items-center px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
                             Owner Address
                         </div>
                         <textarea
                             id="ownerAddress"
                             name="ownerAddress"
-                            className="form-input ltr:rounded-l-none rtl:rounded-r-none flex-1"
-                            placeholder="Enter Owner"
+                            className={`form-input ltr:rounded-l-none rtl:rounded-r-none flex-1 ${
+                                getNestedError?.('ownerDetails.ownerAddress') ? 'border-red-500 focus:border-red-500' : ''
+                            }`}
+                            placeholder="Enter Owner Address"
                             {...register("ownerDetails.ownerAddress")}
-                            error={getNestedError?.('ownerDetails.ownerAddress')}
                         ></textarea>
+                        {/* Error message */}
+                        {getNestedError?.('ownerDetails.ownerAddress') && (
+                            <div className="text-red-500 text-sm mt-1 ml-4">
+                                {getNestedError('ownerDetails.ownerAddress')?.message}
+                            </div>
+                        )}
                     </div>
                     <div className="mt-4 items-center mr-9">
-                        <div className="p-2 flex justify-center items-center  px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
-                            Administrator / Benificial User
+                        <div className="p-2 flex justify-center items-center px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                            Administrator / Beneficial User
                         </div>
                         <InputField
                             label="..."
                             id="admin_ben_user"
                             type="text"
-                            placeholder="Enter Administrator / Benificial User"
+                            placeholder="Enter Administrator / Beneficial User"
                             {...register('ownerDetails.admin_ben_user')}
                             error={getNestedError?.('ownerDetails.admin_ben_user')}
                         />
                     </div>
                     <div className="items-center mr-9">
-                        <div className="p-2 flex justify-center items-center  px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                        <div className="p-2 flex justify-center items-center px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
                             Admin Address
                         </div>
                         <textarea
                             id="adminAddress"
                             name="adminAddress"
-                            className="form-input ltr:rounded-l-none rtl:rounded-r-none flex-1"
+                            className={`form-input ltr:rounded-l-none rtl:rounded-r-none flex-1 ${
+                                getNestedError?.('ownerDetails.admin_ben_user_address') ? 'border-red-500 focus:border-red-500' : ''
+                            }`}
                             placeholder="Enter Admin Address"
                             {...register("ownerDetails.admin_ben_user_address")}
                         ></textarea>
+                        {/* Error message */}
+                        {getNestedError?.('ownerDetails.admin_ben_user_address') && (
+                            <div className="text-red-500 text-sm mt-1 ml-4">
+                                {getNestedError('ownerDetails.admin_ben_user_address')?.message}
+                            </div>
+                        )}
                     </div>
                 </div>
-                <div className="lg:w-1/2 w-full">
+
+                {/* Right Side - Preview and Image Upload */}
+                <div className="space-y-4">
                     <div className="flex items-center mt-4">
                         <InputField
                             label="Transaction Code"
@@ -245,9 +359,10 @@ const OwnerDetailsForm: React.FC<OwnerDetailsFormProps> = ({
                             id="pin"
                             type="text"
                             placeholder="Enter PIN"
-                            {...register('ownerDetails.pin')}
+                            value={watch('ownerDetails.pin')}
+                            onChange={handlePINChange}
                             error={getNestedError?.('ownerDetails.pin')}
-                            helperText="Format: XXXX-XXXX-XXXX-XXXX"
+                            helperText="Format: 123-45-0123-456-789"
                         />
                     </div>
                     <div className="flex items-center">
@@ -256,7 +371,8 @@ const OwnerDetailsForm: React.FC<OwnerDetailsFormProps> = ({
                             id="tin"
                             type="text"
                             placeholder="Enter TIN"
-                            {...register('ownerDetails.tin')}
+                            value={watch('ownerDetails.tin')}
+                            onChange={handleTINChange}
                             error={getNestedError?.('ownerDetails.tin')}
                             helperText="Format: XXX-XXX-XXX-XXX"
                         />
@@ -272,10 +388,29 @@ const OwnerDetailsForm: React.FC<OwnerDetailsFormProps> = ({
                             helperText="Format: +639XXXXXXXXX or 09XXXXXXXXX"
                         />
                     </div>
+
+                    {/* Image Upload Section */}
+                    <div className="mt-6 border-t pt-4">
+                        <h3 className="text-lg font-semibold mb-4">ID Photos</h3>
+                        
+                        <ImageUploadGallery
+                            images={imageListForPreview}
+                            onChange={handleOwnerPhotosChange}
+                            maxNumber={5}
+                            multiple={true}
+                        />
+                    </div>
                 </div>
             </div>
+            <ImagePreviewModal
+                isOpen={isPreviewOpen}
+                imageUrl={previewImageUrl}
+                onClose={handleClosePreview}
+                title="ID Photo Preview"
+            />
         </div>
     );
 };
 
 export default OwnerDetailsForm;
+

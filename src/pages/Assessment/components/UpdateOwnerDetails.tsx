@@ -1,27 +1,48 @@
-import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useEffect, useState } from 'react';
 import InputField from './shared/InputField';
 import { FieldError } from 'react-hook-form';
+import ImageUploadGallery from '../../../components/ImageUploadGallery';
+import { ImageListType } from 'react-images-uploading';
+// Remove this import since ImageUploadGallery has its own preview
+// import ImagePreviewModal from './ImagePreviewModal';
 
-interface OwnerDetailsFormProps {
+interface UpdateOwnerDetailsFormProps {
     register: any;
     watch: any;
     setValue: any;
-    errors?: any;
+    trigger?: any; // Add trigger function
     getNestedError?: (path: string) => FieldError | undefined;
+    // Add image upload props
+    ownerPhotos?: ImageListType;
+    onOwnerPhotosChange?: (imageList: ImageListType) => void;
+    onPreviewImage?: (imageUrl: string) => void;
 }
 
-const UpdateOwnerDetails: React.FC<OwnerDetailsFormProps> = ({
+const UpdateOwnerDetailsForm: React.FC<UpdateOwnerDetailsFormProps> = ({
     register,
     watch,
     setValue,
-    errors,
-    getNestedError
+    trigger, // Add trigger to destructuring
+    getNestedError,
+    // Add image upload props with defaults
+    ownerPhotos = [],
+    onOwnerPhotosChange,
+    onPreviewImage
 }) => {
 
-    const update_td_barangay = watch('update_buildingLocation.update_address_barangay');
-    const update_td_municipality = watch('update_buildingLocation.update_address_municipality');
-    const update_id = watch('ownerDetails.id');
+    const td_barangay = watch('buildingLocation.address_barangay');
+    const td_municipality = watch('buildingLocation.address_municipality');
+    const image_list = watch('ownerDetails.image_list');
+    
+    const imageListForPreview: ImageListType = Array.isArray(image_list)
+      ? image_list.map(b64 => {
+          let prefix = 'data:image/png;base64,';
+          if (b64.startsWith('/9j/')) {
+            prefix = 'data:image/jpeg;base64,';
+          }
+          return { data_url: `${prefix}${b64}` };
+        })
+      : [];
 
     // Add municipality and barangay code mapping
     const municipalityBarangayCodes: { [key: string]: { code: string, barangays: { [key: string]: string } } } = {
@@ -124,101 +145,139 @@ const UpdateOwnerDetails: React.FC<OwnerDetailsFormProps> = ({
 
     // Function to get municipality code
     const getMunicipalityCode = (municipality: string): string => {
-        const code = municipalityBarangayCodes[municipality?.toUpperCase()]?.code || '000';
-        console.log('Getting municipality code:', { municipality, code });
-        return code;
+        return municipalityBarangayCodes[municipality?.toUpperCase()]?.code || '000';
     };
 
     // Function to get barangay code
     const getBarangayCode = (municipality: string, barangay: string): string => {
-        if (!municipality || !barangay) {
-            console.log('Missing municipality or barangay:', { municipality, barangay });
-            return '000';
-        }
+        if (!municipality || !barangay) return '000';
 
         const municipalityUpper = municipality.toUpperCase().trim();
         const barangayUpper = barangay.toUpperCase().trim();
-        const code = municipalityBarangayCodes[municipalityUpper]?.barangays[barangayUpper] || '000';
+
+        return municipalityBarangayCodes[municipalityUpper]?.barangays[barangayUpper] || '000';
+    };
+
+    // Function to format PIN input
+    const formatPIN = (value: string): string => {
+        // Remove all non-digit characters
+        const digits = value.replace(/\D/g, '');
         
-        console.log('Getting barangay code:', { 
-            municipality: municipalityUpper, 
-            barangay: barangayUpper, 
-            code 
-        });
+        // Format as 123-45-0123-456-789
+        if (digits.length <= 3) return digits;
+        if (digits.length <= 5) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+        if (digits.length <= 9) return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`;
+        if (digits.length <= 12) return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5, 9)}-${digits.slice(9)}`;
+        if (digits.length <= 15) return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5, 9)}-${digits.slice(9, 12)}-${digits.slice(12)}`;
         
-        return code;
+        // Limit to 15 digits
+        return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5, 9)}-${digits.slice(9, 12)}-${digits.slice(12, 15)}`;
+    };
+
+    // Function to format TIN input
+    const formatTIN = (value: string): string => {
+        // Remove all non-digit characters
+        const digits = value.replace(/\D/g, '');
+        
+        // Format as XXX-XXX-XXX-XXX (12 digits total)
+        if (digits.length <= 3) return digits;
+        if (digits.length <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+        if (digits.length <= 9) return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+        if (digits.length <= 12) return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 9)}-${digits.slice(9)}`;
+        
+        // Limit to 12 digits
+        return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 9)}-${digits.slice(9, 12)}`;
+    };
+
+    // Handle TIN input change
+    const handleTINChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const formattedValue = formatTIN(e.target.value);
+        setValue('ownerDetails.tin', formattedValue);
+        
+        // Trigger validation after setting the value
+        if (trigger) {
+            trigger('ownerDetails.tin');
+        }
+    };
+
+    // Handle PIN input change
+    const handlePINChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const formattedValue = formatPIN(e.target.value);
+        setValue('ownerDetails.pin', formattedValue);
+        
+        // Trigger validation after setting the value
+        if (trigger) {
+            trigger('ownerDetails.pin');
+        }
     };
 
     // Modified function to generate TDN
     const generateTDN = () => {
-        console.log('Generating TDN:', {
-            municipality: update_td_municipality,
-            barangay: update_td_barangay
-        });
+        if (!td_municipality || !td_barangay) return '';
 
-        if (!update_td_municipality || !update_td_barangay) {
-            console.log('Missing required values for TDN generation');
-            return '';
-        }
-
-        const munCode = getMunicipalityCode(update_td_municipality);
-        const brgCode = getBarangayCode(update_td_municipality, update_td_barangay);
-        
-        console.log('Generated codes:', { munCode, brgCode });
-        
-        // Update the setValue paths to match the update form structure
-        setValue('update_buildingLocation.bcode', brgCode);
-        setValue('update_buildingLocation.mun_code', munCode);
+        const munCode = getMunicipalityCode(td_municipality);
+        const brgCode = getBarangayCode(td_municipality, td_barangay);
+        setValue('buildingLocation.bcode', brgCode);
+        setValue('buildingLocation.mun_code',munCode);
 
         // Get current year
         const year = new Date().getFullYear();
 
-        // Format: YEAR-MUNCODE-BRGCODE
-        const tdn = `${year}-${munCode}-${brgCode}-${update_id}`;
-        console.log('Generated TDN:', tdn);
-        return tdn;
+        // Generate a random 4-digit number
+        // const sequence = String(Math.floor(1000 + Math.random() * 9000));
+
+        // Format: MUNCODE-BRGCODE-YEAR-SEQUENCE
+        return `${year}-${munCode}-${brgCode}`;
     };
 
-    // Add this useEffect to handle initial values
     useEffect(() => {
-        // Force initial TDN generation once the form is loaded with values
-        if (update_td_municipality && update_td_barangay) {
+        if (td_municipality && td_barangay) {  // Only set value if we have both values
             const newTDN = generateTDN();
-            if (newTDN) {
-                setValue('UpdateOwnerDetails.td', newTDN);
-                // Also set the codes again to ensure they're persisted
-                const munCode = getMunicipalityCode(update_td_municipality);
-                const brgCode = getBarangayCode(update_td_municipality, update_td_barangay);
-                setValue('update_buildingLocation.bcode', brgCode);
-                setValue('update_buildingLocation.mun_code', munCode);
+            setValue('ownerDetails.td', newTDN);
+            
+            // Trigger validation for the TD field after setting the value
+            if (trigger && newTDN) {
+                trigger('ownerDetails.td');
             }
         }
-    }, []); // This will run once on mount
+    }, [td_municipality, td_barangay, setValue, trigger]); // Add trigger to dependencies
 
-    // Keep your existing useEffect for handling changes
-    useEffect(() => {
-        if (update_td_municipality && update_td_barangay) {
-            const newTDN = generateTDN();
-            if (newTDN) {
-                setValue('UpdateOwnerDetails.td', newTDN);
-            }
+    // Handle image list changes and convert to base64
+    const handleOwnerPhotosChange = (imageList: ImageListType, addUpdateIndex?: number[]) => {
+        const base64List = imageList.map(img => img.data_url.split(',')[1]);
+        // Get the current value
+        const currentImageList = watch('ownerDetails.image_list') || [];
+        // Only update if different
+        if (JSON.stringify(currentImageList) !== JSON.stringify(base64List)) {
+            setValue('ownerDetails.image_list', base64List);
+            if (trigger) trigger('ownerDetails.image_list');
         }
-    }, [update_td_municipality, update_td_barangay, setValue]);
+        if (onOwnerPhotosChange) onOwnerPhotosChange(imageList);
+    };
+
+    // Remove modal state and handlers since ImageUploadGallery has its own preview
+    // const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    // const [previewImageUrl, setPreviewImageUrl] = useState('');
+    // const handleImagePreview = (imageUrl: string) => { ... };
+    // const handleClosePreview = () => { ... };
+    // useEffect(() => { ... }, [isPreviewOpen]);
 
     return (
         <div className='px-10 border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]'>
             <h2 className='text-xl px-5 text-wrap text-left'>OWNER DETAILS</h2>
-            <div className="mt-5 flex justify-between lg:flex-row flex-col">
-                <div className="lg:w-1/2 w-full">
+            
+            <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left Side - Form Inputs */}
+                <div className="space-y-4">
                     <div className="flex items-center mt-4">
                         <InputField
-                            value={watch('UpdateOwnerDetails.td')}
+                            value={watch('ownerDetails.td')}
                             label="TD / ARP NO."
                             id="tdArpNo"
                             type="text"
                             placeholder="Enter TD / ARP NO."
                             disabled={true}
-                            error={getNestedError?.('UpdateOwnerDetails.td')}
+                            error={getNestedError?.('ownerDetails.td')}
                         />
                     </div>
                     <div className="flex items-center">
@@ -238,15 +297,22 @@ const UpdateOwnerDetails: React.FC<OwnerDetailsFormProps> = ({
                         <textarea
                             id="ownerAddress"
                             name="ownerAddress"
-                            className="form-input ltr:rounded-l-none rtl:rounded-r-none flex-1"
-                            placeholder="Enter Owner"
+                            className={`form-input ltr:rounded-l-none rtl:rounded-r-none flex-1 ${
+                                getNestedError?.('ownerDetails.ownerAddress') ? 'border-red-500 focus:border-red-500' : ''
+                            }`}
+                            placeholder="Enter Owner Address"
                             {...register("ownerDetails.ownerAddress")}
-                            error={getNestedError?.('ownerDetails.ownerAddress')}
                         ></textarea>
+                        {/* Error message */}
+                        {getNestedError?.('ownerDetails.ownerAddress') && (
+                            <div className="text-red-500 text-sm mt-1 ml-4">
+                                {getNestedError('ownerDetails.ownerAddress')?.message}
+                            </div>
+                        )}
                     </div>
                     <div className="mt-4 items-center mr-9">
-                        <div className="p-2 flex justify-center items-center px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
-                            Administrator / Benificial User
+                        <div className="p-2 flex justify-center items-center  px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                            Administrator / Beneficial User
                         </div>
                         <InputField
                             label="..."
@@ -258,20 +324,29 @@ const UpdateOwnerDetails: React.FC<OwnerDetailsFormProps> = ({
                         />
                     </div>
                     <div className="items-center mr-9">
-                        <div className="p-2 flex justify-center items-center px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                        <div className="p-2 flex justify-center items-center  px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
                             Admin Address
                         </div>
                         <textarea
                             id="adminAddress"
-                            value={watch('ownerDetails.admin_ben_user_address')}
                             name="adminAddress"
-                            className="form-input ltr:rounded-l-none rtl:rounded-r-none flex-1"
+                            className={`form-input ltr:rounded-l-none rtl:rounded-r-none flex-1 ${
+                                getNestedError?.('ownerDetails.admin_ben_user_address') ? 'border-red-500 focus:border-red-500' : ''
+                            }`}
                             placeholder="Enter Admin Address"
                             {...register("ownerDetails.admin_ben_user_address")}
                         ></textarea>
+                        {/* Error message */}
+                        {getNestedError?.('ownerDetails.admin_ben_user_address') && (
+                            <div className="text-red-500 text-sm mt-1 ml-4">
+                                {getNestedError('ownerDetails.admin_ben_user_address')?.message}
+                            </div>
+                        )}
                     </div>
                 </div>
-                <div className="lg:w-1/2 w-full">
+
+                {/* Right Side - Preview and Image Upload */}
+                <div className="space-y-4">
                     <div className="flex items-center mt-4">
                         <InputField
                             label="Transaction Code"
@@ -288,9 +363,10 @@ const UpdateOwnerDetails: React.FC<OwnerDetailsFormProps> = ({
                             id="pin"
                             type="text"
                             placeholder="Enter PIN"
-                            {...register('ownerDetails.pin')}
+                            value={watch('ownerDetails.pin')}
+                            onChange={handlePINChange}
                             error={getNestedError?.('ownerDetails.pin')}
-                            helperText="Format: XXXX-XXXX-XXXX-XXXX"
+                            helperText="Format: 123-45-0123-456-789"
                         />
                     </div>
                     <div className="flex items-center">
@@ -299,7 +375,8 @@ const UpdateOwnerDetails: React.FC<OwnerDetailsFormProps> = ({
                             id="tin"
                             type="text"
                             placeholder="Enter TIN"
-                            {...register('ownerDetails.tin')}
+                            value={watch('ownerDetails.tin')}
+                            onChange={handleTINChange}
                             error={getNestedError?.('ownerDetails.tin')}
                             helperText="Format: XXX-XXX-XXX-XXX"
                         />
@@ -315,10 +392,26 @@ const UpdateOwnerDetails: React.FC<OwnerDetailsFormProps> = ({
                             helperText="Format: +639XXXXXXXXX or 09XXXXXXXXX"
                         />
                     </div>
+
+                    {/* Image Upload Section */}
+                    <div className="mt-6 border-t pt-4">
+                        <h3 className="text-lg font-semibold mb-4">ID Photos</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                            Upload photos of valid identification documents
+                        </p>
+                        
+                        <ImageUploadGallery
+                            images={imageListForPreview}
+                            onChange={handleOwnerPhotosChange}
+                            maxNumber={2}
+                            multiple={true}
+                        />
+                    </div>
                 </div>
             </div>
+            {/* Remove ImagePreviewModal since ImageUploadGallery has its own preview */}
         </div>
     );
 };
 
-export default UpdateOwnerDetails;
+export default UpdateOwnerDetailsForm;

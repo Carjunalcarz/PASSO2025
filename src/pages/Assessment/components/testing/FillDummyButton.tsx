@@ -11,14 +11,15 @@ const FillDummyButton: React.FC<FillDummyButtonProps> = ({ setValue }) => {
     setValue('ownerDetails.owner', 'Juan Dela Cruz');
     setValue('ownerDetails.ownerAddress', '456 Sample Ave, Sample City');
     setValue('ownerDetails.admin_ben_user', 'Maria Clara');
+    setValue('ownerDetails.admin_ben_user_address', '456 Sample Ave, Sample City');
     setValue('ownerDetails.transactionCode', 'TXN12345');
-    setValue('ownerDetails.pin', '1234-5678-9012-3456');
+    setValue('ownerDetails.pin', '123-45-0123-456-78');
     setValue('ownerDetails.tin', '123-456-789-000');
     setValue('ownerDetails.telNo', '09171234567');
     setValue('landReference.land_owner', 'Pedro Penduko');
     setValue('landReference.block_no', 'B1');
     setValue('landReference.tdn_no', 'TDN-001');
-    setValue('landReference.pin', '2345-6789-0123-4567');
+    setValue('landReference.pin', '234-56-0123-456-78');
     setValue('landReference.lot_no', 'L2');
     setValue('landReference.survey_no', 'SVY-123');
     setValue('landReference.area', '150.5');
@@ -50,7 +51,7 @@ const FillDummyButton: React.FC<FillDummyButtonProps> = ({ setValue }) => {
     ]);
     setValue('recordOfSupersededAssessment.records', [
       {
-        pin: '3456-7890-1234-5678',
+        pin: '345-67-0123-456-78',
         tdArpNo: 'TD-002',
         totalAssessedValue: 100000,
         previousOwner: 'Old Owner',

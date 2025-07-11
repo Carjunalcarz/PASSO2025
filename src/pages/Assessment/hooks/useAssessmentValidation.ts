@@ -79,20 +79,23 @@ export const useAssessmentValidation = () => {
         },
     });
 
-    // Helper function to get nested error
+    // Helper function to get nested error - improved version
     const getNestedError = (path: string) => {
         const pathArray = path.split('.');
         let currentError: any = errors;
         
         for (const key of pathArray) {
-            if (currentError && currentError[key]) {
+            if (currentError && typeof currentError === 'object' && key in currentError) {
                 currentError = currentError[key];
             } else {
                 return undefined;
             }
         }
         
-        return currentError;
+        // Return the error if it has a message property
+        return currentError && typeof currentError === 'object' && 'message' in currentError 
+            ? currentError 
+            : undefined;
     };
 
     // Helper function to validate specific field

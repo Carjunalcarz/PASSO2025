@@ -730,3 +730,82 @@ pre.hljs {
     border-radius: 4px;
   }
   
+
+  /* Image Upload Gallery Styles */
+.image-upload-gallery {
+    @apply w-full;
+}
+
+.image-upload-gallery .main-swiper {
+    @apply rounded-lg overflow-hidden;
+}
+
+.image-upload-gallery .thumbs-swiper {
+    @apply mt-4;
+}
+
+.image-upload-gallery .swiper-slide {
+    @apply transition-all duration-200;
+}
+
+.image-upload-gallery .swiper-button-prev-custom,
+.image-upload-gallery .swiper-button-next-custom {
+    @apply shadow-lg;
+}
+
+.image-upload-gallery .swiper-button-prev-custom:hover,
+.image-upload-gallery .swiper-button-next-custom:hover {
+    @apply transform scale-105;
+}
+
+.image-upload-gallery .swiper-pagination {
+    @apply bottom-4;
+}
+
+.image-upload-gallery .swiper-pagination-bullet {
+    @apply bg-white opacity-70;
+}
+
+.image-upload-gallery .swiper-pagination-bullet-active {
+    @apply bg-primary opacity-100;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .image-upload-gallery .main-swiper {
+        @apply h-64;
+    }
+    
+    .image-upload-gallery .thumbs-swiper {
+        @apply mt-2;
+    }
+    
+    .image-upload-gallery .swiper-button-prev-custom,
+    .image-upload-gallery .swiper-button-next-custom {
+        @apply p-1;
+    }
+    
+    .image-upload-gallery .swiper-button-prev-custom svg,
+    .image-upload-gallery .swiper-button-next-custom svg {
+        @apply w-4 h-4;
+    }
+}
+
+/* Dark mode support */
+.dark .image-upload-gallery .swiper-button-prev-custom,
+.dark .image-upload-gallery .swiper-button-next-custom {
+    @apply bg-gray-800 border-gray-600 text-gray-300;
+}
+
+.dark .image-upload-gallery .swiper-button-prev-custom:hover,
+.dark .image-upload-gallery .swiper-button-next-custom:hover {
+    @apply bg-primary border-primary text-white;
+}
+
+.dark .image-upload-gallery .swiper-pagination-bullet {
+    @apply bg-gray-600;
+}
+
+.dark .image-upload-gallery .swiper-pagination-bullet-active {
+    @apply bg-primary;
+}

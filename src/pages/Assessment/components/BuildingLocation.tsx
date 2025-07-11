@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import InputField from './shared/InputField';
 import SuggestionInput from './shared/SuggestionInput';
 import { set } from 'lodash';
+import ImageUploadGallery from '../../../components/ImageUploadGallery';
 
 interface BuildingLocationProps {
     reset : any
@@ -23,6 +24,10 @@ interface BuildingLocationProps {
     setShowMunicipalitySuggestions: (show: boolean) => void;
     setShowProvinceSuggestions: (show: boolean) => void;
     setShowBarangaySuggestions: (show: boolean) => void;
+    // Add image upload props
+    locationPhotos?: any[];
+    onLocationPhotosChange?: (imageList: any[]) => void;
+    onPreviewImage?: (imageUrl: string) => void;
 }
 
 const BuildingLocation = ({
@@ -44,18 +49,27 @@ const BuildingLocation = ({
     setShowMunicipalitySuggestions,
     setShowProvinceSuggestions,
     setShowBarangaySuggestions,
+    // Add image upload props
+    locationPhotos = [],
+    onLocationPhotosChange,
+    onPreviewImage,
 }: BuildingLocationProps) => {
     const municipality = watch("address_municipality");
     const barangay = watch("address_barangay");
     const street = watch("street");
     const province = watch("address_province")
 
+    const handleLocationPhotosChange = (imageList: any[]) => {
+        const base64List = imageList.map(img => img.data_url);
+        setValue("buildingLocation.image_list", base64List);
+        if (onLocationPhotosChange) onLocationPhotosChange(imageList);
+    };
+
     return (
         <div className="px-10 border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
             <h2 className='text-xl px-5 text-wrap text-left mb-8'>BUILDING LOCATION</h2>
 
             <div className="mt-5 flex justify-between lg:flex-row flex-col">
-
 
                 <div className="lg:w-1/2 w-full ltr:lg:mr-6 rtl:lg:ml-6 mb-6">
                     <SuggestionInput
@@ -132,6 +146,24 @@ const BuildingLocation = ({
                         }}
                         setShowSuggestions={setShowProvinceSuggestions}
                         value={province || ""}
+                    />
+                </div>
+                
+            </div>
+
+            {/* Location Photos Section */}
+            <div className="mt-8 border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4 px-5">Location Photos</h3>
+                <p className="text-sm text-gray-600 mb-4 px-5">
+                    Upload photos of the building location, street view, and surrounding area
+                </p>
+                
+                <div className="px-5">
+                    <ImageUploadGallery
+                        images={locationPhotos}
+                        onChange={handleLocationPhotosChange}
+                        maxNumber={5}
+                        multiple={true}
                     />
                 </div>
             </div>

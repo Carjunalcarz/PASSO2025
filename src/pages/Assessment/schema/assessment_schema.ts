@@ -3,7 +3,7 @@ import * as yup from 'yup';
 // Common validation patterns
 const phoneRegex = /^(\+63|0)9\d{9}$/;
 const tinRegex = /^\d{3}-\d{3}-\d{3}-\d{3}$/;
-const pinRegex = /^\d{4}-\d{4}-\d{4}-\d{4}$/;
+const pinRegex = /^\d{3}-\d{2}-\d{4}-\d{3}-\d{3}$/;
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
 // Base validation schemas for reusable components
@@ -25,15 +25,23 @@ export const ownerDetailsSchema = yup.object({
         .required('Admin/Beneficial User is required')
         .min(2, 'Admin/Beneficial User must be at least 2 characters')
         .max(100, 'Admin/Beneficial User must not exceed 100 characters'),
+    admin_ben_user_address: yup.string()
+        .required('Admin/Beneficial User address is required')
+        .min(10, 'Address must be at least 10 characters')
+        .max(200, 'Address must not exceed 200 characters'),
     transactionCode: yup.string()
         .required('Transaction Code is required')
         .min(3, 'Transaction Code must be at least 3 characters')
         .max(20, 'Transaction Code must not exceed 20 characters'),
-    pin: yup.string()
-        .required('PIN is required')
-        .matches(pinRegex, 'PIN must be in format: XXXX-XXXX-XXXX-XXXX'),
+    // pin: yup.string()
+    //     .required('PIN is required')
+    //     .matches(pinRegex, 'PIN must be in format: XXX-XX-XXXX-XXX-XXX (15 digits total)')
+    //     .test('pin-length', 'PIN must be exactly 19 characters (including dashes)', value => {
+    //         if (!value) return false;
+    //         return value.length === 19; // 15 digits + 4 dashes
+    //     }),
     tin: yup.string()
-        .required('TIN is required')
+        // .required('TIN is required')
         .matches(tinRegex, 'TIN must be in format: XXX-XXX-XXX-XXX'),
     telNo: yup.string()
         .required('Telephone number is required')
@@ -53,9 +61,9 @@ export const landReferenceSchema = yup.object({
         .required('TDN number is required')
         .min(3, 'TDN number must be at least 3 characters')
         .max(50, 'TDN number must not exceed 50 characters'),
-    pin: yup.string()
-        .required('PIN is required')
-        .matches(pinRegex, 'PIN must be in format: XXXX-XXXX-XXXX-XXXX'),
+    // pin: yup.string()
+    //     .required('PIN is required')
+    //     .matches(pinRegex, 'PIN must be in format: XXX-XX-XXXX-XXX-XXX'),
     lot_no: yup.string()
         .required('Lot number is required')
         .min(1, 'Lot number must be at least 1 character')
@@ -187,9 +195,9 @@ export const assessmentSchema = yup.object({
     memoranda: memorandaSchema,
     recordOfSupersededAssessment: yup.object({
         records: yup.array().of(yup.object({
-            pin: yup.string()
-                .matches(pinRegex, 'PIN must be in format: XXXX-XXXX-XXXX-XXXX')
-                .nullable(),
+            // pin: yup.string()
+            //     .matches(pinRegex, 'PIN must be in format: XXX-XX-XXXX-XXX-XXX')
+            //     .nullable(),
             tdArpNo: yup.string()
                 .min(3, 'TD/ARP Number must be at least 3 characters')
                 .max(50, 'TD/ARP Number must not exceed 50 characters')

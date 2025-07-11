@@ -1,0 +1,32 @@
+/* Image Upload Gallery Styles */
+.image-upload-gallery .main-swiper {
+    @apply rounded-lg overflow-hidden;
+}
+
+.image-upload-gallery .swiper-button-prev-custom,
+.image-upload-gallery .swiper-button-next-custom {
+    @apply shadow-lg;
+}
+
+.image-upload-gallery .swiper-pagination {
+    @apply bottom-4;
+}
+
+.image-upload-gallery .swiper-pagination-bullet {
+    @apply bg-white opacity-70;
+}
+
+.image-upload-gallery .swiper-pagination-bullet-active {
+    @apply bg-primary opacity-100;
+}
+
+/* Dark mode support */
+.dark .image-upload-gallery .swiper-button-prev-custom,
+.dark .image-upload-gallery .swiper-button-next-custom {
+    @apply bg-gray-800 border-gray-600 text-gray-300;
+}
+
+.dark .image-upload-gallery .swiper-button-prev-custom:hover,
+.dark .image-upload-gallery .swiper-button-next-custom:hover {
+    @apply bg-primary border-primary text-white;
+} 
