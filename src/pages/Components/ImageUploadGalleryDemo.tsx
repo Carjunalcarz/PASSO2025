@@ -47,7 +47,20 @@ const ImageUploadGalleryDemo = () => {
                         onChange={handleImageChange}
                         maxNumber={10}
                         multiple={true}
+                        maxImageHeight="500px"
+                        imageFit="contain"
                     />
+                </div>
+
+                <div className="mb-5 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <h6 className="font-semibold mb-2">Zoom Features:</h6>
+                    <ul className="text-sm space-y-1">
+                        <li>• Click on any image to zoom in/out</li>
+                        <li>• Use +/- buttons to adjust zoom level</li>
+                        <li>• Press Escape to reset zoom</li>
+                        <li>• Use keyboard +/- keys when zoomed</li>
+                        <li>• Zoom range: 50% to 400%</li>
+                    </ul>
                 </div>
 
                 {codeArr.includes('code1') && (
@@ -69,9 +82,20 @@ const ImageUploadGalleryDemo = () => {
             onChange={handleImageChange}
             maxNumber={10}
             multiple={true}
+            maxImageHeight="500px"
+            imageFit="contain"
         />
     );
-};`}</pre>
+};
+
+// Available props:
+// - maxImageHeight: string (e.g., "400px", "500px", "600px")
+// - imageFit: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down'
+//   - contain: Maintains aspect ratio, fits within container
+//   - cover: Fills container, may crop image
+//   - fill: Stretches to fill container
+//   - none: No resizing
+//   - scale-down: Like contain but never scales up`}</pre>
                     </CodeHighlight>
                 )}
             </div>

@@ -60,8 +60,7 @@ const BuildingLocation = ({
     const province = watch("address_province")
 
     const handleLocationPhotosChange = (imageList: any[]) => {
-        const base64List = imageList.map(img => img.data_url);
-        setValue("buildingLocation.image_list", base64List);
+        setValue("buildingLocation.image_list", imageList);
         if (onLocationPhotosChange) onLocationPhotosChange(imageList);
     };
 
@@ -164,6 +163,8 @@ const BuildingLocation = ({
                         onChange={handleLocationPhotosChange}
                         maxNumber={5}
                         multiple={true}
+                        maxImageHeight="500px"
+                        imageFit="cover"
                     />
                 </div>
             </div>

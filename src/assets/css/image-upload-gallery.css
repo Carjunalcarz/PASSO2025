@@ -20,6 +20,84 @@
     @apply bg-primary opacity-100;
 }
 
+/* Image sizing controls */
+.image-upload-gallery .main-swiper img {
+    @apply w-full max-h-[600px] object-contain;
+    min-height: 200px; /* Minimum height for very small images */
+}
+
+/* Prevent image distortion */
+.image-upload-gallery .main-swiper img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+/* Zoom functionality */
+.image-upload-gallery .main-swiper .cursor-zoom-in {
+    cursor: zoom-in;
+}
+
+.image-upload-gallery .main-swiper .cursor-grab {
+    cursor: zoom-out;
+}
+
+.image-upload-gallery .main-swiper img {
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Smooth zoom transitions */
+.image-upload-gallery .main-swiper img {
+    will-change: transform;
+}
+
+/* Zoom controls styling */
+.image-upload-gallery .zoom-controls {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.image-upload-gallery .zoom-controls button {
+    transition: all 0.2s ease-in-out;
+}
+
+.image-upload-gallery .zoom-controls button:hover {
+    transform: scale(1.05);
+}
+
+/* Thumbnail sizing */
+.image-upload-gallery .thumbs-swiper img {
+    @apply w-full h-16 object-cover;
+}
+
+/* Table cell constraints */
+.image-upload-gallery {
+    max-width: 100%;
+    overflow: hidden;
+}
+
+/* Ensure gallery doesn't break table layout */
+td .image-upload-gallery {
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Constrain ImageUploading component in table cells */
+td .upload__image-wrapper {
+    width: 100%;
+    max-width: 100%;
+}
+
+td .upload__image-wrapper > div {
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Ensure all upload containers respect table width */
+td [data-upload-id] {
+    width: 100%;
+    max-width: 100%;
+}
+
 /* Dark mode support */
 .dark .image-upload-gallery .swiper-button-prev-custom,
 .dark .image-upload-gallery .swiper-button-next-custom {

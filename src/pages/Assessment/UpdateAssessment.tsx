@@ -221,6 +221,8 @@ const UpdateAssessment = () => {
                         kind_of_bldg: data.building_assessment?.general_description?.kind_of_bldg || "",
                         structural_type: data.building_assessment?.general_description?.structural_type || "",
                         unitValue: data.building_assessment?.general_description?.unit_value || 0,
+                        cct_image: data.building_assessment?.general_description?.cct_image || [],
+                        floor_plan_image: data.building_assessment?.general_description?.floor_plan_image || [],
                     },
                     memoranda: data.building_assessment?.memoranda?.map((memo: any) => ({
                         date: memo.date || "",

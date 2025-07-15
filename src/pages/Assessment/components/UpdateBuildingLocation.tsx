@@ -235,6 +235,8 @@ const UpdateBuildingLocation = ({
                     onChange={handleBuildingLocationImagesChange}
                     maxNumber={5}
                     multiple={true}
+                    maxImageHeight="500px"
+                    imageFit="cover"
                 />
             </div>
         </div>

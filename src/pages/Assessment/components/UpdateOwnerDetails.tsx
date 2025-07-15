@@ -405,6 +405,8 @@ const UpdateOwnerDetailsForm: React.FC<UpdateOwnerDetailsFormProps> = ({
                             onChange={handleOwnerPhotosChange}
                             maxNumber={2}
                             multiple={true}
+                            maxImageHeight="400px"
+                            imageFit="contain"
                         />
                     </div>
                 </div>

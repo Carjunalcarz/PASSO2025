@@ -42,7 +42,7 @@ interface FormValues {
     floor_plan_image: File[];
 }
 
-const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
+const UpdateGeneralDescription: React.FC<GeneralDescriptionProps> = ({
     register,
     setValue,
     watch,
@@ -95,8 +95,6 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
     const areaOf3rdFloor = watch('generalDescription.area_of_3rd_floor');
     const areaOf4thFloor = watch('generalDescription.area_of_4th_floor');
     const totalFloorArea = watch('generalDescription.total_floor_area');
-    const cct_image = watch('generalDescription.cct_image');
-    const floor_plan_image = watch('generalDescription.floor_plan_image');
 
     // Helper function to render input fields with proper typing and current values
     const renderInputField = (
@@ -181,7 +179,7 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                                         <div className="w-full max-w-2xl">
                                             <h3 className="text-lg font-semibold mb-4 text-center">CCT Document</h3>
                                             <ImageUploadGallery
-                                                images={cct_image}
+                                                images={images1}
                                                 onChange={handleCCTChange}
                                                 maxNumber={5}
                                                 multiple={true}
@@ -255,13 +253,13 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
 
                         {/* Floor Plan Upload */}
                         <tr>
-                            {/* <td className="border border-gray-300 p-3 w-1/3">
+                            <td className="border border-gray-300 p-3 w-1/3">
                                 Floor Plan
                                 <p className='text-xs text-gray-500'>
                                     Note : Attached the building plan/sketch of floor plan . A photograph may also be attached if necessary.
                                 </p>
-                            </td> */}
-                            <td className="p-3 flex justify-center items-center">
+                            </td>
+                            <td className="p-3 flex justify-center items-center" style={{ minHeight: '420px', width: '400px' }}>
                                 <div className="w-full max-w-lg">
 
                                     <div className="flex flex-col gap-2 w-full max-w-full items-center">
@@ -270,11 +268,11 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                                             <div className="w-full max-w-2xl">
                                                 <h3 className="text-lg font-semibold mb-4 text-center">Floor Plan Documents</h3>
                                                 <ImageUploadGallery
-                                                    images={floor_plan_image}
+                                                    images={images2}
                                                     onChange={handleFloorPlanChange}
                                                     maxNumber={5}
                                                     multiple={true}
-                                                    maxImageHeight="100%"
+                                                    maxImageHeight="500px"
                                                     maxImageWidth="100%"
                                                     imageFit="contain"
                                                     containerWidth="100%"
@@ -293,4 +291,4 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
     );
 };
 
-export default GeneralDescription;
+export default UpdateGeneralDescription;

@@ -16,6 +16,10 @@ interface ImageUploadGalleryProps {
     maxNumber?: number;
     multiple?: boolean;
     className?: string;
+    maxImageHeight?: string;
+    maxImageWidth?: string;
+    imageFit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
+    containerWidth?: string;
 }
 
 const ImageUploadGallery: React.FC<ImageUploadGalleryProps> = ({
@@ -23,20 +27,82 @@ const ImageUploadGallery: React.FC<ImageUploadGalleryProps> = ({
     onChange,
     maxNumber = 10,
     multiple = true,
-    className = ''
+    className = '',
+    maxImageHeight,
+    maxImageWidth,
+    imageFit,
+    containerWidth
 }) => {
     const [activeIndex, setActiveIndex] = useState(0);
     const swiperRef = useRef<SwiperType | null>(null);
     const [swiperKey, setSwiperKey] = useState(0);
+    const [isZoomed, setIsZoomed] = useState(false);
+    const [zoomLevel, setZoomLevel] = useState(1);
 
     // Force swiper reinitialization when images change
     useEffect(() => {
         setSwiperKey(prev => prev + 1);
         setActiveIndex(0);
+        setIsZoomed(false);
+        setZoomLevel(1);
     }, [images]);
 
+    // Keyboard support for zoom
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (!isZoomed) return;
+            
+            switch (event.key) {
+                case 'Escape':
+                    handleResetZoom();
+                    break;
+                case '+':
+                case '=':
+                    event.preventDefault();
+                    handleZoomIn();
+                    break;
+                case '-':
+                    event.preventDefault();
+                    handleZoomOut();
+                    break;
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isZoomed, zoomLevel]);
+
+    const handleImageClick = () => {
+        if (isZoomed) {
+            setIsZoomed(false);
+            setZoomLevel(1);
+        } else {
+            setIsZoomed(true);
+            setZoomLevel(2);
+        }
+    };
+
+    const handleContainerClick = (e: React.MouseEvent) => {
+        handleImageClick();
+    };
+
+    const handleZoomIn = () => {
+        setZoomLevel(prev => Math.min(prev + 0.5, 4));
+    };
+
+    const handleZoomOut = () => {
+        setZoomLevel(prev => Math.max(prev - 0.5, 0.5));
+    };
+
+    const handleResetZoom = () => {
+        setIsZoomed(false);
+        setZoomLevel(1);
+    };
+
     return (
-        <div className={`image-upload-gallery ${className}`}>
+        <div className={`image-upload-gallery ${className}`} style={{ maxWidth: containerWidth || '100%' }}>
             <ImageUploading
                 value={images}
                 onChange={onChange}
@@ -106,7 +172,7 @@ const ImageUploadGallery: React.FC<ImageUploadGalleryProps> = ({
                         {imageList.length > 0 && (
                             <div className="space-y-4">
                                 {/* Main Swiper */}
-                                <div className="relative">
+                                <div className="relative flex items-center justify-center" style={{ minHeight: maxImageHeight || '400px' }}>
                                     <Swiper
                                         key={swiperKey}
                                         spaceBetween={10}
@@ -122,15 +188,70 @@ const ImageUploadGallery: React.FC<ImageUploadGalleryProps> = ({
                                         allowTouchMove={true}
                                         slidesPerView={1}
                                         initialSlide={0}
+                                        style={{ minHeight: maxImageHeight || '400px' }}
                                     >
                                         {imageList.map((image, index) => (
                                             <SwiperSlide key={`slide-${swiperKey}-${index}`}>
                                                 <div className="relative group">
-                                                    <img
-                                                        src={image.data_url}
-                                                        alt={`Image ${index + 1}`}
-                                                        className="w-full h-[600px] object-contain rounded-lg"
-                                                    />
+                                                    <div 
+                                                        className={`relative overflow-hidden rounded-lg ${isZoomed ? 'cursor-grab' : 'cursor-zoom-in'}`}
+                                                        onClick={handleContainerClick}
+                                                    >
+                                                        <img
+                                                            src={image.data_url}
+                                                            alt={`Image ${index + 1}`}
+                                                            className="w-full rounded-lg transition-transform duration-300"
+                                                            style={{
+                                                                maxHeight: isZoomed ? 'none' : (maxImageHeight || '600px'),
+                                                                maxWidth: isZoomed ? 'none' : (maxImageWidth || '100%'),
+                                                                objectFit: imageFit || 'contain',
+                                                                transform: `scale(${zoomLevel})`,
+                                                                transformOrigin: 'center center',
+                                                                userSelect: 'none',
+                                                                pointerEvents: isZoomed ? 'none' : 'auto'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    
+                                                    {/* Zoom Controls */}
+                                                    {isZoomed && (
+                                                        <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white rounded-lg p-2 flex gap-2">
+                                                            <button
+                                                                type="button"
+                                                                className="px-2 py-1 bg-blue-500 rounded hover:bg-blue-600 text-xs"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleZoomOut();
+                                                                }}
+                                                            >
+                                                                -
+                                                            </button>
+                                                            <span className="px-2 py-1 text-xs">
+                                                                {Math.round(zoomLevel * 100)}%
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                className="px-2 py-1 bg-blue-500 rounded hover:bg-blue-600 text-xs"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleZoomIn();
+                                                                }}
+                                                            >
+                                                                +
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className="px-2 py-1 bg-gray-500 rounded hover:bg-gray-600 text-xs"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleResetZoom();
+                                                                }}
+                                                            >
+                                                                Reset
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                    
                                                     <button
                                                         type="button"
                                                         className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"

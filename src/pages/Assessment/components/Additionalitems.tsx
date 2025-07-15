@@ -208,10 +208,10 @@ const AdditionalItems: React.FC<PropertyAppraisalProps> = ({ register, setValue,
 
         // Handle deductions
         if (item.value.deductPercentage) {
-            return item.quantity * (baseValue - (baseValue * Number(item.value.deductPercentage)));
+            return item.quantity * -(baseValue * Number(item.value.deductPercentage));
         }
         if (item.value.deductRange) {
-            return item.quantity * (baseValue - (baseValue * Number(item.value.deductRange)));
+            return item.quantity * -(baseValue * Number(item.value.deductRange));
         }
 
         return 0;

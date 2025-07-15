@@ -22,6 +22,7 @@ interface RecordOfSupersededAssessmentProps {
 
 const RecordOfSupersededAssessment: React.FC<RecordOfSupersededAssessmentProps> = ({ register, setValue, watch }) => {
     const records = watch('recordOfSupersededAssessment.records') || [];
+    
 
     const addNewRecord = () => {
         setValue('recordOfSupersededAssessment.records', [...records, {
