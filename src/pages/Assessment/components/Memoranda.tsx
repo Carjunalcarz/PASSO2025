@@ -83,7 +83,7 @@ const Memoranda: React.FC<MemorandaProps> = ({ onMemorandaChange, register, watc
     return (
         <div className="w-full">
             <div className="mb-4">
-                <h4 className="text-xl font-semibold mb-4">Memoranda</h4>
+            <h2 className='text-xl px-10S text-wrap text-left mb-8'>MEMORANDA</h2>
                 <div className="space-y-4">
                     {entries.map((entry, index) => (
                         <div key={entry.id} className="flex gap-4 items-start border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4">

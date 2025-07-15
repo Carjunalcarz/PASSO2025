@@ -8,10 +8,11 @@ interface SuggestionInputProps {
     onSuggestionClick: (suggestion: string) => void;
     setShowSuggestions: (show: boolean) => void;
     labelClassName?: string;
+    value?: string;
+    error?: any; // Add this line
 }
 
 const SuggestionInput = ({
-
     id,
     label,
     placeholder,
@@ -20,10 +21,11 @@ const SuggestionInput = ({
     onInputChange,
     onSuggestionClick,
     setShowSuggestions,
-    labelClassName = "w-1/4"
+    labelClassName = "w-1/4",
+    value = "",
+    error
 }: SuggestionInputProps) => {
     return (
-
         <div className="w-full ltr:lg:mr-6 rtl:lg:ml-6 mb-6">
             <div className="flex">
                 <div className='flex justify-center items-center ltr:rounded-l-md rtl:rounded-r-md px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]'>
@@ -35,10 +37,10 @@ const SuggestionInput = ({
                     name={id}
                     className={`form-input flex-1 ltr:rounded-l-none rtl:rounded-r-none`}
                     placeholder={placeholder}
+                    value={value}
                     onChange={onInputChange}
                     onFocus={() => setShowSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-
                 />
                 {showSuggestions && suggestions.length > 0 && (
                     <div className="mt-[40px] absolute z-10 w-1/4 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto form-input">
@@ -49,12 +51,16 @@ const SuggestionInput = ({
                                 onClick={() => onSuggestionClick(suggestion)}
                             >
                                 {suggestion}
-
                             </div>
                         ))}
                     </div>
                 )}
             </div>
+            {error && (
+                <div className="text-red-500 text-sm mt-1 ml-4">
+                    {error}
+                </div>
+            )}
         </div>
     );
 };

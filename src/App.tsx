@@ -5,6 +5,7 @@ import { toggleRTL, toggleTheme, toggleLocale, toggleMenu, toggleLayout, toggleA
 import store from './store';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from 'react-hot-toast';
 
 function App({ children }: PropsWithChildren) {
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
@@ -30,6 +31,7 @@ function App({ children }: PropsWithChildren) {
                 {children}
             </div>
             <ToastContainer position="top-right" />
+            <Toaster position="top-right" />
         </>
     );
 }

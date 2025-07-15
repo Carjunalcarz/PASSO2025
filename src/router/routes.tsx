@@ -99,6 +99,7 @@ const QuillEditor = lazy(() => import('../pages/Forms/QuillEditor'));
 const MarkDownEditor = lazy(() => import('../pages/Forms/MarkDownEditor'));
 const DateRangePicker = lazy(() => import('../pages/Forms/DateRangePicker'));
 const Clipboard = lazy(() => import('../pages/Forms/Clipboard'));
+const ImageUploadGalleryDemo = lazy(() => import('../pages/Components/ImageUploadGalleryDemo'));
 import ProtectedRoute from './protectedRoute';
 import Buenavista from '../pages/DataTables/Buenavista_table';
 import Carmen from '../pages/DataTables/Carmen_table';
@@ -106,6 +107,17 @@ import BuenavistaAssessment from '../pages/Municipality/BuenavistaAssessment';
 import CarmenAssessment from '../pages/Municipality/CarmenAssessment';
 import EditAssessment from '../pages/Municipality/EditAssessment';
 import AddAssessment from '../pages/Assessment/AddAssessment';
+import KitcharaoAssessment from '../pages/Municipality/KitcharaoAssessment';
+import JabongaAssessment from '../pages/Municipality/JabongaAssessment';
+import RTRAssessment from '../pages/Municipality/RTRAssessment';
+import LasnievesAssessment from '../pages/Municipality/LasnievesAssessment';
+import MagallanesAssessment from '../pages/Municipality/MagallanessAssessment';
+import SantiagoAssessment from '../pages/Municipality/SantiagoAssessment';
+import TubayAssessment from '../pages/Municipality/TubayAssessment';
+import NasipitAssessment from '../pages/Municipality/NasipitAssessment';
+import ADNAssessment from '../pages/Municipality/ADN_Assessment';
+import Map from '../pages/Map'
+import UpdateAssessment from '../pages/Assessment/UpdateAssessment';
 const routes = [
     // dashboard
     {
@@ -131,10 +143,18 @@ const routes = [
     },
     // finance page
     {
-        path: '/finance',
+        path: '/adn-data',
         element: (
             <ProtectedRoute>
                 <Finance />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/map',
+        element: (
+            <ProtectedRoute>
+                <Map />
             </ProtectedRoute>
         ),
     },
@@ -249,6 +269,10 @@ const routes = [
     {
         path: '/components/lightbox',
         element: <LightBox />,
+    },
+    {
+        path: '/components/image-upload-gallery',
+        element: <ImageUploadGalleryDemo />,
     },
     // elements page
     {
@@ -601,6 +625,78 @@ const routes = [
         ),
     },
     {
+        path: '/assessment/jabonga',
+        element: (
+            <ProtectedRoute>
+                <JabongaAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/kitcharao',
+        element: (
+            <ProtectedRoute>
+                <KitcharaoAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/remedios_t_romualdez',
+        element: (
+            <ProtectedRoute>
+                <RTRAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/lasnieves',
+        element: (
+            <ProtectedRoute>
+                <LasnievesAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/magallanes',
+        element: (
+            <ProtectedRoute>
+                <MagallanesAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/santiago',
+        element: (
+            <ProtectedRoute>
+                <SantiagoAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/tubay',
+        element: (
+            <ProtectedRoute>
+                <TubayAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/nasipit',
+        element: (
+            <ProtectedRoute>
+                <NasipitAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/adn',
+        element: (
+            <ProtectedRoute>
+                <ADNAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
         path: '/assessment/edit/:tdn',
         element: (
             <ProtectedRoute>
@@ -617,6 +713,14 @@ const routes = [
             </ProtectedRoute>
         ),
 
+    },
+    {
+        path: '/assessment/update/:id',
+        element: (
+            <ProtectedRoute>
+                <UpdateAssessment />
+            </ProtectedRoute>
+        ),
     },
 ];
 

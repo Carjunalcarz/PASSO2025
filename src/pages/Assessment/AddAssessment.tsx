@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link , useNavigate} from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
@@ -25,6 +25,11 @@ import { UseFormRegister, FieldValues } from 'react-hook-form';
 import AdditionalItems from './components/Additionalitems';
 import useAssessmentSubmit from './hooks/useAssessmentSubmit';
 import SubmitAssessment from './components/SubmitAssessment';
+import { toast } from 'react-hot-toast';
+import { useAssessmentValidation } from './hooks/useAssessmentValidation';
+import ValidationDebug from './components/ValidationDebug';
+import FillDummyButton from './components/testing/FillDummyButton';
+import ErrorValidator from './components/error_validator/ErrorValidator';
 
 // Type definitions
 type BarangayData = {
@@ -211,28 +216,9 @@ const Add = () => {
         setValue('address_province', suggestion); // ← very important
     };
 
-    const addItem = () => {
-        let maxId = 0;
-        maxId = items?.length ? items.reduce((max: number, character: any) => (character.id > max ? character.id : max), items[0].id) : 0;
 
-        setItems([...items, { id: maxId + 1, title: '', description: '', rate: 0, quantity: 0, amount: 0 }]);
-    };
 
-    const removeItem = (item: any = null) => {
-        setItems(items.filter((d: any) => d.id !== item.id));
-    };
-
-    const changeQuantityPrice = (type: string, value: string, id: number) => {
-        const list = items;
-        const item = list.find((d: any) => d.id === id);
-        if (type === 'quantity') {
-            item.quantity = Number(value);
-        }
-        if (type === 'price') {
-            item.amount = Number(value);
-        }
-        setItems([...list]);
-    };
+ 
 
     // First add this state for barangay suggestions
     const [barangaySuggestions, setBarangaySuggestions] = useState<string[]>([]);
@@ -369,13 +355,7 @@ const Add = () => {
     // Add this to your component's state declarations
     const [structuralMaterials, setStructuralMaterials] = useState<Record<string, boolean | string>>({});
 
-    // Add this handler function
-    const handleStructuralMaterialChange = (field: string, value: boolean | string) => {
-        setStructuralMaterials(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    };
+  
 
     // Add these new state variables for component visibility
     const [showGeneralDescription, setShowGeneralDescription] = useState(false);
@@ -396,29 +376,54 @@ const Add = () => {
     const [showSuperseded, setShowSuperseded] = useState(false);
 
  
-    const { register, handleSubmit, watch, setValue, ...rest } = useForm<AssessmentFormData>();
+    const {
+        register,
+        handleSubmit,
+        watch,
+        setValue,
+        reset,
+        control,
+        errors,
+        isValid,
+        isDirty,
+        isSubmitting,
+        trigger,
+        getNestedError,
+        validateField,
+    } = useAssessmentValidation();
 
     // Real-time logging
     const allValues = watch();
     useEffect(() => {
-        console.log("OwnerDetailsForm values:", allValues);
-    }, [allValues]);
+        console.log("Form values:", allValues);
+        console.log("Form errors:", errors);
+        console.log("Form valid:", isValid);
+        console.log("Form dirty:", isDirty);
+    }, [allValues, errors, isValid, isDirty]);
 
     const [showAdditionalItem, setShowAdditionalItem] = useState(false);
 
-    const { submitAssessment, isSubmitting } = useAssessmentSubmit();
+    const { submitAssessment, isSubmitting: oldIsSubmitting } = useAssessmentSubmit();
+    const navigate = useNavigate();
+    const onSubmit = async (data: AssessmentFormData) => {
+        console.log('Sending form data to API:', data);
+        
+        // Validate all fields before submission
+        const isValidForm = await trigger();
+        if (!isValidForm) {
+            toast.error('Please fix validation errors before submitting');
+            console.log('Validation errors:', errors);
+            return;
+        }
 
-    const onSubmit = async () => {
-        console.log('Sending allValues to API:', allValues);
         try {
-            const response = await fetch('http://localhost:8000/assessment/add', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL_FASTAPI}/assessment/add`, {
                 method: 'POST',
                 headers: {
-                    
-                     Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(allValues),
+                body: JSON.stringify(data),
             });
 
             if (!response.ok) {
@@ -428,13 +433,38 @@ const Add = () => {
             const result = await response.json();
             console.log('Submission successful:', result);
 
-            // Optional: Add success notification or redirect
-            // navigate('/assessments');
+            // ✅ Show success toast
+            toast.success('Assessment submitted successfully!');
+
+            // ✅ Clear form fields after successful submit
+            reset();
+            
+            // ✅ Clear image states after successful submit
+            setLocationPhotos([]);
+            setOwnerPhotos([]);
+            setImages1([]);
+            setImages2([]);
+
+            // navigate(0); // This will reload the current route
 
         } catch (error) {
             console.error('Submission error:', error);
-            // Add error handling UI feedback here
+            // ❌ Show error toast
+            toast.error('Failed to submit assessment.');
         }
+    };
+
+    // Add these state declarations (around line 329 where other image states are)
+    const [ownerPhotos, setOwnerPhotos] = useState<ImageListType>([]);
+    const [locationPhotos, setLocationPhotos] = useState<ImageListType>([]);
+
+    // Add this handler (around line 333 where other onChange handlers are)
+    const handleOwnerPhotosChange = (imageList: ImageListType) => {
+        setOwnerPhotos(imageList);
+    };
+
+    const handleLocationPhotosChange = (imageList: ImageListType) => {
+        setLocationPhotos(imageList);
     };
 
     return (
@@ -443,12 +473,13 @@ const Add = () => {
                 <div className='mt-5'>
                     <Header />
                 </div>
-
+                <FillDummyButton setValue={setValue as any} />
 
                 {/* ###########ENTRY############## */}
 
                 <div className="px-10 mt-2">
                     <BuildingLocation
+                        reset = {reset}
                         register={register}
                         watch={watch}
                         setValue={setValue}
@@ -467,15 +498,33 @@ const Add = () => {
                         setShowMunicipalitySuggestions={setShowMunicipalitySuggestions}
                         setShowProvinceSuggestions={setShowProvinceSuggestions}
                         setShowBarangaySuggestions={setShowBarangaySuggestions}
+                        locationPhotos={locationPhotos}
+                        onLocationPhotosChange={handleLocationPhotosChange}
+                        onPreviewImage={setPreviewImage}
                     />
                 </div>
                 {/* ##########END############### */}
                 <div className="p-10">
-                    <OwnerDetailsForm register={register} watch={watch} setValue={setValue} />
+                    <OwnerDetailsForm 
+                        register={register} 
+                        watch={watch} 
+                        setValue={setValue}
+                        trigger={trigger} // Add trigger function
+                        getNestedError={getNestedError}
+                        ownerPhotos={ownerPhotos}
+                        onOwnerPhotosChange={handleOwnerPhotosChange}
+                        onPreviewImage={setPreviewImage}
+                    />
                 </div>
                 {/* ##########ENTRY############### */}
                 <div className="px-10 ">
-                    <LandReference register={register} />
+                    <LandReference 
+                        register={register} 
+                        getNestedError={getNestedError}
+                        watch={watch}
+                        setValue={setValue}
+                        trigger={trigger}
+                    />
                 </div>
 
                 {/* ###########END############## */}
@@ -502,7 +551,7 @@ const Add = () => {
                         <div className="border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
                             <GeneralDescription
                                 register={register}
-                                control={rest.control}
+                                control={control}
                                 setValue={setValue}
                                 watch={watch}
                                 images1={images1}
@@ -731,9 +780,11 @@ const Add = () => {
 
                 {/* Submit button component */}
                 <SubmitAssessment
-                    handleSubmit={handleSubmit}
-                    onSubmit={onSubmit}
-                    isSubmitting={isSubmitting} 
+                    handleSubmit={handleSubmit as any}
+                    onSubmit={onSubmit as any}
+                    isSubmitting={isSubmitting}
+                    isValid={isValid}
+                    isDirty={isDirty}
                 />
 
             </div>
@@ -742,10 +793,20 @@ const Add = () => {
 
             {previewImage && (
                 <ImagePreviewModal
-                    previewImage={previewImage}
-                    setPreviewImage={setPreviewImage}
+                    isOpen={!!previewImage}
+                    imageUrl={previewImage}
+                    onClose={() => setPreviewImage(null)}
                 />
             )}
+
+            {/* Add debug component without values */}
+            {/* <ValidationDebug 
+                errors={errors} 
+                isValid={isValid} 
+                isDirty={isDirty}
+            /> */}
+
+            <ErrorValidator errors={errors} />
         </div>
     );
 };

@@ -4,6 +4,7 @@ import IconX from '../../../components/Icon/IconX';
 import InputField from './shared/InputField';
 import { Controller } from 'react-hook-form';
 import ConstructionCost from './gendesc_component/ConstructionCost';
+import ImageUploadGallery from '../../../components/ImageUploadGallery';
 
 interface GeneralDescriptionProps {
     setValue: any;
@@ -37,6 +38,8 @@ interface FormValues {
     area_of_4th_floor: string;
     total_floor_area: string;
     floor_plan: File[];
+    cct_image: File[];
+    floor_plan_image: File[];
 }
 
 const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
@@ -69,7 +72,9 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
         area_of_3rd_floor: '',
         area_of_4th_floor: '',
         total_floor_area: '',
-        floor_plan: []
+        floor_plan: [],
+        cct_image: [],
+        floor_plan_image: []
     });
 
     // Type-safe input change handler
@@ -78,21 +83,28 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
         onInputChange?.(field, value);
     };
 
-    // Handler for CCT file change
-    const handleCCTChange = (imageList: ImageListType) => {
-        setFormValues(prev => ({
-            ...prev,
-            cct: imageList[0]?.file || null,
-        }));
-        onChange1(imageList); // keep this if you need to update parent
-    };
+    // Get current form values
+    const buildingPermitNo = watch('generalDescription.building_permit_no');
+    const certificateOfCompletion = watch('generalDescription.certificate_of_completion_issued_on');
+    const certificateOfOccupancy = watch('generalDescription.certificate_of_occupancy_issued_on');
+    const dateOfOccupied = watch('generalDescription.date_of_occupied');
+    const bldgAge = watch('generalDescription.bldg_age');
+    const noOfStoreys = watch('generalDescription.no_of_storeys');
+    const areaOf1stFloor = watch('generalDescription.area_of_1st_floor');
+    const areaOf2ndFloor = watch('generalDescription.area_of_2nd_floor');
+    const areaOf3rdFloor = watch('generalDescription.area_of_3rd_floor');
+    const areaOf4thFloor = watch('generalDescription.area_of_4th_floor');
+    const totalFloorArea = watch('generalDescription.total_floor_area');
+    const cct_image = watch('generalDescription.cct_image');
+    const floor_plan_image = watch('generalDescription.floor_plan_image');
 
-    // Helper function to render input fields with proper typing
+    // Helper function to render input fields with proper typing and current values
     const renderInputField = (
         id: keyof FormValues,
         label: string,
         type: string = 'text',
-        placeholder: string = ''
+        placeholder: string = '',
+        currentValue?: string
     ) => (
         <InputField
             label={label}
@@ -101,6 +113,7 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
             placeholder={placeholder}
             className="w-1/2"
             labelClassName="w-1/3"
+            value={currentValue || ""}
             {...register(`generalDescription.${id}`)}
         />
     );
@@ -116,6 +129,16 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
             setValue('generalDescription.total_floor_area', totalFloorArea);
         }
     }, [floor1, floor2, floor3, floor4, setValue]);
+
+    const handleFloorPlanChange = (imageList: ImageListType) => {
+        setValue('generalDescription.floor_plan_image', imageList);
+        onChange2(imageList);
+    };
+
+    const handleCCTChange = (imageList: ImageListType) => {
+        setValue('generalDescription.cct_image', imageList);
+        onChange1(imageList);
+    };
 
     return (
         <div className="px-10">
@@ -140,7 +163,7 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                         <tr>
                             <td className="border border-gray-300 p-3 w-1/3">Building Permit No.</td>
                             <td className="p-3">
-                                {renderInputField('building_permit_no', 'Building Permit No.', 'text', 'Enter Building Permit No.')}
+                                {renderInputField('building_permit_no', 'Building Permit No.', 'text', 'Enter Building Permit No.', buildingPermitNo)}
                             </td>
                         </tr>
 
@@ -149,61 +172,27 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                             <td className="border border-gray-300 p-3 w-1/3">
                                 Condominium Certificate of Title (CCT)
                             </td>
-                            <td className="p-3">
-                                <Controller
-                                    control={control}
-                                    name="cct"
-                                    render={({ field: { onChange, value } }) => (
-                                        <ImageUploading
-                                            multiple={false}
-                                            value={images1}
-                                            onChange={(imageList) => {
-                                                onChange(imageList[0]?.file || null);
-                                                onChange1(imageList); // update parent if needed
-                                            }}
-                                            maxNumber={1}
-                                            dataURLKey="data_url"
-                                        >
-                                            {({
-                                                imageList,
-                                                onImageUpload,
-                                                onImageRemove,
-                                                isDragging,
-                                                dragProps
-                                            }) => (
-                                                <div className="space-y-4">
-                                                    <button
-                                                        type="button"
-                                                        className={`border-2 border-dashed border-gray-300 rounded-lg p-4 w-full text-center ${isDragging ? 'bg-blue-50' : ''}`}
-                                                        onClick={onImageUpload}
-                                                        {...dragProps}
-                                                    >
-                                                        Upload CCT Document
-                                                    </button>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {imageList.map((image, index) => (
-                                                            <div key={index} className="relative">
-                                                                <img
-                                                                    src={image.data_url}
-                                                                    alt="cct-document"
-                                                                    className="w-20 h-20 object-cover rounded"
-                                                                    onClick={() => onPreviewImage?.(image.data_url)}
-                                                                />
-                                                                <button
-                                                                    type="button"
-                                                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
-                                                                    onClick={() => onImageRemove(index)}
-                                                                >
-                                                                    <IconX className="w-3 h-3" />
-                                                                </button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </ImageUploading>
-                                    )}
-                                />
+                            <td className="p-3 flex justify-center items-center" style={{ minHeight: '420px', width: '400px' }}>
+
+
+                                <div className="flex flex-col gap-2 w-full max-w-full items-center">
+                                    {/* Image Upload Section */}
+                                    <div className="mt-6 border-t pt-4 w-full max-w-full flex justify-center">
+                                        <div className="w-full max-w-2xl">
+                                            <h3 className="text-lg font-semibold mb-4 text-center">CCT Document</h3>
+                                            <ImageUploadGallery
+                                                images={cct_image}
+                                                onChange={handleCCTChange}
+                                                maxNumber={5}
+                                                multiple={true}
+                                                maxImageHeight="400px"
+                                                maxImageWidth="600px"
+                                                imageFit="contain"
+                                                containerWidth="600px"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
 
@@ -211,21 +200,21 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                         <tr>
                             <td className="border border-gray-300 p-3 w-1/3">Certificate of Completion Issued On</td>
                             <td className="p-3">
-                                {renderInputField('certificate_of_completion_issued_on', 'Certificate of Completion', 'date')}
+                                {renderInputField('certificate_of_completion_issued_on', 'Certificate of Completion', 'date', '', certificateOfCompletion)}
                             </td>
                         </tr>
 
                         <tr>
                             <td className="border border-gray-300 p-3 w-1/3">Certificate of Occupancy Issued On</td>
                             <td className="p-3">
-                                {renderInputField('certificate_of_occupancy_issued_on', 'Certificate of Occupancy', 'date')}
+                                {renderInputField('certificate_of_occupancy_issued_on', 'Certificate of Occupancy', 'date', '', certificateOfOccupancy)}
                             </td>
                         </tr>
                         {/* Date of Occupied */}
                         <tr>
                             <td className="border border-gray-300 p-3 w-1/3">Date of Occupied</td>
                             <td className="p-3">
-                                {renderInputField('date_of_occupied', 'Date of Occupied', 'date')}
+                                {renderInputField('date_of_occupied', 'Date of Occupied', 'date', '', dateOfOccupied)}
                             </td>
                         </tr>
 
@@ -233,14 +222,14 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                         <tr>
                             <td className="border border-gray-300 p-3 w-1/3">Building Age</td>
                             <td className="p-3">
-                                {renderInputField('bldg_age', 'Building Age', 'number', 'Enter Building Age')}
+                                {renderInputField('bldg_age', 'Building Age', 'number', 'Enter Building Age', bldgAge)}
                             </td>
                         </tr>
 
                         <tr>
                             <td className="border border-gray-300 p-3 w-1/3">Number of Storeys</td>
                             <td className="p-3">
-                                {renderInputField('no_of_storeys', 'Number of Storeys', 'number', 'Enter Number of Storeys')}
+                                {renderInputField('no_of_storeys', 'Number of Storeys', 'number', 'Enter Number of Storeys', noOfStoreys)}
                             </td>
                         </tr>
 
@@ -249,10 +238,10 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                             <td className="border border-gray-300 p-3 w-1/3">Floor Areas (sqm)</td>
                             <td className="p-3">
                                 <div className="space-y-2">
-                                    {renderInputField('area_of_1st_floor', '1st Floor', 'number', '1st Floor')}
-                                    {renderInputField('area_of_2nd_floor', '2nd Floor', 'number', '2nd Floor')}
-                                    {renderInputField('area_of_3rd_floor', '3rd Floor', 'number', '3rd Floor')}
-                                    {renderInputField('area_of_4th_floor', '4th Floor', 'number', '4th Floor')}
+                                    {renderInputField('area_of_1st_floor', '1st Floor', 'number', '1st Floor', areaOf1stFloor)}
+                                    {renderInputField('area_of_2nd_floor', '2nd Floor', 'number', '2nd Floor', areaOf2ndFloor)}
+                                    {renderInputField('area_of_3rd_floor', '3rd Floor', 'number', '3rd Floor', areaOf3rdFloor)}
+                                    {renderInputField('area_of_4th_floor', '4th Floor', 'number', '4th Floor', areaOf4thFloor)}
                                 </div>
                             </td>
                         </tr>
@@ -260,72 +249,41 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                         <tr>
                             <td className="border border-gray-300 p-3 w-1/3">Total Floor Area</td>
                             <td className="p-3">
-                                {renderInputField('total_floor_area', 'Total Floor Area', 'number', 'Total Floor Area')}
+                                {renderInputField('total_floor_area', 'Total Floor Area', 'number', 'Total Floor Area', totalFloorArea)}
                             </td>
                         </tr>
 
                         {/* Floor Plan Upload */}
                         <tr>
-                            <td className="border border-gray-300 p-3 w-1/3">
+                            {/* <td className="border border-gray-300 p-3 w-1/3">
                                 Floor Plan
-                                <p className='text-xs text-gray-500'>Note : Attached the building plan/sketch of floor plan . A photograph may also be attached if necessary.</p>
-                            </td>
-                            <td className="p-3 w-1/2 border border-gray-300">
-                                <Controller
-                                    control={control}
-                                    name="floor_plan"
-                                    render={({ field: { onChange, value } }) => (
-                                        <ImageUploading
-                                            multiple={true}
-                                            value={images2}
-                                            onChange={(imageList) => {
-                                                const files = imageList.map(img => img.file).filter(Boolean);
-                                                onChange(files);
-                                                onChange2(imageList);
-                                            }}
-                                            maxNumber={5}
-                                            dataURLKey="data_url"
-                                        >
-                                            {({
-                                                imageList,
-                                                onImageUpload,
-                                                onImageRemove,
-                                                isDragging,
-                                                dragProps
-                                            }) => (
-                                                <div className="space-y-4">
-                                                    <button
-                                                        type="button"
-                                                        className={`border-2 border-dashed border-gray-300 rounded-lg p-4 w-full text-center ${isDragging ? 'bg-blue-50' : ''}`}
-                                                        onClick={onImageUpload}
-                                                        {...dragProps}
-                                                    >
-                                                        Upload Floor Plan (Max 5)
-                                                    </button>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {imageList.map((image, index) => (
-                                                            <div key={index} className="relative">
-                                                                <img
-                                                                    src={image.data_url}
-                                                                    alt={`floor-plan-${index + 1}`}
-                                                                    className="w-20 h-20 object-cover rounded"
-                                                                    onClick={() => onPreviewImage?.(image.data_url)}
-                                                                />
-                                                                <button
-                                                                    type="button"
-                                                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
-                                                                    onClick={() => onImageRemove(index)}
-                                                                >
-                                                                    <IconX className="w-3 h-3" />
-                                                                </button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </ImageUploading>
-                                    )}
-                                />
+                                <p className='text-xs text-gray-500'>
+                                    Note : Attached the building plan/sketch of floor plan . A photograph may also be attached if necessary.
+                                </p>
+                            </td> */}
+                            <td className="p-3 flex justify-center items-center">
+                                <div className="w-full max-w-lg">
+
+                                    <div className="flex flex-col gap-2 w-full max-w-full items-center">
+                                        {/* Image Upload Section */}
+                                        <div className="mt-6 border-t pt-4 w-full max-w-full flex justify-center">
+                                            <div className="w-full max-w-2xl">
+                                                <h3 className="text-lg font-semibold mb-4 text-center">Floor Plan Documents</h3>
+                                                <ImageUploadGallery
+                                                    images={floor_plan_image}
+                                                    onChange={handleFloorPlanChange}
+                                                    maxNumber={5}
+                                                    multiple={true}
+                                                    maxImageHeight="100%"
+                                                    maxImageWidth="100%"
+                                                    imageFit="contain"
+                                                    containerWidth="100%"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
                             </td>
                         </tr>
                     </tbody>

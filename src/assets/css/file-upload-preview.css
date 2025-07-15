@@ -1,3 +1,6 @@
+/* Image Upload Gallery Styles */
+@import './image-upload-gallery.css';
+
 .custom-file-container {
     box-sizing: border-box;
     position: relative;

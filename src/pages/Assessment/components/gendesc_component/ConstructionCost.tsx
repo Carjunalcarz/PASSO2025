@@ -183,6 +183,9 @@ const constructionCosts: Record<string, Record<string, number | null>> = {
 const ConstructionCost: React.FC<ConstructionCostProps> = ({ register, setValue, watch }) => {
     const constructionTypes = Object.keys(constructionCosts);
 
+    // Get current form values
+    const currentBuildingType = watch('generalDescription.kind_of_bldg');
+    const currentStructuralType = watch('generalDescription.structural_type');
 
     return (
         <div className="flex gap-4">
@@ -190,7 +193,7 @@ const ConstructionCost: React.FC<ConstructionCostProps> = ({ register, setValue,
                 <label className="block mb-2">Building Type</label>
                 <select
                     className="form-select w-full"
-                    value={watch('generalDescription.kind_of_bldg') || ''}
+                    value={currentBuildingType || ""}
                     onChange={e => {
                         const newType = e.target.value;
                         setValue('generalDescription.kind_of_bldg', newType);
@@ -209,7 +212,7 @@ const ConstructionCost: React.FC<ConstructionCostProps> = ({ register, setValue,
                 <label className="block mb-2">Structural Type</label>
                 <select
                     className="form-select w-full"
-                    value={watch('generalDescription.structural_type') || ''}
+                    value={currentStructuralType || ""}
                     onChange={e => {
                         const selectedStructuralType = e.target.value;
                         setValue('generalDescription.structural_type', selectedStructuralType);
@@ -221,12 +224,12 @@ const ConstructionCost: React.FC<ConstructionCostProps> = ({ register, setValue,
                         }
                         setValue('generalDescription.unitValue', unitValue);
                     }}
-                    disabled={!watch('generalDescription.kind_of_bldg')}
+                    disabled={!currentBuildingType}
                 >
-                    <option value="">Select  Type</option>
-                    {watch('generalDescription.kind_of_bldg') &&
-                        Object.keys(constructionCosts[watch('generalDescription.kind_of_bldg')])
-                            .filter(structuralType => constructionCosts[watch('generalDescription.kind_of_bldg')][structuralType] !== null)
+                    <option value="">Select Type</option>
+                    {currentBuildingType &&
+                        Object.keys(constructionCosts[currentBuildingType])
+                            .filter(structuralType => constructionCosts[currentBuildingType][structuralType] !== null)
                             .map(structuralType => (
                                 <option key={structuralType} value={structuralType}>{structuralType}</option>
                             ))
