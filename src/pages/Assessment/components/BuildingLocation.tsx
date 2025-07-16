@@ -164,7 +164,7 @@ const BuildingLocation = ({
                         maxNumber={5}
                         multiple={true}
                         maxImageHeight="500px"
-                        imageFit="cover"
+                        imageFit="contain"
                     />
                 </div>
             </div>

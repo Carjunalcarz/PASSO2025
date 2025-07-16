@@ -10,6 +10,13 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
+function cleanUrl(url: string) {
+  if (url.startsWith('data:image') && url.includes('http')) {
+    return url.replace(/^data:image\/[a-zA-Z]+;base64,/, '');
+  }
+  return url;
+}
+
 interface ImageUploadGalleryProps {
     images: ImageListType;
     onChange: (imageList: ImageListType, addUpdateIndex: number[] | undefined) => void;
@@ -198,7 +205,7 @@ const ImageUploadGallery: React.FC<ImageUploadGalleryProps> = ({
                                                         onClick={handleContainerClick}
                                                     >
                                                         <img
-                                                            src={image.data_url}
+                                                            src={cleanUrl(image.data_url)}
                                                             alt={`Image ${index + 1}`}
                                                             className="w-full rounded-lg transition-transform duration-300"
                                                             style={{
@@ -307,7 +314,7 @@ const ImageUploadGallery: React.FC<ImageUploadGalleryProps> = ({
                                         {imageList.map((image, index) => (
                                             <div key={`thumb-${swiperKey}-${index}`} className="relative group">
                                                 <img
-                                                    src={image.data_url}
+                                                    src={cleanUrl(image.data_url)}
                                                     alt={`Thumbnail ${index + 1}`}
                                                     className={`w-full h-16 object-cover rounded cursor-pointer transition-all duration-200 ${
                                                         index === activeIndex
