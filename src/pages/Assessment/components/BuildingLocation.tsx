@@ -5,7 +5,7 @@ import { set } from 'lodash';
 import ImageUploadGallery from '../../../components/ImageUploadGallery';
 
 interface BuildingLocationProps {
-    reset : any
+    reset: any
     register: any;
     setValue: any;
     watch: any;
@@ -147,28 +147,31 @@ const BuildingLocation = ({
                         value={province || ""}
                     />
                 </div>
-                
+
             </div>
 
             {/* Location Photos Section */}
-            <div className="mt-8 border-t pt-6">
-                <h3 className="text-lg font-semibold mb-4 px-5">Location Photos</h3>
-                <p className="text-sm text-gray-600 mb-4 px-5">
-                    Upload photos of the building location, street view, and surrounding area
-                </p>
-                
-                <div className="px-5">
-                    <ImageUploadGallery
-                        images={locationPhotos}
-                        onChange={handleLocationPhotosChange}
-                        maxNumber={5}
-                        multiple={true}
-                        maxImageHeight="500px"
-                        imageFit="contain"
-                    />
+
+            <div className="mt-6 border-t pt-6 w-full flex justify-center items-center">
+                <div className="w-full max-w-3xl mx-auto text-center">
+                    <h3 className="text-lg font-semibold mb-6 text-center">Location Photos</h3>
+                    <div className="flex justify-center">
+                        <ImageUploadGallery
+                            images={locationPhotos}
+                            onChange={handleLocationPhotosChange}
+                            maxNumber={5}
+                            multiple={true}
+                            maxImageHeight="500px"
+                            maxImageWidth="500px"
+                            imageFit="contain"
+                            containerWidth="500px"
+                        />
+                    </div>
                 </div>
             </div>
+
         </div>
+
     );
 };
 

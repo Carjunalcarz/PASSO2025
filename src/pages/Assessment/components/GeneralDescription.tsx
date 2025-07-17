@@ -209,16 +209,16 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                             <td className="p-3 flex justify-center items-center w-full">
                                 <div className="flex flex-col items-center w-full">
                                     <h3 className="text-lg font-semibold mb-4 text-center">CCT Document</h3>
-                                    <div className="w-full max-w-2xl flex justify-center">
+                                    <div className="w-full max-w-lg flex justify-center">
                                         <ImageUploadGallery
                                             images={cctImageForPreview}
                                             onChange={handleCCTChange}
                                             maxNumber={5}
                                             multiple={true}
-                                            maxImageHeight="100%"
-                                            maxImageWidth="100%"
+                                            maxImageHeight="500px"
+                                            maxImageWidth="500px"
                                             imageFit="contain"
-                                            containerWidth="100%"
+                                            containerWidth="500px"
                                         />
                                     </div>
                                 </div>
@@ -284,27 +284,20 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                                 </p>
                             </td> */}
                             <td className="p-3 flex justify-center items-center w-full">
-                                <div className="w-full max-w-lg">
-
-                                    <div className="flex flex-col gap-2 w-full max-w-full">
-                                        {/* Image Upload Section */}
-                                        <div className="mt-6 border-t pt-4 w-full max-w-full flex justify-center">
-                                            <div className="w-full max-w-2xl">
-                                                <h3 className="text-lg font-semibold mb-4 text-center">Floor Plan Documents</h3>
-                                                <ImageUploadGallery
-                                                    images={floorPlanImageForPreview}
-                                                    onChange={handleFloorPlanChange}
-                                                    maxNumber={5}
-                                                    multiple={true}
-                                                    maxImageHeight="100%"
-                                                    maxImageWidth="100%"
-                                                    imageFit="contain"
-                                                    containerWidth="100%"
-                                                />
-                                            </div>
-                                        </div>
+                                <div className="flex flex-col items-center w-full">
+                                    <h3 className="text-lg font-semibold mb-4 text-center">Floor Plan Documents</h3>
+                                    <div className="w-full max-w-lg flex justify-center">
+                                        <ImageUploadGallery
+                                            images={floorPlanImageForPreview}
+                                            onChange={handleFloorPlanChange}
+                                            maxNumber={5}
+                                            multiple={true}
+                                            maxImageHeight="500px"
+                                            maxImageWidth="500px"
+                                            imageFit="contain"
+                                            containerWidth="500px"
+                                        />
                                     </div>
-
                                 </div>
                             </td>
                         </tr>

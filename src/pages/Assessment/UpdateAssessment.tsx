@@ -181,10 +181,24 @@ const UpdateAssessment = () => {
                         admin_ben_user: data.owner_details?.admin_ben_user || "",
                         admin_ben_user_address: data.owner_details?.admin_ben_user_address || "",
                         transactionCode: data.owner_details?.transaction_code || "",
-                        image_list: data.owner_details?.image_list || [],
                         pin: data.owner_details?.pin || "",
                         tin: data.owner_details?.tin || "",
                         telNo: data.owner_details?.tel_no || "",
+                        image_list: (() => {
+                            const FTP_URL_BASE = import.meta.env.VITE_FTP_URL_BASE;
+                            const rawImageList = data.owner_details?.image_list || [];
+                            let filenames: string[] = [];
+                            if (Array.isArray(rawImageList)) {
+                                filenames = rawImageList;
+                            } else if (typeof rawImageList === 'string') {
+                                try {
+                                    filenames = JSON.parse(rawImageList);
+                                } catch {
+                                    filenames = [];
+                                }
+                            }
+                            return filenames.map(fname => `${FTP_URL_BASE}/${fname}`);
+                        })(),
                     },
                     ownerDetail: {
                         ownerAddress: data.owner_details?.owner_address || "",
@@ -204,7 +218,7 @@ const UpdateAssessment = () => {
                         update_address_barangay: data.building_assessment?.address_barangay || "",
                         update_street: data.building_assessment?.street || "",
                         image_list: (() => {
-                            const FTP_URL_BASE = "http://127.0.0.1:3000/";
+                            const FTP_URL_BASE = import.meta.env.VITE_FTP_URL_BASE;
                             const rawImageList = data.building_assessment.building_location?.image_list || [];
                             let filenames: string[] = [];
                             if (Array.isArray(rawImageList)) {
@@ -236,7 +250,7 @@ const UpdateAssessment = () => {
                         structural_type: data.building_assessment?.general_description?.structural_type || "",
                         unitValue: data.building_assessment?.general_description?.unit_value || 0,
                         cct_image: (() => {
-                            const FTP_URL_BASE = "http://127.0.0.1:3000/";
+                            const FTP_URL_BASE = import.meta.env.VITE_FTP_URL_BASE;
                             const rawImageList = data.building_assessment.general_description?.cct_image || [];
                             let filenames: string[] = [];
                             if (Array.isArray(rawImageList)) {
@@ -251,7 +265,7 @@ const UpdateAssessment = () => {
                             return filenames.map(fname => `${FTP_URL_BASE}/${fname}`);
                         })(),
                         floor_plan_image: (() => {
-                            const FTP_URL_BASE = "http://127.0.0.1:3000/";
+                            const FTP_URL_BASE = import.meta.env.VITE_FTP_URL_BASE;
                             const rawImageList = data.building_assessment.general_description?.floor_plan_image || [];
                             let filenames: string[] = [];
                             if (Array.isArray(rawImageList)) {
