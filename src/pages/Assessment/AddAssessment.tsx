@@ -511,9 +511,6 @@ const Add = () => {
                         setValue={setValue}
                         trigger={trigger} // Add trigger function
                         getNestedError={getNestedError}
-                        ownerPhotos={ownerPhotos}
-                        onOwnerPhotosChange={handleOwnerPhotosChange}
-                        onPreviewImage={setPreviewImage}
                     />
                 </div>
                 {/* ##########ENTRY############### */}

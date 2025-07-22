@@ -77,11 +77,6 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
         floor_plan_image: []
     });
 
-    // Type-safe input change handler
-    const handleInputChange = (field: keyof FormValues, value: string) => {
-        setFormValues(prev => ({ ...prev, [field]: value }));
-        onInputChange?.(field, value);
-    };
 
     // Get current form values
     const buildingPermitNo = watch('generalDescription.building_permit_no');
@@ -136,9 +131,53 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
     };
 
     const handleCCTChange = (imageList: ImageListType) => {
-        setValue('generalDescription.cct_image', imageList);
+        // If you want to store only the URLs:
+        const urlList = imageList
+            .filter(img => img && typeof img.data_url === 'string')
+            .map(img => img.data_url);
+        setValue('generalDescription.cct_image', urlList);
         onChange1(imageList);
     };
+
+    const images1ForPreview = React.useMemo(() => {
+        if (!Array.isArray(images1)) return [];
+        return images1
+            .filter(Boolean)
+            .map(img => {
+                // If it's already an object with data_url, use as is
+                if (img && typeof img === 'object' && typeof img.data_url === 'string') return img;
+                // If it's a string (URL), wrap it
+                if (typeof img === 'string') return { data_url: img };
+                return null;
+            })
+            .filter(img => !!img && typeof img.data_url === 'string' && img.data_url.length > 0);
+    }, [images1]);
+
+    const images2ForPreview = React.useMemo(() => {
+        if (!Array.isArray(images2)) return [];
+        return images2
+            .filter(Boolean)
+            .map(img => {
+                if (img && typeof img === 'object' && typeof img.data_url === 'string') return img;
+                if (typeof img === 'string') return { data_url: img };
+                return null;
+            })
+            .filter(img => !!img && typeof img.data_url === 'string' && img.data_url.length > 0);
+    }, [images2]);
+
+    const cctImageForPreview = React.useMemo(() => {
+        if (!Array.isArray(cct_image)) return [];
+        return cct_image
+            .filter(img => !!img && (typeof img === 'string' || (typeof img === 'object' && typeof img.data_url === 'string')))
+            .map(img => typeof img === 'string' ? { data_url: img } : img);
+    }, [cct_image]);
+
+    const floorPlanImageForPreview = React.useMemo(() => {
+        if (!Array.isArray(floor_plan_image)) return [];
+        return floor_plan_image
+            .filter(img => !!img && (typeof img === 'string' || (typeof img === 'object' && typeof img.data_url === 'string')))
+            .map(img => typeof img === 'string' ? { data_url: img } : img);
+    }, [floor_plan_image]);
 
     return (
         <div className="px-10">
@@ -149,8 +188,7 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                     <tbody>
                         {/* Building Information */}
                         <tr>
-                            <td className="border border-gray-300 p-3 w-1/3">Kind of Building</td>
-                            <td className="p-3">
+                            <td className="p-3 w-full">
                                 <ConstructionCost
                                     register={register}
                                     setValue={setValue}
@@ -161,36 +199,27 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
 
                         {/* Building Details */}
                         <tr>
-                            <td className="border border-gray-300 p-3 w-1/3">Building Permit No.</td>
-                            <td className="p-3">
+                            <td className="p-3 w-full">
                                 {renderInputField('building_permit_no', 'Building Permit No.', 'text', 'Enter Building Permit No.', buildingPermitNo)}
                             </td>
                         </tr>
 
                         {/* Certificates */}
                         <tr>
-                            <td className="border border-gray-300 p-3 w-1/3">
-                                Condominium Certificate of Title (CCT)
-                            </td>
-                            <td className="p-3 flex justify-center items-center" style={{ minHeight: '420px', width: '400px' }}>
-
-
-                                <div className="flex flex-col gap-2 w-full max-w-full items-center">
-                                    {/* Image Upload Section */}
-                                    <div className="mt-6 border-t pt-4 w-full max-w-full flex justify-center">
-                                        <div className="w-full max-w-2xl">
-                                            <h3 className="text-lg font-semibold mb-4 text-center">CCT Document</h3>
-                                            <ImageUploadGallery
-                                                images={cct_image}
-                                                onChange={handleCCTChange}
-                                                maxNumber={5}
-                                                multiple={true}
-                                                maxImageHeight="400px"
-                                                maxImageWidth="600px"
-                                                imageFit="contain"
-                                                containerWidth="600px"
-                                            />
-                                        </div>
+                            <td className="p-3 flex justify-center items-center w-full">
+                                <div className="flex flex-col items-center w-full">
+                                    <h3 className="text-lg font-semibold mb-4 text-center">CCT Document</h3>
+                                    <div className="w-full max-w-lg flex justify-center">
+                                        <ImageUploadGallery
+                                            images={cctImageForPreview}
+                                            onChange={handleCCTChange}
+                                            maxNumber={5}
+                                            multiple={true}
+                                            maxImageHeight="500px"
+                                            maxImageWidth="500px"
+                                            imageFit="contain"
+                                            containerWidth="500px"
+                                        />
                                     </div>
                                 </div>
                             </td>
@@ -198,44 +227,38 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
 
                         {/* Dates */}
                         <tr>
-                            <td className="border border-gray-300 p-3 w-1/3">Certificate of Completion Issued On</td>
-                            <td className="p-3">
+                            <td className="p-3 w-full">
                                 {renderInputField('certificate_of_completion_issued_on', 'Certificate of Completion', 'date', '', certificateOfCompletion)}
                             </td>
                         </tr>
 
                         <tr>
-                            <td className="border border-gray-300 p-3 w-1/3">Certificate of Occupancy Issued On</td>
-                            <td className="p-3">
+                            <td className="p-3 w-full">
                                 {renderInputField('certificate_of_occupancy_issued_on', 'Certificate of Occupancy', 'date', '', certificateOfOccupancy)}
                             </td>
                         </tr>
                         {/* Date of Occupied */}
                         <tr>
-                            <td className="border border-gray-300 p-3 w-1/3">Date of Occupied</td>
-                            <td className="p-3">
+                            <td className="p-3 w-full">
                                 {renderInputField('date_of_occupied', 'Date of Occupied', 'date', '', dateOfOccupied)}
                             </td>
                         </tr>
 
                         {/* Building Areas */}
                         <tr>
-                            <td className="border border-gray-300 p-3 w-1/3">Building Age</td>
-                            <td className="p-3">
+                            <td className="p-3 w-full">
                                 {renderInputField('bldg_age', 'Building Age', 'number', 'Enter Building Age', bldgAge)}
                             </td>
                         </tr>
 
                         <tr>
-                            <td className="border border-gray-300 p-3 w-1/3">Number of Storeys</td>
-                            <td className="p-3">
+                            <td className="p-3 w-full">
                                 {renderInputField('no_of_storeys', 'Number of Storeys', 'number', 'Enter Number of Storeys', noOfStoreys)}
                             </td>
                         </tr>
 
                         {/* Floor Areas */}
                         <tr>
-                            <td className="border border-gray-300 p-3 w-1/3">Floor Areas (sqm)</td>
                             <td className="p-3">
                                 <div className="space-y-2">
                                     {renderInputField('area_of_1st_floor', '1st Floor', 'number', '1st Floor', areaOf1stFloor)}
@@ -247,8 +270,7 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                         </tr>
 
                         <tr>
-                            <td className="border border-gray-300 p-3 w-1/3">Total Floor Area</td>
-                            <td className="p-3">
+                            <td className="p-3 w-full">
                                 {renderInputField('total_floor_area', 'Total Floor Area', 'number', 'Total Floor Area', totalFloorArea)}
                             </td>
                         </tr>
@@ -261,28 +283,21 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
                                     Note : Attached the building plan/sketch of floor plan . A photograph may also be attached if necessary.
                                 </p>
                             </td> */}
-                            <td className="p-3 flex justify-center items-center">
-                                <div className="w-full max-w-lg">
-
-                                    <div className="flex flex-col gap-2 w-full max-w-full items-center">
-                                        {/* Image Upload Section */}
-                                        <div className="mt-6 border-t pt-4 w-full max-w-full flex justify-center">
-                                            <div className="w-full max-w-2xl">
-                                                <h3 className="text-lg font-semibold mb-4 text-center">Floor Plan Documents</h3>
-                                                <ImageUploadGallery
-                                                    images={floor_plan_image}
-                                                    onChange={handleFloorPlanChange}
-                                                    maxNumber={5}
-                                                    multiple={true}
-                                                    maxImageHeight="100%"
-                                                    maxImageWidth="100%"
-                                                    imageFit="contain"
-                                                    containerWidth="100%"
-                                                />
-                                            </div>
-                                        </div>
+                            <td className="p-3 flex justify-center items-center w-full">
+                                <div className="flex flex-col items-center w-full">
+                                    <h3 className="text-lg font-semibold mb-4 text-center">Floor Plan Documents</h3>
+                                    <div className="w-full max-w-lg flex justify-center">
+                                        <ImageUploadGallery
+                                            images={floorPlanImageForPreview}
+                                            onChange={handleFloorPlanChange}
+                                            maxNumber={5}
+                                            multiple={true}
+                                            maxImageHeight="500px"
+                                            maxImageWidth="500px"
+                                            imageFit="contain"
+                                            containerWidth="500px"
+                                        />
                                     </div>
-
                                 </div>
                             </td>
                         </tr>

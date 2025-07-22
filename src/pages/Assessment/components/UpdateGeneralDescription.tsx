@@ -104,15 +104,20 @@ const UpdateGeneralDescription: React.FC<GeneralDescriptionProps> = ({
         placeholder: string = '',
         currentValue?: string
     ) => (
-        <InputField
-            label={label}
-            id={id}
-            type={type}
-            placeholder={placeholder}
-            className="w-1/2"
-            labelClassName="w-1/3"
-            value={currentValue || ""}
-            {...register(`generalDescription.${id}`)}
+        <Controller
+            control={control}
+            name={`generalDescription.${id}`}
+            render={({ field }) => (
+                <InputField
+                    label={label}
+                    id={id}
+                    type={type}
+                    placeholder={placeholder}
+                    className="w-1/2"
+                    labelClassName="w-1/3"
+                    {...field}
+                />
+            )}
         />
     );
 

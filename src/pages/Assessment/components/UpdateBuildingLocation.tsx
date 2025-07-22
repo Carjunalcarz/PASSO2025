@@ -6,7 +6,7 @@ import { set } from 'lodash';
 import type { ImageListType } from 'react-images-uploading';
 
 interface BuildingLocationProps {
-    reset : any
+    reset: any
     register: any;
     setValue: any;
     watch: any;
@@ -75,12 +75,19 @@ const UpdateBuildingLocation = ({
 
     // Handle building location images change
     const handleBuildingLocationImagesChange = (imageList: ImageListType, addUpdateIndex: number[] | undefined) => {
+        // Handle empty image list (when "Remove All" is clicked)
+        if (!imageList || imageList.length === 0) {
+            setValue('update_buildingLocation.image_list', []);
+            if (trigger) trigger('update_buildingLocation.image_list');
+            return;
+        }
+
         // Convert images to base64 format like other components
         const base64List = imageList.map(img => img.data_url.split(',')[1]);
-        
+
         // Get the current value to avoid unnecessary updates
         const currentImageList = watch('update_buildingLocation.image_list') || [];
-        
+
         // Only update if different
         if (JSON.stringify(currentImageList) !== JSON.stringify(base64List)) {
             setValue('update_buildingLocation.image_list', base64List);
@@ -97,7 +104,7 @@ const UpdateBuildingLocation = ({
         return image_list.map((imageData, index) => {
             // Handle different possible formats from API
             let dataUrl = '';
-            
+
             // If it's already a data URL
             if (typeof imageData === 'string' && imageData.startsWith('data:')) {
                 dataUrl = imageData;
@@ -136,7 +143,7 @@ const UpdateBuildingLocation = ({
                 }
             }
 
-            return { 
+            return {
                 data_url: dataUrl
             };
         });
@@ -148,7 +155,7 @@ const UpdateBuildingLocation = ({
             return 'empty';
         }
         // Check if this looks like API data (base64 strings)
-        const isApiData = image_list.some(img => 
+        const isApiData = image_list.some(img =>
             typeof img === 'string' && !img.startsWith('data:')
         );
         return isApiData ? `api-${image_list.length}` : 'upload';
@@ -226,18 +233,24 @@ const UpdateBuildingLocation = ({
             </div>
 
             {/* Building Location Images Section */}
-            <div className="mt-6 border-t pt-4">
-                <h3 className="text-lg font-semibold mb-4">Building Location Photos</h3>
-                
-                <ImageUploadGallery
-                    key={galleryKey}
-                    images={imageListForPreview}
-                    onChange={handleBuildingLocationImagesChange}
-                    maxNumber={5}
-                    multiple={true}
-                    maxImageHeight="500px"
-                    imageFit="cover"
-                />
+            {/* Image Upload Section */}
+            <div className="mt-6 border-t pt-6 w-full flex justify-center items-center">
+                <div className="w-full max-w-3xl mx-auto text-center">
+                    <h3 className="text-lg font-semibold mb-6 text-center">Location Photos</h3>
+                    <div className="flex justify-center">
+                        <ImageUploadGallery
+                            key={galleryKey}
+                            images={imageListForPreview}
+                            onChange={handleBuildingLocationImagesChange}
+                            maxNumber={5}
+                            multiple={true}
+                            maxImageHeight="500px"
+                            maxImageWidth="500px"
+                            imageFit="contain"
+                            containerWidth="500px"
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     );
