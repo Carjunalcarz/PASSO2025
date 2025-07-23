@@ -14,10 +14,11 @@ import { Modal } from '@mantine/core';
 import { toast } from 'react-toastify';
 import SuggesstionSearchInput from '../Municipality/Components/SuggesstionSearchInput';
 import TaxableSwitch from '../Municipality/Components/TaxableSwitch';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import SubclassSuggesstion from '../Municipality/Components/SubclassSuggesstion';
 import GRFilter from '../Municipality/Components/GRFilter';
 import { useState } from 'react';
+import IconEye from '../../components/Icon/IconEye';
 
 // Define column interface
 interface Column {
@@ -25,6 +26,7 @@ interface Column {
     title: string;
     sortable: boolean;
     render?: (record: Assessment) => React.ReactNode;
+    rowKey?: string;
 }
 
 // Define the Assessment interface (renamed from AssessmentData for consistency)
@@ -51,6 +53,8 @@ interface Assessment {
     barangay: string;
     gr_code: string;
     gr: string;
+    id: string;
+    rowKey?: string;
 }
 
 const formatCurrency = (amount: number) => {
@@ -67,7 +71,7 @@ const BuildingAssessment = () => {
     const token = localStorage.getItem('token');
     const dispatch = useDispatch();
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl';
-
+    const navigate = useNavigate();
     const [page, setPage] = useState(1);
     const PAGE_SIZES = [10, 20, 30, 50, 100];
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
@@ -172,6 +176,14 @@ const BuildingAssessment = () => {
                 <div className="flex items-center gap-2">
                     <button
                         type="button"
+                        onClick={() => handleView(record)}
+                        className="p-1 bg-transparent border border-primary text-primary rounded hover:bg-primary hover:text-white hover:border-primary transition-colors duration-200"
+                        title="View Record"
+                    >
+                        <IconEye className="w-4 h-4" />
+                    </button>
+                    <button
+                        type="button"
                         onClick={() => handleUpdate(record)}
                         className="p-1 bg-transparent border border-primary text-primary rounded hover:bg-primary hover:text-white hover:border-primary transition-colors duration-200"
                         title="Edit Record"
@@ -195,20 +207,41 @@ const BuildingAssessment = () => {
         dispatch(setPageTitle('Building'));
     }, [dispatch]);
 
+    const assessment_data = (data: any): Assessment => ({
+        id: data.owner_details.id ?? '',
+        pin: data.owner_details.pin,
+        name: data.owner_details.owner,
+        tdn: data.owner_details.td,
+        market_val: data.building_assessment?.property_appraisal?.market_value ?? 0,
+        ass_value: data.building_assessment?.assessment_value ?? 0,
+        area: Number(data.building_assessment?.general_description?.total_floor_area ?? 0),
+        unit_value: data.building_assessment?.general_description?.unit_value ?? 0,
+        kind: data.building_assessment?.general_description?.kind_of_bldg ?? '',
+        ass_level: Number(data.building_assessment?.assessment_level ?? 0),
+        classification: data.building_assessment?.building_category ?? '',
+        sub_class: data.building_assessment?.general_description?.structural_type ?? '',
+        taxability: data.building_assessment?.property_assessment_items?.[0]?.taxable === 1 ? 'Taxable' : 'Exempt',
+        trans_cd: data.owner_details.transaction_code ?? '',
+        tax_beg_yr: Number(data.building_assessment?.property_assessment_items?.[0]?.eff_year ?? 0),
+        eff_date: data.building_assessment?.property_assessment_items?.[0]?.eff_year ?? '',
+        owner_no: data.owner_details.id?.toString() ?? '',
+        mun_code: data.building_assessment?.building_location?.mun_code ?? '',
+        municipality: data.building_assessment?.building_location?.address_municipality ?? '',
+        barangay_code: data.building_assessment?.building_location?.bcode ?? '',
+        barangay: data.building_assessment?.building_location?.address_barangay ?? '',
+        gr_code: data.building_assessment?.building_location?.gr_code ?? '',
+        gr: data.building_assessment?.building_location?.gr_name ?? '',
+       
+    });
+
     const fetchAssessments = async (): Promise<Assessment[]> => {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/get-general-revision?municipality=carmen&skip=0&limit=300000`, {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/assessment/get-assessments`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
         });
-
-        const taxability = response.data.data.map((item: Assessment) => {
-            item.taxability = item.taxability === "1" ? "Taxable" : item.taxability === "0" ? "Exempt" : item.taxability;
-            return item;
-        });
-
-        response.data.data = taxability;
-        return response.data.data;
+        // If your API returns { data: [ ... ] }
+        return response.data.map(assessment_data);
     };
 
     const { data: rowData = [], isLoading: queryLoading, refetch } = useQuery<Assessment[]>({
@@ -219,6 +252,7 @@ const BuildingAssessment = () => {
         refetchOnReconnect: false,
         staleTime: Infinity,
     });
+    console.log("rowData", rowData);
 
     // const filteredData = rowData.filter((item: Assessment) => {
     //     const value = item[searchColumn.toLowerCase() as keyof Assessment];
@@ -402,6 +436,10 @@ const BuildingAssessment = () => {
         if (editingRecord) {
             updateMutation.mutate(editingRecord);
         }
+    };
+
+    const handleView = (record: Assessment) => {
+        navigate(`/assessment/update/${record.id}`);
     };
 
     return (
