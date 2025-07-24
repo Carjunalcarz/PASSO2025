@@ -21,15 +21,11 @@ import Memoranda from './components/Memoranda';
 import UpdateRecordOfSupersededAssessment from './components/UpdateRecordOfSupersededAssessment';
 import UpdateOwnerDetails from './components/UpdateOwnerDetails';
 import { useForm } from 'react-hook-form';
-import { UseFormRegister, FieldValues } from 'react-hook-form';
 import AdditionalItems from './components/Additionalitems';
 import useAssessmentSubmit from './hooks/useAssessmentSubmit';
 import SubmitAssessment from './components/SubmitAssessment';
 import { toast } from 'react-hot-toast';
-import { useAssessmentValidation } from './hooks/useAssessmentValidation';
-import ValidationDebug from './components/ValidationDebug';
 import FillDummyButton from './components/testing/FillDummyButton';
-import ErrorValidator from './components/error_validator/ErrorValidator';
 import axios from 'axios';
 
 
@@ -135,6 +131,7 @@ const UpdateAssessment = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
+    // Use plain useForm (no validation)
     const {
         register,
         handleSubmit,
@@ -142,14 +139,8 @@ const UpdateAssessment = () => {
         setValue,
         reset,
         control,
-        errors,
-        isValid,
-        isDirty,
-        isSubmitting,
-        trigger,
-        getNestedError,
-        validateField,
-    } = useAssessmentValidation();
+        formState: { isDirty, isSubmitting },
+    } = useForm();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -602,36 +593,34 @@ const UpdateAssessment = () => {
     const allValues = watch();
     useEffect(() => {
         console.log("Form values:", allValues);
-        console.log("Form errors:", errors);
-        console.log("Form valid:", isValid);
+        console.log("Form errors:", {}); // No errors
+        console.log("Form valid:", true); // Always true
         console.log("Form dirty:", isDirty);
-    }, [allValues, errors, isValid, isDirty]);
+    }, [allValues, isDirty]);
 
     const [showAdditionalItem, setShowAdditionalItem] = useState(false);
 
     const { submitAssessment, isSubmitting: oldIsSubmitting } = useAssessmentSubmit();
 
-    const onSubmit = async (data: AssessmentFormData) => {
-        const isValidForm = await trigger();
-        if (!isValidForm) {
-            toast.error('Please fix validation errors before submitting');
-            return;
-        }
+    const onSubmit = async (data: any) => {
         try {
-            const url = `${import.meta.env.VITE_API_URL_FASTAPI}/assessment/update/${id}`;
+            const url = `${import.meta.env.VITE_API_URL_FASTAPI}/assessment/update`;
             const response = await axios.put(url, data, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 }
             });
+            console.log("data", data);
             toast.success('Assessment updated successfully!');
-            navigate(-1); // Go back or redirect as needed
+            // navigate(0);
         } catch (error) {
             toast.error('Failed to update assessment.');
             console.error(error);
         }
     };
+
+
 
     return (
         <div className="panel hidden sm:block md:w-[900px] lg:w-[1200px]">
@@ -649,8 +638,6 @@ const UpdateAssessment = () => {
                         watch={watch}
                         setValue={setValue}
                         reset={reset}
-                        trigger={trigger}
-                        getNestedError={getNestedError}
                         municipalitySuggestions={municipalitySuggestions}
                         provinceSuggestions={provinceSuggestions}
                         barangaySuggestions={barangaySuggestions}
@@ -674,17 +661,14 @@ const UpdateAssessment = () => {
                         register={register} 
                         watch={watch} 
                         setValue={setValue}
-                        getNestedError={getNestedError}
                     />
                 </div>
                 {/* ##########ENTRY############### */}
                 <div className="px-10 ">
                     <LandReference 
                         register={register} 
-                        getNestedError={getNestedError}
                         watch={watch}
                         setValue={setValue}
-                        trigger={trigger}
                     />
                 </div>
 
@@ -948,7 +932,7 @@ const UpdateAssessment = () => {
                     handleSubmit={handleSubmit as any}
                     onSubmit={onSubmit as any}
                     isSubmitting={isSubmitting}
-                    isValid={isValid}
+                    isValid={true}
                     isDirty={isDirty}
                 />
 
@@ -971,7 +955,7 @@ const UpdateAssessment = () => {
                 isDirty={isDirty}
             /> */}
 
-            <ErrorValidator errors={errors} />
+            {/* ErrorValidator errors={errors} */}
         </div>
     );
 };

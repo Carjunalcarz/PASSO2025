@@ -10,8 +10,6 @@ interface BuildingLocationProps {
     register: any;
     setValue: any;
     watch: any;
-    trigger: any;
-    getNestedError: any;
     municipalitySuggestions: string[];
     provinceSuggestions: string[];
     barangaySuggestions: string[];
@@ -33,8 +31,6 @@ const UpdateBuildingLocation = ({
     setValue,
     watch,
     register,
-    trigger,
-    getNestedError,
     municipalitySuggestions,
     provinceSuggestions,
     barangaySuggestions,
@@ -78,7 +74,6 @@ const UpdateBuildingLocation = ({
         // Handle empty image list (when "Remove All" is clicked)
         if (!imageList || imageList.length === 0) {
             setValue('update_buildingLocation.image_list', []);
-            if (trigger) trigger('update_buildingLocation.image_list');
             return;
         }
 
@@ -91,7 +86,6 @@ const UpdateBuildingLocation = ({
         // Only update if different
         if (JSON.stringify(currentImageList) !== JSON.stringify(base64List)) {
             setValue('update_buildingLocation.image_list', base64List);
-            if (trigger) trigger('update_buildingLocation.image_list');
         }
     };
 

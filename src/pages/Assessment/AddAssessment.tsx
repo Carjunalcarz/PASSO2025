@@ -113,18 +113,6 @@ const Add = () => {
         dispatch(setPageTitle('Invoice Add'));
     }, [dispatch]);
 
-    const currencyList = ['USD - US Dollar', 'GBP - British Pound', 'IDR - Indonesian Rupiah', 'INR - Indian Rupee', 'BRL - Brazilian Real', 'EUR - Germany (Euro)', 'TRY - Turkish Lira'];
-
-    const [items, setItems] = useState<any>([
-        {
-            id: 1,
-            title: '',
-            description: '',
-            rate: 0,
-            quantity: 0,
-            amount: 0,
-        },
-    ]);
 
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);

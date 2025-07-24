@@ -38,7 +38,7 @@ export const useAssessmentValidation = () => {
                 ownerAddress: '',
                 admin_ben_user: '',
                 transactionCode: '',
-                pin: '',
+               
                 tin: '',
                 telNo: '',
             },
@@ -46,7 +46,7 @@ export const useAssessmentValidation = () => {
                 land_owner: '',
                 block_no: '',
                 tdn_no: '',
-                pin: '',
+               
                 lot_no: '',
                 survey_no: '',
                 area: '',
