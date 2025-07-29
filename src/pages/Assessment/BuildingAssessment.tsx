@@ -247,10 +247,10 @@ const BuildingAssessment = () => {
     const { data: rowData = [], isLoading: queryLoading, refetch } = useQuery<Assessment[]>({
         queryKey: ['assessments', 'Building'],
         queryFn: fetchAssessments,
-        refetchOnWindowFocus: false,
-        refetchOnMount: false,
-        refetchOnReconnect: false,
-        staleTime: Infinity,
+        refetchOnWindowFocus: true,  // Changed to true
+        refetchOnMount: true,        // Changed to true
+        refetchOnReconnect: true,    // Changed to true
+        staleTime: 5 * 60 * 1000,   // Changed to 5 minutes instead of Infinity
     });
     console.log("rowData", rowData);
 
@@ -379,6 +379,7 @@ const BuildingAssessment = () => {
         onSuccess: () => {
             toast.success('Record updated successfully');
             setIsEditModalOpen(false);
+            console.log('Calling refetch...'); // Add this debug log
             refetch();
         },
         onError: (error) => {

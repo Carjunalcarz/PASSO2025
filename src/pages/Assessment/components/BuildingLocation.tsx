@@ -30,6 +30,16 @@ interface BuildingLocationProps {
     onPreviewImage?: (imageUrl: string) => void;
 }
 
+// Define floor options and GR code mapping
+const FLOOR_OPTIONS = ["5TH", "6TH"] as const;
+const GR_CODE_MAP: Record<string, string> = {
+    "5TH": "22",
+    "6TH": "25",
+    
+} as const;
+
+const gr_options = ["5TH", "6TH"];
+
 const BuildingLocation = ({
     setValue,
     watch,
@@ -58,10 +68,39 @@ const BuildingLocation = ({
     const barangay = watch("address_barangay");
     const street = watch("street");
     const province = watch("address_province")
+    const year = new Date().getFullYear();
+    const gr = watch("buildingLocation.gr_name") || "5TH";
+  
+    // Set default values when component mounts
+    useEffect(() => {
+        // Set default values if they are empty
+        if (!province) {
+            setValue("address_province", "Agusan del Norte");
+            setValue("buildingLocation.address_province", "Agusan del Norte");
+        }
+
+        if (!watch("buildingLocation.year")) {
+            setValue("buildingLocation.year", year);
+        }
+
+        // Set default GR values if not set
+        if (!watch("buildingLocation.gr_name")) {
+            setValue("buildingLocation.gr_name", "5TH");
+            setValue("buildingLocation.gr_code", "22");
+        }
+    }, [setValue, watch, year, province]);
 
     const handleLocationPhotosChange = (imageList: any[]) => {
         setValue("buildingLocation.image_list", imageList);
         if (onLocationPhotosChange) onLocationPhotosChange(imageList);
+    };
+
+    const handleGRChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedValue = e.target.value;
+        setValue("buildingLocation.gr_name", selectedValue);
+        
+        const code = GR_CODE_MAP[selectedValue] || "";
+        setValue("buildingLocation.gr_code", code);
     };
 
     return (
@@ -88,7 +127,7 @@ const BuildingLocation = ({
                             setValue("buildingLocation.address_municipality", suggestion);
                         }}
                         setShowSuggestions={setShowMunicipalitySuggestions}
-                        value={municipality || ""}
+                        value={municipality}
                     />
 
                     <SuggestionInput
@@ -109,20 +148,20 @@ const BuildingLocation = ({
                         }}
                         setShowSuggestions={setShowBarangaySuggestions}
                         labelClassName="w-1/4"
-                        value={barangay || ""}
+                        value={barangay}
                     />
 
-                    <div className="mt-4 items-center">
+                    <div className="mt-4 flex items-center">
                         <div className="p-2 justify-center items-center ltr:rounded-l-md rtl:rounded-r-md px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
                             Street No. / Street
                         </div>
-                        <textarea
+                        <input
                             id="street"
                             name="street"
                             className="form-input ltr:rounded-l-none rtl:rounded-r-none flex-1"
                             placeholder="Enter No. / Street"
                             {...register("buildingLocation.street")}
-                        ></textarea>
+                        />
                     </div>
                 </div>
 
@@ -144,15 +183,51 @@ const BuildingLocation = ({
                             setValue("buildingLocation.address_province", suggestion);
                         }}
                         setShowSuggestions={setShowProvinceSuggestions}
-                        value={province || ""}
+                        value={province}
                     />
+                    
+                    <div className="mt-4 flex items-center">
+                        <div className="p-2 justify-center items-center ltr:rounded-l-md rtl:rounded-r-md px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                            Year :
+                        </div>
+                        <select 
+                            name="year" 
+                            id="year" 
+                            className="form-input ltr:rounded-l-none rtl:rounded-r-none flex-1" 
+                            {...register("buildingLocation.year")}
+                        >
+                            <option value={year.toString()}>{year}</option>
+                            <option value={year - 1}>{year - 1}</option>
+                            <option value={year - 2}>{year - 2}</option>
+                            <option value={year - 3}>{year - 3}</option>
+                            <option value={year - 4}>{year - 4}</option>
+                        </select>
+                    </div>
+                    
+                    <div className="mt-4 flex items-center">
+                        <div className="p-2 justify-center items-center ltr:rounded-l-md rtl:rounded-r-md px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                            GR :
+                        </div>
+                        <select
+                            name="gr"
+                            id="gr"
+                            value={gr}
+                            className="form-input ltr:rounded-l-none rtl:rounded-r-none flex-1"
+                            onChange={handleGRChange}
+                        >
+                            <option value="">Select GR Year</option>
+                            {gr_options.map((option) => (
+                                <option key={option} value={option}>
+                                    {option} ({GR_CODE_MAP[option]})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
-
             </div>
 
             {/* Location Photos Section */}
-
-            <div className="mt-6 border-t pt-6 w-full flex justify-center items-center">
+            <div className="mt-6  pt-6 w-full flex justify-center items-center">
                 <div className="w-full max-w-3xl mx-auto text-center">
                     <h3 className="text-lg font-semibold mb-6 text-center">Location Photos</h3>
                     <div className="flex justify-center">
@@ -169,9 +244,7 @@ const BuildingLocation = ({
                     </div>
                 </div>
             </div>
-
         </div>
-
     );
 };
 

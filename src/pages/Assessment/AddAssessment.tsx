@@ -30,6 +30,7 @@ import { useAssessmentValidation } from './hooks/useAssessmentValidation';
 import ValidationDebug from './components/ValidationDebug';
 import FillDummyButton from './components/testing/FillDummyButton';
 import ErrorValidator from './components/error_validator/ErrorValidator';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Type definitions
 type BarangayData = {
@@ -393,6 +394,8 @@ const Add = () => {
 
     const { submitAssessment, isSubmitting: oldIsSubmitting } = useAssessmentSubmit();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    
     const onSubmit = async (data: AssessmentFormData) => {
         console.log('Sending form data to API:', data);
         
@@ -434,6 +437,10 @@ const Add = () => {
             setImages2([]);
 
             // navigate(0); // This will reload the current route
+
+            // ✅ Invalidate cache and navigate
+            queryClient.invalidateQueries({ queryKey: ['assessments', 'Building'] });
+            navigate('/assessment/building_assessment');
 
         } catch (error) {
             console.error('Submission error:', error);

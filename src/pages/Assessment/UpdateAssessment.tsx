@@ -167,6 +167,7 @@ const UpdateAssessment = () => {
                     street: data.building_assessment?.street || "",
                     ownerDetails: {
                         id: data.owner_details?.id || "",
+                        td: data.owner_details?.td || "",
                         owner: data.owner_details?.owner || "",
                         ownerAddress: data.owner_details?.owner_address || "",
                         admin_ben_user: data.owner_details?.admin_ben_user || "",
@@ -208,6 +209,9 @@ const UpdateAssessment = () => {
                         update_address_municipality: data.building_assessment?.address_municipality || "",
                         update_address_barangay: data.building_assessment?.address_barangay || "",
                         update_street: data.building_assessment?.street || "",
+                        update_year: data.building_assessment?.building_location?.year || "",
+                        update_gr_name: data.building_assessment?.building_location?.gr_name || "",
+                        update_gr_code: data.building_assessment?.building_location?.gr_code || "",
                         image_list: (() => {
                             const FTP_URL_BASE = import.meta.env.VITE_FTP_URL_BASE;
                             const rawImageList = data.building_assessment.building_location?.image_list || [];

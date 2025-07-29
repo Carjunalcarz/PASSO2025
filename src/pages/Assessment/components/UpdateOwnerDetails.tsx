@@ -2,39 +2,36 @@ import React, { useEffect, useState } from 'react';
 import InputField from './shared/InputField';
 import { FieldError } from 'react-hook-form';
 import ImageUploadGallery from '../../../components/ImageUploadGallery';
+import ImagePreviewModal from './ImagePreviewModal';
 import { ImageListType } from 'react-images-uploading';
-// Remove this import since ImageUploadGallery has its own preview
-// import ImagePreviewModal from './ImagePreviewModal';
 
-interface UpdateOwnerDetailsFormProps {
+interface UpdateOwnerDetailsProps {
     register: any;
     watch: any;
     setValue: any;
-    trigger?: any; // Add trigger function
+    trigger?: any;
     getNestedError?: (path: string) => FieldError | undefined;
-    // Add image upload props
-    ownerPhotos?: ImageListType;
-    onOwnerPhotosChange?: (imageList: ImageListType) => void;
-    onPreviewImage?: (imageUrl: string) => void;
 }
 
-const UpdateOwnerDetailsForm: React.FC<UpdateOwnerDetailsFormProps> = ({
+const UpdateOwnerDetails: React.FC<UpdateOwnerDetailsProps> = ({
     register,
     watch,
     setValue,
-    trigger, // Add trigger to destructuring
-    getNestedError,
-    // Add image upload props with defaults
-    ownerPhotos = [],
-    onOwnerPhotosChange,
-    onPreviewImage
+    trigger,
+    getNestedError
 }) => {
 
-    const td_barangay = watch('buildingLocation.address_barangay');
-    const td_municipality = watch('buildingLocation.address_municipality');
+    const td_barangay = watch('update_buildingLocation.update_address_barangay');
+    const td_municipality = watch('update_buildingLocation.update_address_municipality');
     const image_list = watch('ownerDetails.image_list');
+    const id = watch('ownerDetails.id');
+    const update_bcode = watch('update_buildingLocation.update_bcode');
+    const update_mun_code = watch('update_buildingLocation.update_mun_code');   
+    const update_year = watch('update_buildingLocation.update_year');
+    const update_gr_name = watch('update_buildingLocation.update_gr_name');
+    const update_gr_code = watch('update_buildingLocation.update_gr_code');
     
-    const imageListForPreview: ImageListType = Array.isArray(image_list)
+    const imageListForPreview = Array.isArray(image_list)
       ? image_list.map(b64 => {
           let prefix = 'data:image/png;base64,';
           if (b64.startsWith('/9j/')) {
@@ -47,7 +44,7 @@ const UpdateOwnerDetailsForm: React.FC<UpdateOwnerDetailsFormProps> = ({
     // Add municipality and barangay code mapping
     const municipalityBarangayCodes: { [key: string]: { code: string, barangays: { [key: string]: string } } } = {
         'BUENAVISTA': {
-            code: '001',
+            code: '01',
             barangays: {
                 'ABILAN': '001', 'AGONG-ONG': '002', 'ALUBIJID': '003', 'GUINABSAN': '004',
                 'LOWER OLAVE': '005', 'MACALANG': '006', 'MALAPONG': '007', 'MALPOC': '008',
@@ -58,7 +55,7 @@ const UpdateOwnerDetailsForm: React.FC<UpdateOwnerDetailsFormProps> = ({
             }
         },
         'CABADBARAN': {
-            code: '002',
+            code: '02',
             barangays: {
                 'ANTONIO LUNA': '001', 'BAY-ANG': '002', 'BAYABAS': '003', 'CAASINAN': '004',
                 'CABINET': '005', 'CALAMBA': '006', 'CALIBUNAN': '007', 'COMAGASCAS': '008',
@@ -71,14 +68,14 @@ const UpdateOwnerDetailsForm: React.FC<UpdateOwnerDetailsFormProps> = ({
             }
         },
         'CARMEN': {
-            code: '003',
+            code: '03',
             barangays: {
                 'CAHAYAGAN': '001', 'GOSOON': '002', 'MANOLIGAO': '003', 'POBLACION': '004', 'ROJALES': '005',
                 'SAN AGUSTIN': '006', 'TAGCATONG': '007', 'VINAPOR': '008'
             }
         },
         'JABONGA': {
-            code: '004',
+            code: '04',
             barangays: {
                 'A. BELTRAN': '001', 'BALEGUAN': '002', 'BANGONAY': '003', 'BUNGA': '004', 'COLORADO': '005',
                 'CUYAGO': '006', 'LIBAS': '007', 'MAGDAGOOC': '008', 'MAGSAYSAY': '009', 'MARAIGING': '010',
@@ -86,7 +83,7 @@ const UpdateOwnerDetailsForm: React.FC<UpdateOwnerDetailsFormProps> = ({
             }
         },
         'KITCHARAO': {
-            code: '005',
+            code: '05',
             barangays: {
                 'BANGAYAN': '001', 'CANAWAY': '002', 'CROSSING': '003', 'HINIMBANGAN': '004', 'JALIOBONG': '005',
                 'MAHAYAHAY': '006', 'POBLACION': '007', 'SAN ISIDRO': '008', 'SAN ROQUE': '009', 'SANGAY': '010',
@@ -94,7 +91,7 @@ const UpdateOwnerDetailsForm: React.FC<UpdateOwnerDetailsFormProps> = ({
             }
         },
         'LAS NIEVES': {
-            code: '006',
+            code: '06',
             barangays: {
                 'AMBACON': '001', 'BALUNGAGAN': '002', 'BONIFACIO': '003', 'CASIKLAN': '004', 'CONSORCIA': '005',
                 'DURIAN': '006', 'EDUARDO G. MONTILLA': '007', 'IBUAN': '008', 'KATIPUNAN': '009', 'LINGAYAO': '010',
@@ -103,14 +100,14 @@ const UpdateOwnerDetailsForm: React.FC<UpdateOwnerDetailsFormProps> = ({
             }
         },
         'MAGALLANES': {
-            code: '007',
+            code: '07',
             barangays: {
                 'BUHANG': '001', 'CALOC-AN': '002', 'GUIASAN': '003', 'MARCOS': '004', 'POBLACION': '005',
                 'SANTO NIÑO': '006', 'SANTO ROSARIO': '007', 'TAOD-OY': '008'
             }
         },
         'NASIPIT': {
-            code: '008',
+            code: '08',
             barangays: {
                 'ACLAN': '001', 'AMONTAY': '002', 'ATA-ATAHON': '003', 'BARANGAY 1': '004', 'BARANGAY 2': '005',
                 'BARANGAY 3': '006', 'BARANGAY 4': '007', 'BARANGAY 5': '008', 'BARANGAY 6': '009', 'BARANGAY 7': '010',
@@ -119,14 +116,14 @@ const UpdateOwnerDetailsForm: React.FC<UpdateOwnerDetailsFormProps> = ({
             }
         },
         'REMEDIOS T. ROMUALDEZ': {
-            code: '009',
+            code: '09',
             barangays: {
                 'BALANGBALANG': '001', 'BASILISA': '002', 'HUMILOG': '003', 'PANAYTAYON': '004',
                 'POBLACION I': '005', 'POBLACION II': '006', 'SAN ANTONIO': '007', 'TAGBONGABONG': '008'
             }
         },
         'SANTIAGO': {
-            code: '010',
+            code: '10',
             barangays: {
                 'CURVA': '001', 'ESTANISLAO MORGADO': '002', 'JAGUPIT': '003', 'LA PAZ': '004',
                 'PANGAYLAN-IP': '005', 'POBLACION I': '006', 'POBLACION II': '007', 'SAN ISIDRO': '008',
@@ -134,7 +131,7 @@ const UpdateOwnerDetailsForm: React.FC<UpdateOwnerDetailsFormProps> = ({
             }
         },
         'TUBAY': {
-            code: '011',
+            code: '11',
             barangays: {
                 'BINUANGAN': '001', 'CABAYAWA': '002', 'DOÑA ROSARIO': '003', 'DOÑA TELESFORA': '004',
                 'LA FRATERNIDAD': '005', 'LAWIGAN': '006', 'POBLACION 1': '007', 'POBLACION 2': '008',
@@ -217,21 +214,16 @@ const UpdateOwnerDetailsForm: React.FC<UpdateOwnerDetailsFormProps> = ({
 
         const munCode = getMunicipalityCode(td_municipality);
         const brgCode = getBarangayCode(td_municipality, td_barangay);
-        setValue('buildingLocation.bcode', brgCode);
-        setValue('buildingLocation.mun_code',munCode);
+        setValue('update_buildingLocation.update_bcode', brgCode);
+        setValue('update_buildingLocation.update_mun_code', munCode);
 
-        // Get current year
-        const year = new Date().getFullYear();
-
-        // Generate a random 4-digit number
-        // const sequence = String(Math.floor(1000 + Math.random() * 9000));
-
-        // Format: MUNCODE-BRGCODE-YEAR-SEQUENCE
-        return `${year}-${munCode}-${brgCode}`;
+        const year = update_year;
+        // Format: YEAR-MUNCODE-BRGCODE
+        return `${year}-${munCode}-${brgCode}-${id}`;
     };
 
     useEffect(() => {
-        if (td_municipality && td_barangay) {  // Only set value if we have both values
+        if (td_municipality && td_barangay) {
             const newTDN = generateTDN();
             setValue('ownerDetails.td', newTDN);
             
@@ -240,10 +232,10 @@ const UpdateOwnerDetailsForm: React.FC<UpdateOwnerDetailsFormProps> = ({
                 trigger('ownerDetails.td');
             }
         }
-    }, [td_municipality, td_barangay, setValue, trigger]); // Add trigger to dependencies
+    }, [td_municipality, td_barangay, update_year, id, setValue, trigger]);
 
     // Handle image list changes and convert to base64
-    const handleOwnerPhotosChange = (imageList: ImageListType, addUpdateIndex?: number[]) => {
+    const handleOwnerPhotosChange = (imageList: ImageListType, addUpdateIndex: number[] | undefined) => {
         const base64List = imageList.map(img => img.data_url.split(',')[1]);
         // Get the current value
         const currentImageList = watch('ownerDetails.image_list') || [];
@@ -252,15 +244,23 @@ const UpdateOwnerDetailsForm: React.FC<UpdateOwnerDetailsFormProps> = ({
             setValue('ownerDetails.image_list', base64List);
             if (trigger) trigger('ownerDetails.image_list');
         }
-        if (onOwnerPhotosChange) onOwnerPhotosChange(imageList);
     };
 
-    // Remove modal state and handlers since ImageUploadGallery has its own preview
-    // const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    // const [previewImageUrl, setPreviewImageUrl] = useState('');
-    // const handleImagePreview = (imageUrl: string) => { ... };
-    // const handleClosePreview = () => { ... };
-    // useEffect(() => { ... }, [isPreviewOpen]);
+    // Modal state
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [previewImageUrl, setPreviewImageUrl] = useState('');
+
+    // Handle image preview
+    const handleImagePreview = (imageUrl: string) => {
+        setPreviewImageUrl(imageUrl);
+        setIsPreviewOpen(true);
+    };
+
+    // Handle close preview
+    const handleClosePreview = () => {
+        setIsPreviewOpen(false);
+        setPreviewImageUrl('');
+    };
 
     return (
         <div className='px-10 border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]'>
@@ -311,20 +311,20 @@ const UpdateOwnerDetailsForm: React.FC<UpdateOwnerDetailsFormProps> = ({
                         )}
                     </div>
                     <div className="mt-4 items-center mr-9">
-                        <div className="p-2 flex justify-center items-center  px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                        <div className="p-2 flex justify-center items-center px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
                             Administrator / Beneficial User
                         </div>
                         <InputField
                             label="..."
                             id="admin_ben_user"
                             type="text"
-                            placeholder="Enter Administrator / Benificial User"
+                            placeholder="Enter Administrator / Beneficial User"
                             {...register('ownerDetails.admin_ben_user')}
                             error={getNestedError?.('ownerDetails.admin_ben_user')}
                         />
                     </div>
                     <div className="items-center mr-9">
-                        <div className="p-2 flex justify-center items-center  px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                        <div className="p-2 flex justify-center items-center px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
                             Admin Address
                         </div>
                         <textarea
@@ -394,28 +394,23 @@ const UpdateOwnerDetailsForm: React.FC<UpdateOwnerDetailsFormProps> = ({
                     </div>
 
                     {/* Image Upload Section */}
-                    <div className="mt-6 border-t pt-4">
+                    <div className="mt-6 pt-4">
                         <h3 className="text-lg font-semibold mb-4">ID Photos</h3>
-                        <p className="text-sm text-gray-600 mb-4">
-                            Upload photos of valid identification documents
-                        </p>
                         
                         <ImageUploadGallery
                             images={imageListForPreview}
                             onChange={handleOwnerPhotosChange}
-                            maxNumber={2}
+                            maxNumber={5}
                             multiple={true}
                             maxImageHeight="400px"
-                            maxImageWidth="400px"
-                            containerWidth="400px"
                             imageFit="contain"
                         />
                     </div>
                 </div>
             </div>
-            {/* Remove ImagePreviewModal since ImageUploadGallery has its own preview */}
         </div>
     );
 };
 
-export default UpdateOwnerDetailsForm;
+export default UpdateOwnerDetails;
+

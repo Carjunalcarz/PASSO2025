@@ -184,125 +184,117 @@ const GeneralDescription: React.FC<GeneralDescriptionProps> = ({
             <h2 className='text-xl px-5 text-wrap text-left mb-6'>GENERAL DESCRIPTION</h2>
 
             <div className="overflow-x-auto table-responsive">
-                <table className="min-w-full border-collapse border border-gray-300">
-                    <tbody>
-                        {/* Building Information */}
-                        <tr>
-                            <td className="p-3 w-full">
-                                <ConstructionCost
-                                    register={register}
-                                    setValue={setValue}
-                                    watch={watch}
+                <div className="min-w-full">
+                    <div className="p-3 w-full">
+                        <ConstructionCost
+                            register={register}
+                            setValue={setValue}
+                            watch={watch}
+                        />
+                    </div>
+                </div>
+
+                <div className="min-w-full">
+                    <div className="p-3 w-full">
+                        {renderInputField('building_permit_no', 'Building Permit No.', 'text', 'Enter Building Permit No.', buildingPermitNo)}
+                    </div>
+                </div>
+
+                <div className="min-w-full">
+                    <div className="p-3 flex justify-center items-center w-full">
+                        <div className="flex flex-col items-center w-full">
+                            <h3 className="text-lg font-semibold mb-4 text-center">CCT Document</h3>
+                            <div className="w-full max-w-lg flex justify-center">
+                                <ImageUploadGallery
+                                    images={cctImageForPreview}
+                                    onChange={handleCCTChange}
+                                    maxNumber={5}
+                                    multiple={true}
+                                    maxImageHeight="500px"
+                                    maxImageWidth="500px"
+                                    imageFit="contain"
+                                    containerWidth="500px"
                                 />
-                            </td>
-                        </tr>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                        {/* Building Details */}
-                        <tr>
-                            <td className="p-3 w-full">
-                                {renderInputField('building_permit_no', 'Building Permit No.', 'text', 'Enter Building Permit No.', buildingPermitNo)}
-                            </td>
-                        </tr>
+                <div className="min-w-full">
+                    <div className="p-3 w-full">
+                        {renderInputField('certificate_of_completion_issued_on', 'Certificate of Completion', 'date', '', certificateOfCompletion)}
+                    </div>
+                </div>
 
-                        {/* Certificates */}
-                        <tr>
-                            <td className="p-3 flex justify-center items-center w-full">
-                                <div className="flex flex-col items-center w-full">
-                                    <h3 className="text-lg font-semibold mb-4 text-center">CCT Document</h3>
-                                    <div className="w-full max-w-lg flex justify-center">
-                                        <ImageUploadGallery
-                                            images={cctImageForPreview}
-                                            onChange={handleCCTChange}
-                                            maxNumber={5}
-                                            multiple={true}
-                                            maxImageHeight="500px"
-                                            maxImageWidth="500px"
-                                            imageFit="contain"
-                                            containerWidth="500px"
-                                        />
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
+                <div className="min-w-full">
+                    <div className="p-3 w-full">
+                        {renderInputField('certificate_of_occupancy_issued_on', 'Certificate of Occupancy', 'date', '', certificateOfOccupancy)}
+                    </div>
+                </div>
+                {/* Date of Occupied */}
+                <div className="min-w-full">
+                    <div className="p-3 w-full">
+                        {renderInputField('date_of_occupied', 'Date of Occupied', 'date', '', dateOfOccupied)}
+                    </div>
+                </div>
 
-                        {/* Dates */}
-                        <tr>
-                            <td className="p-3 w-full">
-                                {renderInputField('certificate_of_completion_issued_on', 'Certificate of Completion', 'date', '', certificateOfCompletion)}
-                            </td>
-                        </tr>
+                {/* Building Areas */}
+                <div className="min-w-full">
+                    <div className="p-3 w-full">
+                        {renderInputField('bldg_age', 'Building Age', 'number', 'Enter Building Age', bldgAge)}
+                    </div>
+                </div>
 
-                        <tr>
-                            <td className="p-3 w-full">
-                                {renderInputField('certificate_of_occupancy_issued_on', 'Certificate of Occupancy', 'date', '', certificateOfOccupancy)}
-                            </td>
-                        </tr>
-                        {/* Date of Occupied */}
-                        <tr>
-                            <td className="p-3 w-full">
-                                {renderInputField('date_of_occupied', 'Date of Occupied', 'date', '', dateOfOccupied)}
-                            </td>
-                        </tr>
+                <div className="min-w-full">
+                    <div className="p-3 w-full">
+                        {renderInputField('no_of_storeys', 'Number of Storeys', 'number', 'Enter Number of Storeys', noOfStoreys)}
+                    </div>
+                </div>
 
-                        {/* Building Areas */}
-                        <tr>
-                            <td className="p-3 w-full">
-                                {renderInputField('bldg_age', 'Building Age', 'number', 'Enter Building Age', bldgAge)}
-                            </td>
-                        </tr>
+                {/* Floor Areas */}
+                <div className="min-w-full">
+                    <div className="p-3">
+                        <div className="space-y-2">
+                            {renderInputField('area_of_1st_floor', '1st Floor', 'number', '1st Floor', areaOf1stFloor)}
+                            {renderInputField('area_of_2nd_floor', '2nd Floor', 'number', '2nd Floor', areaOf2ndFloor)}
+                            {renderInputField('area_of_3rd_floor', '3rd Floor', 'number', '3rd Floor', areaOf3rdFloor)}
+                            {renderInputField('area_of_4th_floor', '4th Floor', 'number', '4th Floor', areaOf4thFloor)}
+                        </div>
+                    </div>
+                </div>
 
-                        <tr>
-                            <td className="p-3 w-full">
-                                {renderInputField('no_of_storeys', 'Number of Storeys', 'number', 'Enter Number of Storeys', noOfStoreys)}
-                            </td>
-                        </tr>
+                <div className="min-w-full">
+                    <div className="p-3 w-full">
+                        {renderInputField('total_floor_area', 'Total Floor Area', 'number', 'Total Floor Area', totalFloorArea)}
+                    </div>
+                </div>
 
-                        {/* Floor Areas */}
-                        <tr>
-                            <td className="p-3">
-                                <div className="space-y-2">
-                                    {renderInputField('area_of_1st_floor', '1st Floor', 'number', '1st Floor', areaOf1stFloor)}
-                                    {renderInputField('area_of_2nd_floor', '2nd Floor', 'number', '2nd Floor', areaOf2ndFloor)}
-                                    {renderInputField('area_of_3rd_floor', '3rd Floor', 'number', '3rd Floor', areaOf3rdFloor)}
-                                    {renderInputField('area_of_4th_floor', '4th Floor', 'number', '4th Floor', areaOf4thFloor)}
-                                </div>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td className="p-3 w-full">
-                                {renderInputField('total_floor_area', 'Total Floor Area', 'number', 'Total Floor Area', totalFloorArea)}
-                            </td>
-                        </tr>
-
-                        {/* Floor Plan Upload */}
-                        <tr>
-                            {/* <td className="border border-gray-300 p-3 w-1/3">
-                                Floor Plan
-                                <p className='text-xs text-gray-500'>
-                                    Note : Attached the building plan/sketch of floor plan . A photograph may also be attached if necessary.
-                                </p>
-                            </td> */}
-                            <td className="p-3 flex justify-center items-center w-full">
-                                <div className="flex flex-col items-center w-full">
-                                    <h3 className="text-lg font-semibold mb-4 text-center">Floor Plan Documents</h3>
-                                    <div className="w-full max-w-lg flex justify-center">
-                                        <ImageUploadGallery
-                                            images={floorPlanImageForPreview}
-                                            onChange={handleFloorPlanChange}
-                                            maxNumber={5}
-                                            multiple={true}
-                                            maxImageHeight="500px"
-                                            maxImageWidth="500px"
-                                            imageFit="contain"
-                                            containerWidth="500px"
-                                        />
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                {/* Floor Plan Upload */}
+                <div className="min-w-full">
+                    {/* <div className="border border-gray-300 p-3 w-1/3">
+                        Floor Plan
+                        <p className='text-xs text-gray-500'>
+                            Note : Attached the building plan/sketch of floor plan . A photograph may also be attached if necessary.
+                        </p>
+                    </div> */}
+                    <div className="p-3 flex justify-center items-center w-full">
+                        <div className="flex flex-col items-center w-full">
+                            <h3 className="text-lg font-semibold mb-4 text-center">Floor Plan Documents</h3>
+                            <div className="w-full max-w-lg flex justify-center">
+                                <ImageUploadGallery
+                                    images={floorPlanImageForPreview}
+                                    onChange={handleFloorPlanChange}
+                                    maxNumber={5}
+                                    multiple={true}
+                                    maxImageHeight="500px"
+                                    maxImageWidth="500px"
+                                    imageFit="contain"
+                                    containerWidth="500px"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );
