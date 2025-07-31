@@ -119,6 +119,7 @@ import ADNAssessment from '../pages/Municipality/ADN_Assessment';
 import Map from '../pages/Map'
 import UpdateAssessment from '../pages/Assessment/UpdateAssessment';
 import BuildingAssessment from '../pages/Assessment/BuildingAssessment';
+import UnitValue from '../pages/Municipality/unit_value';
 const routes = [
     // dashboard
     {
@@ -436,6 +437,14 @@ const routes = [
         element: (
             <ProtectedRoute>
                 <Carmen />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/unit_value',
+        element: (
+            <ProtectedRoute>
+                <UnitValue />
             </ProtectedRoute>
         ),
     },

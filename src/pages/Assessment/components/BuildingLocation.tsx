@@ -227,7 +227,7 @@ const BuildingLocation = ({
             </div>
 
             {/* Location Photos Section */}
-            <div className="mt-6  pt-6 w-full flex justify-center items-center">
+            <div className="mt-6 border-t border-white-light dark:border-[#17263c]   pt-6 w-full flex justify-center items-center">
                 <div className="w-full max-w-3xl mx-auto text-center">
                     <h3 className="text-lg font-semibold mb-6 text-center">Location Photos</h3>
                     <div className="flex justify-center">

@@ -114,6 +114,9 @@ const Sidebar = () => {
                                         <li>
                                             <NavLink to="/map">{t('MAP')}</NavLink>
                                         </li>
+                                        <li>
+                                            <NavLink to="/unit_value">{t('Unit Value')}</NavLink>
+                                        </li>
                                         {/* <li>
                                             <NavLink to="/analytics">{t('analytics')}</NavLink>
                                         </li>
