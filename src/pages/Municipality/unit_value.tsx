@@ -320,6 +320,104 @@ const UnitValue = () => {
         }
     };
 
+    // First, add this utility function at the top of your file after the imports
+    const exportToCSV = (data: Assessment[], fileName: string) => {
+        // Group data by category and ensure proper categorization
+        const groupedData = data.reduce((acc: { [key: string]: Assessment[] }, item) => {
+            // Ensure category is properly set, defaulting to 'Other' if undefined
+            const category = item.category?.trim() || 'Other';
+            if (!acc[category]) {
+                acc[category] = [];
+            }
+            acc[category].push(item);
+            return acc;
+        }, {});
+
+        const headers = [
+            'ID',
+            'Structural Class Type',
+            'Category',
+            'SMV Year',
+            'SMV Code',
+            'SMV Name',
+            'Unit Cost',
+            'Date Input',
+            'Input By',
+            'Increase',
+            'Remarks'
+        ];
+
+        let csvContent = [
+            ['Unit Value Report'],
+            [''],
+            [`Generated on: ${new Date().toLocaleDateString()}`],
+            [''],
+        ];
+
+        // Sort categories to ensure consistent order
+        const sortedCategories = Object.keys(groupedData).sort((a, b) => {
+            const order = ['Building', 'Industrial', 'Commercial', 'Residential', 'Other'];
+            return order.indexOf(a) - order.indexOf(b);
+        });
+
+        // Add data by category
+        sortedCategories.forEach(category => {
+            const items = groupedData[category];
+            if (items && items.length > 0) {
+                // Add category header
+                csvContent.push([`${category} Category`]);
+                csvContent.push(headers);
+
+                // Sort items within category by struct_class_type
+                const sortedItems = items.sort((a, b) => 
+                    (a.struct_class_type || '').localeCompare(b.struct_class_type || '')
+                );
+
+                // Add items for this category
+                sortedItems.forEach(item => {
+                    csvContent.push([
+                        item.struct_class_type || '',
+                        item.category || '',
+                        item.smv_year || '',
+                        item.smv_code || '',
+                        item.smv_name || '',
+                        (item.unit_cost || 0).toString(),
+                        item.date_input || '',
+                        item.inputed_by || '',
+                        (item.increase || 0).toString(),
+                        item.remarks || ''
+                    ]);
+                });
+
+                // Add empty row between categories
+                csvContent.push(['']);
+            }
+        });
+
+        // Convert to CSV string with proper handling of special characters
+        const csvString = csvContent
+            .map(row => row.map(cell => {
+                if (cell === null || cell === undefined) return '';
+                const stringCell = cell.toString();
+                if (stringCell.includes(',') || stringCell.includes('"') || stringCell.includes('\n')) {
+                    return `"${stringCell.replace(/"/g, '""')}"`;
+                }
+                return stringCell;
+            }).join(','))
+            .join('\n');
+
+        // Create and download file
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `${fileName}-${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <div>
             <ul className="flex space-x-2 rtl:space-x-reverse mb-5">
@@ -360,6 +458,28 @@ const UnitValue = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
                             Add New Unit Cost
+                        </button>
+
+                        {/* Add this button before your existing buttons */}
+                        <button
+                            type="button"
+                            className="btn btn-success"
+                            onClick={() => exportToCSV(filteredData, 'unit-value-report')}
+                        >
+                            <svg 
+                                className="w-4 h-4 mr-2" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                            >
+                                <path 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                    strokeWidth={2} 
+                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
+                                />
+                            </svg>
+                            Export to CSV
                         </button>
 
                         <Dropdown

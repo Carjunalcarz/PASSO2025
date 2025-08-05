@@ -1,5 +1,3 @@
-    
-
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
@@ -16,6 +14,7 @@ import {
   ResponsiveContainer,
   LabelList
 } from 'recharts';
+import { toast } from 'react-toastify';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -99,140 +98,226 @@ function UnitValueChart({ unitCostCategoryFilter }: UnitValueChartProps) {
   // Print to PDF function with chart capture
   const printToPDF = async () => {
     try {
-      // Wait for chart to be fully rendered
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Get the chart container
-      const chartContainer = chartRef.current;
-      if (!chartContainer) {
-        alert('Chart not found. Please try again.');
-        return;
-      }
+        // Wait for chart to be fully rendered
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const chartContainer = chartRef.current;
+        if (!chartContainer) {
+            toast.error('Chart not found. Please try again.');
+            return;
+        }
 
-      // Capture the entire chart container as image
-      const chartCanvas = await html2canvas(chartContainer, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        width: chartContainer.scrollWidth,
-        height: chartContainer.scrollHeight,
-        scrollX: 0,
-        scrollY: 0
-      });
+        // Capture the chart with better quality
+        const chartCanvas = await html2canvas(chartContainer, {
+            scale: 2, // Higher scale for better quality
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            width: chartContainer.scrollWidth,
+            height: chartContainer.scrollHeight,
+            logging: false, // Disable logging
+            imageTimeout: 0, // No timeout
+        });
 
-      const chartImage = chartCanvas.toDataURL('image/png');
+        const chartImage = chartCanvas.toDataURL('image/png', 1.0); // Maximum quality
 
-      // Create a new window for printing
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        alert('Please allow popups to print the chart');
-        return;
-      }
+        // Create a new window for printing with enhanced styling
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            toast.error('Please allow popups to print the chart');
+            return;
+        }
 
-      // Create the content for the new window
-      const printContent = `
+        // Enhanced print content with better styling
+        const printContent = `
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Unit Value Chart Report</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
-            .summary-card { padding: 15px; border-radius: 8px; text-align: center; }
-            .summary-card h4 { margin: 0 0 5px 0; font-size: 14px; }
-            .summary-card p { margin: 0; font-size: 24px; font-weight: bold; }
-            .blue { background: #dbeafe; color: #1e40af; }
-            .green { background: #dcfce7; color: #166534; }
-            .purple { background: #f3e8ff; color: #7c3aed; }
-            .chart-container { margin-top: 30px; text-align: center; }
-            .chart-image { max-width: 100%; height: auto; border: 1px solid #ddd; margin: 20px 0; }
-            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; }
-            th { background: #f3f4f6; font-weight: bold; }
-            tr:nth-child(even) { background: #f9fafb; }
-            @media print {
-              body { margin: 0; }
-              .no-print { display: none; }
-              .chart-image { page-break-inside: avoid; }
-            }
-          </style>
+            <title>Unit Value Chart Report - ${new Date().toLocaleDateString()}</title>
+            <style>
+                @page { size: landscape; margin: 20mm; }
+                body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 0;
+                    padding: 20px;
+                    color: #333;
+                }
+                .header { 
+                    text-align: center; 
+                    margin-bottom: 30px;
+                    border-bottom: 2px solid #2563eb;
+                    padding-bottom: 15px;
+                }
+                .header h1 {
+                    color: #1e40af;
+                    margin: 0 0 10px 0;
+                    font-size: 24px;
+                }
+                .header p {
+                    color: #666;
+                    margin: 5px 0;
+                    font-size: 14px;
+                }
+                .meta-info {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 20px;
+                    font-size: 12px;
+                    color: #666;
+                }
+                .summary {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 20px;
+                    margin-bottom: 30px;
+                }
+                .summary-card {
+                    padding: 15px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+                .summary-card h4 {
+                    margin: 0 0 10px 0;
+                    font-size: 14px;
+                    color: #666;
+                }
+                .summary-card p {
+                    margin: 0;
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: #2563eb;
+                }
+                .chart-container {
+                    margin: 30px 0;
+                    text-align: center;
+                }
+                .chart-image {
+                    max-width: 100%;
+                    height: auto;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 30px;
+                    font-size: 12px;
+                }
+                th {
+                    background: #f3f4f6;
+                    padding: 12px;
+                    text-align: left;
+                    font-weight: bold;
+                    color: #1e40af;
+                    border: 1px solid #e5e7eb;
+                }
+                td {
+                    padding: 10px;
+                    border: 1px solid #e5e7eb;
+                }
+                tr:nth-child(even) {
+                    background: #f9fafb;
+                }
+                .footer {
+                    margin-top: 40px;
+                    text-align: center;
+                    font-size: 12px;
+                    color: #666;
+                    border-top: 1px solid #e5e7eb;
+                    padding-top: 20px;
+                }
+                @media print {
+                    .no-print { display: none; }
+                    .chart-image { page-break-inside: avoid; }
+                    table { page-break-inside: auto; }
+                    tr { page-break-inside: avoid; }
+                    thead { display: table-header-group; }
+                }
+            </style>
         </head>
         <body>
-          <div class="header">
-            <h1>${unitCostCategoryFilter !== 'all' 
-              ? `${selectedCategoryValue} - Struct Class Comparison by Year`
-              : 'All Structure Classes - Yearly Unit Cost Comparison'
-            }</h1>
-            <p>Generated on: ${new Date().toLocaleDateString()} | Filter: ${unitCostCategoryFilter.toUpperCase()}</p>
-          </div>
-          
-          <div class="summary">
-            <div class="summary-card blue">
-              <h4>Total Years</h4>
-              <p>${chartData.length}</p>
+            <div class="header">
+                <h1>${unitCostCategoryFilter !== 'all' 
+                    ? `${selectedCategoryValue} - Struct Class Comparison by Year`
+                    : 'All Structure Classes - Yearly Unit Cost Comparison'
+                }</h1>
+                <p>Generated on: ${new Date().toLocaleString()}</p>
+                <p>Category Filter: ${unitCostCategoryFilter.toUpperCase()}</p>
             </div>
-            <div class="summary-card green">
-              <h4>Structure Classes</h4>
-              <p>${sortedGroups.length}</p>
+
+            <div class="meta-info">
+                <span>Report ID: ${Math.random().toString(36).substr(2, 9).toUpperCase()}</span>
+                <span>Generated by: ${localStorage.getItem('username') || 'System User'}</span>
             </div>
-            <div class="summary-card purple">
-              <h4>Total Records</h4>
-              <p>${unitCostCategoryFilter !== 'all' && selectedCategoryValue
-                ? apiData.filter((item: any) => item.category === selectedCategoryValue).length
-                : apiData.length
-              }</p>
+
+            <div class="summary">
+                <div class="summary-card">
+                    <h4>Total Years</h4>
+                    <p>${chartData.length}</p>
+                </div>
+                <div class="summary-card">
+                    <h4>Structure Classes</h4>
+                    <p>${sortedGroups.length}</p>
+                </div>
+                <div class="summary-card">
+                    <h4>Total Records</h4>
+                    <p>${unitCostCategoryFilter !== 'all' && selectedCategoryValue
+                        ? apiData.filter((item: any) => item.category === selectedCategoryValue).length
+                        : apiData.length
+                    }</p>
+                </div>
             </div>
-          </div>
-          
-          <div class="chart-container">
-            <h3>Chart Visualization</h3>
-            <img src="${chartImage}" alt="Unit Value Chart" class="chart-image" />
-          </div>
-          
-          <div style="margin-top: 30px;">
-            <h3>Detailed Data Table</h3>
+
+            <div class="chart-container">
+                <img src="${chartImage}" alt="Unit Value Chart" class="chart-image" />
+            </div>
+
             <table>
-              <thead>
-                <tr>
-                  <th>Year</th>
-                  ${sortedGroups.map(group => `<th>${group}</th>`).join('')}
-                </tr>
-              </thead>
-              <tbody>
-                ${chartData.map((yearData, index) => `
-                  <tr>
-                    <td><strong>${yearData.year}</strong></td>
-                    ${sortedGroups.map(group => 
-                      `<td>₱${(yearData[group as string] || 0).toLocaleString()}</td>`
-                    ).join('')}
-                  </tr>
-                `).join('')}
-              </tbody>
+                <thead>
+                    <tr>
+                        <th>Year</th>
+                        ${sortedGroups.map(group => `
+                            <th>${group}${showPercentage ? ' (%)' : ''}</th>
+                        `).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${chartData.map(yearData => `
+                        <tr>
+                            <td><strong>${yearData.year}</strong></td>
+                            ${sortedGroups.map(group => `
+                                <td>${showPercentage 
+                                    ? `${(yearData[`${group}_increase`] || 0).toFixed(2)}%`
+                                    : `₱${(yearData[group as string] || 0).toLocaleString()}`
+                                }</td>
+                            `).join('')}
+                        </tr>
+                    `).join('')}
+                </tbody>
             </table>
-          </div>
-          
-          <div class="no-print" style="margin-top: 30px; text-align: center;">
-            <button onclick="window.print()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer;">
-              Print Report
-            </button>
-          </div>
+
+            <div class="footer">
+                <p>This report is system generated by PASSO System</p>
+                <p>© ${new Date().getFullYear()} All Rights Reserved</p>
+            </div>
         </body>
         </html>
-      `;
+        `;
 
-      printWindow.document.write(printContent);
-      printWindow.document.close();
-      
-      // Wait for content to load then print
-      printWindow.onload = () => {
-        printWindow.print();
-        printWindow.close();
-      };
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+
+        // Wait for content to load then print
+        printWindow.onload = () => {
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
+        };
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
+        console.error('Error generating PDF:', error);
+        toast.error('Error generating PDF. Please try again.');
     }
   };
 
@@ -335,13 +420,49 @@ function UnitValueChart({ unitCostCategoryFilter }: UnitValueChartProps) {
 
   // Sort groups based on current sort criteria
   const sortedGroups = [...groups].sort((a, b) => {
-    if (sortBy === 'name') {
-      return (a as string).localeCompare(b as string);
+    if (unitCostCategoryFilter === 'all') {
+      // Define the category order exactly as shown in data
+      const categoryOrder = {
+        // Roman numerals (Building) first
+        'I': 1,
+        'II-A': 2,
+        'II-B': 3,
+        'III-A': 4,
+        'III-B': 5,
+        'IV-A': 6,
+        'IV-B': 7,
+        'V-A': 8,
+        'V-B': 9,
+        // Industrial next
+        'I-1': 10,
+        'I-2': 11,
+        'I-3': 12,
+        'I-4': 13,
+        // Commercial next
+        'C-1': 14,
+        'C-2': 15,
+        'C-3': 16,
+        'C-4': 17,
+        // Residential last
+        'R-1': 18,
+        'R-2': 19,
+        'R-3': 20,
+        'R-4': 21
+      };
+
+      // Direct comparison using the categoryOrder object
+      const orderA = categoryOrder[a as keyof typeof categoryOrder] || 999;
+      const orderB = categoryOrder[b as keyof typeof categoryOrder] || 999;
+      return orderA - orderB;
     } else {
-      // Sort by average value across all years
-      const aAvg = chartData.reduce((sum, yearData) => sum + (yearData[a as string] || 0), 0) / chartData.length;
-      const bAvg = chartData.reduce((sum, yearData) => sum + (yearData[b as string] || 0), 0) / chartData.length;
-      return bAvg - aAvg; // Descending order
+      // For specific categories, keep existing sort logic
+      if (sortBy === 'name') {
+        return (a as string).localeCompare(b as string);
+      } else {
+        const aAvg = chartData.reduce((sum, yearData) => sum + (yearData[a as string] || 0), 0) / chartData.length;
+        const bAvg = chartData.reduce((sum, yearData) => sum + (yearData[b as string] || 0), 0) / chartData.length;
+        return bAvg - aAvg;
+      }
     }
   });
 
@@ -499,7 +620,13 @@ function UnitValueChart({ unitCostCategoryFilter }: UnitValueChartProps) {
           {viewMode === 'chart' && (
             <div className="mb-6" ref={chartRef}>
               <ResponsiveContainer width="100%" height={400}>
-                <ComposedChart data={chartData}>
+                <ComposedChart 
+                  data={chartData}
+                  // Reduce the gaps slightly
+                  barGap={4}                  // Smaller gap between bars in the same year group
+                  barCategoryGap={30}         // Smaller gap between different year groups
+                  barSize={unitCostCategoryFilter === 'all' ? 12 : 25}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e6ed" />
                   <XAxis 
                     dataKey="year" 
@@ -514,6 +641,12 @@ function UnitValueChart({ unitCostCategoryFilter }: UnitValueChartProps) {
                       angle: -90, 
                       position: 'insideLeft' 
                     }}
+                    // Calculate max value and add 10% padding
+                    domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.1)]}
+                    // Add a specific height range
+                    height={300}
+                    // Format the ticks to show proper values
+                    tickFormatter={(value) => showPercentage ? `${value}%` : `₱${value.toLocaleString()}`}
                   />
                   <Tooltip 
                     formatter={(value: any, name: any) => {
@@ -528,7 +661,7 @@ function UnitValueChart({ unitCostCategoryFilter }: UnitValueChartProps) {
                       border: 'none'
                     }}
                   />
-                  <Legend />
+            
                   
                   {/* Show average line when "all" is selected and showAverage is true */}s
                   {unitCostCategoryFilter === 'all' && showAverage && showPercentage && (
@@ -546,7 +679,30 @@ function UnitValueChart({ unitCostCategoryFilter }: UnitValueChartProps) {
                   {(!showAverage || unitCostCategoryFilter !== 'all') && sortedGroups.map((group, index) => {
                     const dataKey = showPercentage ? `${group as string}_increase` : group as string;
                     const name = showPercentage ? `${group as string} (%)` : group as string;
-                    const color = `hsl(${index * 60}, 70%, 50%)`;
+                    // Custom color palette with lighter, vibrant colors
+                    const colors = [
+                      '#60A5FA', // Light Blue
+                      '#34D399', // Light Green
+                      '#F87171', // Light Red
+                      '#818CF8', // Light Indigo
+                      '#FCD34D', // Light Yellow
+                      '#F472B6', // Light Pink
+                      '#A78BFA', // Light Purple
+                      '#2DD4BF', // Light Teal
+                      '#FB923C', // Light Orange
+                      '#38BDF8', // Sky Blue
+                      '#4ADE80', // Emerald
+                      '#C084FC', // Light Violet
+                      '#FB7185', // Light Rose
+                      '#FBBF24', // Light Amber
+                      '#67E8F9', // Cyan
+                      '#94A3B8', // Light Slate
+                      '#A5B4FC', // Lighter Indigo
+                      '#86EFAC', // Lighter Green
+                      '#FCA5A5', // Lighter Red
+                      '#E879F9'  // Light Fuchsia
+                    ];
+                    const color = colors[index % colors.length];
                     
                     if (chartType === 'bar') {
                       return (
@@ -557,15 +713,16 @@ function UnitValueChart({ unitCostCategoryFilter }: UnitValueChartProps) {
                           name={name}
                           radius={[4, 4, 0, 0]}
                           style={{ outline: 'none' }}
+                          maxBarSize={unitCostCategoryFilter === 'all' ? 12 : 25}
                         >
                           <LabelList 
                             dataKey={dataKey}
-                            position="top" 
+                            position="top"
                             formatter={(value: any) => {
                               return group as string;
                             }}
                             style={{ 
-                              fontSize: unitCostCategoryFilter === 'all' ? '10px' : '14px', 
+                              fontSize: unitCostCategoryFilter === 'all' ? '9px' : '12px',
                               fontWeight: 'bold',
                               fill: '#333',
                               outline: 'none'
