@@ -65,7 +65,7 @@ const UnitValue = () => {
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
     const [search, setSearch] = useState('');
     const [searchColumn, setSearchColumn] = useState('tdn');
-    const [hideCols, setHideCols] = useState<Array<keyof Assessment>>(['date_input', 'inputed_by']);
+    const [hideCols, setHideCols] = useState<Array<keyof Assessment>>(['date_input', 'inputed_by' , 'increase' , 'remarks']);
     const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
         columnAccessor: 'tdn',
         direction: 'asc',
@@ -167,7 +167,7 @@ const UnitValue = () => {
 
     // 2. Filter by taxability and subclass
     const filteredData = searchFilteredData.filter((item: Assessment) => {
-        const matchesTaxability =
+        const matchesCategory =
             unitCostCategoryFilter === 'all' ||
             (unitCostCategoryFilter === 'residential' && item.category === 'Residential') ||
             (unitCostCategoryFilter === 'commercial' && item.category === 'Commercial') ||
@@ -175,13 +175,9 @@ const UnitValue = () => {
             (unitCostCategoryFilter === 'building' && item.category === 'Building');
          
 
-        const matchesSubclass =
-            subclassFilter === 'all' || item.struct_class_type?.toLowerCase() === subclassFilter.toLowerCase();
+       
 
-        const matchesGR =
-            grFilter === 'all' || item.smv_code?.toLowerCase() === grFilter.toLowerCase();
-
-        return matchesTaxability && matchesSubclass && matchesGR;
+        return matchesCategory;
     });
 
 
@@ -189,16 +185,9 @@ const UnitValue = () => {
 
 
     const sortedData = sortBy(filteredData, (item) => {
-        switch (sortStatus.columnAccessor) {
-            case 'increase':
-                return item.increase || 0;
-            case 'remarks':
-                return item.remarks || 0;
-            case 'area':
-                return item.smv_name || 0;
-            default:
+      
                 return item[sortStatus.columnAccessor as keyof Assessment];
-        }
+        
     });
     const finalData = sortStatus.direction === 'desc' ? sortedData.reverse() : sortedData;
 

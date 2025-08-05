@@ -40,6 +40,8 @@
         "easymde": "^2.18.0",
         "formik": "^2.2.9",
         "highlight.js": "^11.6.0",
+        "html2canvas": "^1.4.1",
+        "jspdf": "^3.0.1",
         "mantine-datatable": "^1.7.17",
         "nouislider-react": "^3.4.1",
         "react": "^18.3.1",
