@@ -6,7 +6,7 @@ import { IRootState } from '../../store';
 import Dropdown from '../../components/Dropdown';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import IconCaretDown from '../../components/Icon/IconCaretDown';
-import axios from 'axios';
+import { databaseService, AssessmentDocument } from '../../services/databaseService';
 import { useQuery, useMutation, UseMutationResult } from '@tanstack/react-query';
 import IconEdit from '../../components/Icon/IconEdit';
 import IconTrash from '../../components/Icon/IconTrash';
@@ -18,39 +18,19 @@ import GRFilter from './Components/GRFilter';
 import { Link } from 'react-router-dom';
 import SubclassSuggesstion from './Components/SubclassSuggesstion';
 
+// Use AssessmentDocument from databaseService
+type Assessment = AssessmentDocument;
+
 // Define column interface
 interface Column {
-    accessor: keyof Assessment | 'actions';
+    accessor: keyof AssessmentDocument | 'actions';
     title: string;
     sortable: boolean;
-    render?: (record: Assessment) => React.ReactNode;
+    render?: (record: AssessmentDocument) => React.ReactNode;
 }
 
-// Define the Assessment interface (renamed from AssessmentData for consistency)
-interface Assessment {
-    pin: string;
-    name: string;
-    tdn: string;
-    market_val: number;
-    ass_value: number;
-    area: number;
-    unit_value: number;
-    kind: string;
-    ass_level: number;
-    classification: string;
-    sub_class: string;
-    taxability: string;
-    trans_cd: string;
-    tax_beg_yr: number;
-    eff_date: string;
-    owner_no: string;
-    mun_code: string;
-    municipality: string;
-    barangay_code: string;
-    barangay: string;
-    gr_code: string;
-    gr: string;
-}
+// Collection ID for ADN assessments from environment variables
+const ADN_COLLECTION_ID = import.meta.env.VITE_APPWRITE_PROPERTY_ASSESSMENTS_COLLECTION_ID || 'property_assessments';
 
 const formatCurrency = (amount: number) => {
     return `₱${new Intl.NumberFormat('en-PH', {
@@ -64,7 +44,7 @@ const ADNAssessment = () => {
     const [subclassFilter, setSubclassFilter] = useState<string>('all');
     const [grFilter, setGrFilter] = useState<string>('all');
 
-    const token = localStorage.getItem('token');
+    // Appwrite handles authentication automatically through the client
     const dispatch = useDispatch();
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl';
 
@@ -83,7 +63,7 @@ const ADNAssessment = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [deletingTdn, setDeletingTdn] = useState<string | null>(null);
+    const [deletingRecord, setDeletingRecord] = useState<Assessment | null>(null);
 
     const cols: Column[] = [
         { accessor: 'tdn', title: 'TDN', sortable: true },
@@ -196,19 +176,13 @@ const ADNAssessment = () => {
     }, [dispatch]);
 
     const fetchAssessments = async (): Promise<Assessment[]> => {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/get-general-revision?skip=0&limit=300000`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-
-        const taxability = response.data.data.map((item: Assessment) => {
-            item.taxability = item.taxability === "1" ? "Taxable" : item.taxability === "0" ? "Exempt" : item.taxability;
-            return item;
-        });
-
-        response.data.data = taxability;
-        return response.data.data;
+        try {
+            const assessments = await databaseService.getAssessments(ADN_COLLECTION_ID, 300000);
+            return assessments;
+        } catch (error) {
+            console.error('Error fetching assessments from Appwrite:', error);
+            throw error;
+        }
     };
 
     const { data: rowData = [], isLoading: queryLoading, refetch } = useQuery<Assessment[]>({
@@ -308,38 +282,35 @@ const ADNAssessment = () => {
 
 
     const sums = calculateSums();
-
     const toggleColumn = (col: keyof Assessment) => {
         setHideCols((prev) => (prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col]));
     };
 
     const createMutation = useMutation<Assessment, Error, Partial<Assessment>>({
-        mutationFn: (newData) =>
-            axios.post('your-endpoint', newData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }).then(response => response.data),
+        mutationFn: async (newData) => {
+            const data = newData as Omit<AssessmentDocument, '$id' | '$createdAt' | '$updatedAt'>;
+            return await databaseService.createAssessment(ADN_COLLECTION_ID, data);
+        },
         onSuccess: () => {
+            toast.success('Record created successfully');
             refetch();
+        },
+        onError: (error) => {
+            toast.error('Failed to create record: ' + error.message);
         },
     });
 
     const updateMutation = useMutation<
-        any,
+        Assessment,
         Error,
         Assessment,
         unknown
     >({
         mutationFn: async (data: Assessment) => {
-            const response = await axios.put(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/${data.tdn}`, data, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            const taxability = data.taxability === "1" ? "Taxable" : data.taxability === "0" ? "Exempt" : data.taxability;
-            data.taxability = taxability;
-            return response.data;
+            if (!data.$id) {
+                throw new Error('Document ID is required for update');
+            }
+            return await databaseService.updateAssessment(ADN_COLLECTION_ID, data.$id, data);
         },
         onSuccess: () => {
             toast.success('Record updated successfully');
@@ -352,18 +323,13 @@ const ADNAssessment = () => {
     });
 
     const deleteMutation = useMutation<
-        any,
+        void,
         Error,
-        string,
+        { tdn: string; documentId: string },
         unknown
     >({
-        mutationFn: async (tdn: string) => {
-            const response = await axios.delete(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/${tdn}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            return response.data;
+        mutationFn: async ({ documentId }) => {
+            await databaseService.deleteAssessment(ADN_COLLECTION_ID, documentId);
         },
         onSuccess: () => {
             toast.success('Record deleted successfully');
@@ -384,15 +350,22 @@ const ADNAssessment = () => {
     };
 
     const handleDelete = (tdn: string) => {
-        setDeletingTdn(tdn);
-        setIsDeleteModalOpen(true);
+        // Find the record by TDN to get the document ID
+        const record = rowData.find(item => item.tdn === tdn);
+        if (record) {
+            setDeletingRecord(record);
+            setIsDeleteModalOpen(true);
+        }
     };
 
     const confirmDelete = () => {
-        if (deletingTdn) {
-            deleteMutation.mutate(deletingTdn);
+        if (deletingRecord && deletingRecord.$id) {
+            deleteMutation.mutate({ 
+                tdn: deletingRecord.tdn, 
+                documentId: deletingRecord.$id 
+            });
             setIsDeleteModalOpen(false);
-            setDeletingTdn(null);
+            setDeletingRecord(null);
         }
     };
 
@@ -742,7 +715,7 @@ const ADNAssessment = () => {
                     opened={isDeleteModalOpen}
                     onClose={() => {
                         setIsDeleteModalOpen(false);
-                        setDeletingTdn(null);
+                        setDeletingRecord(null);
                     }}
                     title="Delete Record"
                     size="sm"
@@ -755,7 +728,7 @@ const ADNAssessment = () => {
                                 className="btn btn-outline-danger"
                                 onClick={() => {
                                     setIsDeleteModalOpen(false);
-                                    setDeletingTdn(null);
+                                    setDeletingRecord(null);
                                 }}
                                 disabled={deleteMutation.isPending}
                             >
