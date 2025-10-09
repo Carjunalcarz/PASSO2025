@@ -8,7 +8,9 @@ import IconLockDots from '../../components/Icon/IconLockDots';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
+import { useAuth } from '../../contexts/AuthContext';
+import AppwriteConnectionTest from '../../components/AppwriteConnectionTest';
 
 // Form Schema
 const loginSchema = yup.object().shape({
@@ -25,6 +27,7 @@ const LoginBoxed = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [loginError, setLoginError] = useState<string>('');
+    const { user, loading, login, isAuthenticated } = useAuth();
 
     const isDark = useSelector((state: IRootState) => state.themeConfig.theme === 'dark' || state.themeConfig.isDarkMode);
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl';
@@ -33,79 +36,26 @@ const LoginBoxed = () => {
         dispatch(setPageTitle('Login Boxed'));
     }, [dispatch]);
 
-    // Token verification query
-    const { data: tokenValid, isLoading: verifyingToken } = useQuery({
-        queryKey: ['verifyToken'],
-        queryFn: async () => {
-            const token = localStorage.getItem('token');
-
-            if (!token) {
-                return false;
-            }
-
-            try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL_FASTAPI}/verify-token`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-
-                if (!response.ok) {
-                    localStorage.removeItem('token');
-                    return false;
-                }
-
-                return true;
-            } catch (error) {
-                console.error("Token verification failed:", error);
-                localStorage.removeItem('token');
-                return false;
-            }
-        },
-        retry: false, // Don't retry token verification
-        refetchOnWindowFocus: false, // Don't refetch when window gains focus
-        staleTime: 0, // Always check token freshness
-    });
-
-    // Redirect if token is valid
+    // Redirect if user is authenticated
     useEffect(() => {
-        if (tokenValid === true) {
-            navigate('/');
+        if (isAuthenticated) {
+            // navigate('/');
+            console.log("✅ User is authenticated");
         }
-    }, [tokenValid, navigate]);
+    }, [isAuthenticated, navigate]);
 
-    // Login mutation
+    // Appwrite Login mutation
     const loginMutation = useMutation({
         mutationFn: async (data: LoginFormInputs) => {
-            const formData = new URLSearchParams();
-            formData.append('username', data.email);
-            formData.append('password', data.password);
-
-            const response = await fetch(`${import.meta.env.VITE_API_URL_FASTAPI}/token`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: formData.toString(),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Invalid credentials');
-            }
-
-            return response.json();
+            await login(data.email, data.password);
         },
-        onSuccess: (result) => {
-            console.log("Login Success", result);
-            localStorage.setItem('token', result.access_token);
-            localStorage.setItem('username', result.username);
+        onSuccess: () => {
+            console.log("✅ Appwrite Login Success");
             setLoginError('');
             navigate('/');
         },
         onError: (error: Error) => {
-            console.error('Login failed:', error);
+            console.error('❌ Appwrite Login failed:', error);
             setLoginError(error.message || 'Login failed. Please check your credentials.');
         },
     });
@@ -123,8 +73,8 @@ const LoginBoxed = () => {
         loginMutation.mutate(data);
     };
 
-    // Show loading while verifying token
-    if (verifyingToken) {
+    // Show loading while checking authentication
+    if (loading) {
         return (
             <div className="flex min-h-screen items-center justify-center">
                 <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
@@ -132,9 +82,15 @@ const LoginBoxed = () => {
         );
     }
 
-    // Don't render login form if token is valid (will redirect)
-    if (tokenValid === true) {
+    // Don't render login form if user is authenticated (will redirect)
+    if (isAuthenticated) {
         return null;
+    }
+
+    // Temporary debug mode - show connection test
+    const showDebug = new URLSearchParams(window.location.search).get('debug') === 'true';
+    if (showDebug) {
+        return <AppwriteConnectionTest />;
     }
 
     return (

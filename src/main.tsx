@@ -19,6 +19,8 @@ import { Provider } from 'react-redux';
 import store from './store/index';
 //Tanstack Query
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+// Auth Context
+import { AuthProvider } from './contexts/AuthContext';
 // 1️⃣ Create a query client instance
 const queryClient = new QueryClient();
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
@@ -26,7 +28,9 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
         <Suspense>
             <Provider store={store}>
                 <QueryClientProvider client={queryClient}>
-                    <RouterProvider router={router} />
+                    <AuthProvider>
+                        <RouterProvider router={router} />
+                    </AuthProvider>
                 </QueryClientProvider>
             </Provider>
         </Suspense>
