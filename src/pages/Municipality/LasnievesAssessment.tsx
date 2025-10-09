@@ -195,7 +195,7 @@ const LasNievesAssessment = () => {
     }, [dispatch]);
 
     const fetchAssessments = async (): Promise<Assessment[]> => {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/get-general-revision?municipality=lasnieves&skip=0&limit=300000`, {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/get-general-revision?municipality=las nieves&skip=0&limit=300000`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
