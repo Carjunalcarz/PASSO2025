@@ -8,13 +8,26 @@ import Header from './Header';
 import Setting from './Setting';
 import Sidebar from './Sidebar';
 import Portals from '../../components/Portals';
+import { useAuth } from '../../contexts/AuthContext';
 
 const DefaultLayout = ({ children }: PropsWithChildren) => {
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
     const dispatch = useDispatch();
+    const { user, isAuthenticated } = useAuth();
 
     const [showLoader, setShowLoader] = useState(true);
     const [showTopButton, setShowTopButton] = useState(false);
+
+    // Check if user is verified
+    const isUserVerified = isAuthenticated && user?.emailVerification;
+    
+    console.log('🏗️ DefaultLayout: User verification status:', {
+        isAuthenticated,
+        hasUser: !!user,
+        emailVerified: user?.emailVerification,
+        isUserVerified,
+        userEmail: user?.email
+    });
 
     const goToTop = () => {
         document.body.scrollTop = 0;
@@ -49,8 +62,10 @@ const DefaultLayout = ({ children }: PropsWithChildren) => {
         <App>
             {/* BEGIN MAIN CONTAINER */}
             <div className="relative">
-                {/* sidebar menu overlay */}
-                <div className={`${(!themeConfig.sidebar && 'hidden') || ''} fixed inset-0 bg-[black]/60 z-50 lg:hidden`} onClick={() => dispatch(toggleSidebar())}></div>
+                {/* sidebar menu overlay - Only show for verified users */}
+                {isUserVerified && (
+                    <div className={`${(!themeConfig.sidebar && 'hidden') || ''} fixed inset-0 bg-[black]/60 z-50 lg:hidden`} onClick={() => dispatch(toggleSidebar())}></div>
+                )}
                 {/* screen loader */}
                 {showLoader && (
                     <div className="screen_loader fixed inset-0 bg-[#fafafa] dark:bg-[#060818] z-[60] grid place-content-center animate__animated">
@@ -79,11 +94,11 @@ const DefaultLayout = ({ children }: PropsWithChildren) => {
                 {/* END APP SETTING LAUNCHER */}
 
                 <div className={`${themeConfig.navbar} main-container text-black dark:text-white-dark min-h-screen`}>
-                    {/* BEGIN SIDEBAR */}
-                    <Sidebar />
+                    {/* BEGIN SIDEBAR - Only show for verified users */}
+                    {isUserVerified && <Sidebar />}
                     {/* END SIDEBAR */}
 
-                    <div className="main-content flex flex-col min-h-screen">
+                    <div className={`main-content flex flex-col min-h-screen ${!isUserVerified ? 'ltr:ml-0 rtl:mr-0' : ''}`}>
                         {/* BEGIN TOP NAVBAR */}
                         <Header />
                         {/* END TOP NAVBAR */}

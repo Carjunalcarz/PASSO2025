@@ -13,13 +13,42 @@ import IconInstagram from '../../components/Icon/IconInstagram';
 import IconFacebookCircle from '../../components/Icon/IconFacebookCircle';
 import IconTwitter from '../../components/Icon/IconTwitter';
 import IconGoogle from '../../components/Icon/IconGoogle';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import { useMutation } from '@tanstack/react-query';
+import { useAuth } from '../../contexts/AuthContext';
+
+// Form Schema
+const registerSchema = yup.object().shape({
+    name: yup.string().required('Name is required'),
+    email: yup.string().email('Invalid email').required('Email is required'),
+    password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+});
+
+type RegisterFormInputs = {
+    name: string;
+    email: string;
+    password: string;
+};
 
 const RegisterBoxed = () => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const [registerError, setRegisterError] = useState<string>('');
+    const { user, loading, register: registerUser, isAuthenticated } = useAuth();
+
     useEffect(() => {
         dispatch(setPageTitle('Register Boxed'));
-    });
-    const navigate = useNavigate();
+    }, [dispatch]);
+
+    // Redirect if user is authenticated
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/');
+        }
+    }, [isAuthenticated, navigate]);
+
     const isDark = useSelector((state: IRootState) => state.themeConfig.theme === 'dark' || state.themeConfig.isDarkMode);
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl' ? true : false;
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
@@ -33,9 +62,48 @@ const RegisterBoxed = () => {
     };
     const [flag, setFlag] = useState(themeConfig.locale);
 
-    const submitForm = () => {
-        navigate('/');
+    // Registration mutation
+    const registerMutation = useMutation({
+        mutationFn: async (data: RegisterFormInputs) => {
+            await registerUser(data.email, data.password, data.name);
+        },
+        onSuccess: () => {
+            console.log("✅ Appwrite Registration Success");
+            setRegisterError('');
+            navigate('/');
+        },
+        onError: (error: Error) => {
+            console.error('❌ Appwrite Registration failed:', error);
+            setRegisterError(error.message || 'Registration failed. Please try again.');
+        },
+    });
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<RegisterFormInputs>({
+        resolver: yupResolver(registerSchema),
+    });
+
+    const submitForm = (data: RegisterFormInputs) => {
+        setRegisterError('');
+        registerMutation.mutate(data);
     };
+
+    // Show loading while checking authentication
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    // Don't render register form if user is authenticated (will redirect)
+    if (isAuthenticated) {
+        return null;
+    }
 
     return (
         <div>
@@ -96,33 +164,64 @@ const RegisterBoxed = () => {
                                 <h1 className="text-3xl font-extrabold uppercase !leading-snug text-primary md:text-4xl">Sign Up</h1>
                                 <p className="text-base font-bold leading-normal text-white-dark">Enter your email and password to register</p>
                             </div>
-                            <form className="space-y-5 dark:text-white" onSubmit={submitForm}>
+                            {/* Error Message */}
+                            {registerError && (
+                                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                                    {registerError}
+                                </div>
+                            )}
+
+                            <form className="space-y-5 dark:text-white" onSubmit={handleSubmit(submitForm)}>
                                 <div>
                                     <label htmlFor="Name">Name</label>
                                     <div className="relative text-white-dark">
-                                        <input id="Name" type="text" placeholder="Enter Name" className="form-input ps-10 placeholder:text-white-dark" />
+                                        <input 
+                                            {...register('name')}
+                                            id="Name" 
+                                            type="text" 
+                                            placeholder="Enter Name" 
+                                            className="form-input ps-10 placeholder:text-white-dark"
+                                            disabled={registerMutation.isPending}
+                                        />
                                         <span className="absolute start-4 top-1/2 -translate-y-1/2">
                                             <IconUser fill={true} />
                                         </span>
                                     </div>
+                                    {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
                                 </div>
                                 <div>
                                     <label htmlFor="Email">Email</label>
                                     <div className="relative text-white-dark">
-                                        <input id="Email" type="email" placeholder="Enter Email" className="form-input ps-10 placeholder:text-white-dark" />
+                                        <input 
+                                            {...register('email')}
+                                            id="Email" 
+                                            type="email" 
+                                            placeholder="Enter Email" 
+                                            className="form-input ps-10 placeholder:text-white-dark"
+                                            disabled={registerMutation.isPending}
+                                        />
                                         <span className="absolute start-4 top-1/2 -translate-y-1/2">
                                             <IconMail fill={true} />
                                         </span>
                                     </div>
+                                    {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
                                 </div>
                                 <div>
                                     <label htmlFor="Password">Password</label>
                                     <div className="relative text-white-dark">
-                                        <input id="Password" type="password" placeholder="Enter Password" className="form-input ps-10 placeholder:text-white-dark" />
+                                        <input 
+                                            {...register('password')}
+                                            id="Password" 
+                                            type="password" 
+                                            placeholder="Enter Password" 
+                                            className="form-input ps-10 placeholder:text-white-dark"
+                                            disabled={registerMutation.isPending}
+                                        />
                                         <span className="absolute start-4 top-1/2 -translate-y-1/2">
                                             <IconLockDots fill={true} />
                                         </span>
                                     </div>
+                                    {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
                                 </div>
                                 <div>
                                     <label className="flex cursor-pointer items-center">
@@ -130,8 +229,19 @@ const RegisterBoxed = () => {
                                         <span className="text-white-dark">Subscribe to weekly newsletter</span>
                                     </label>
                                 </div>
-                                <button type="submit" className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]">
-                                    Sign Up
+                                <button 
+                                    type="submit" 
+                                    className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]"
+                                    disabled={registerMutation.isPending}
+                                >
+                                    {registerMutation.isPending ? (
+                                        <span className="flex items-center justify-center">
+                                            <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                                            Signing up...
+                                        </span>
+                                    ) : (
+                                        'Sign Up'
+                                    )}
                                 </button>
                             </form>
                             <div className="relative my-7 text-center md:mb-9">

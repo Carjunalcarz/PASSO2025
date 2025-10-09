@@ -28,6 +28,7 @@ import IconCaretDown from '../Icon/IconCaretDown';
 import IconMenuApps from '../Icon/Menu/IconMenuApps';
 import IconMenuComponents from '../Icon/Menu/IconMenuComponents';
 import IconMenuElements from '../Icon/Menu/IconMenuElements';
+import { useAuth } from '../../contexts/AuthContext';
 import IconMenuDatatables from '../Icon/Menu/IconMenuDatatables';
 import IconMenuForms from '../Icon/Menu/IconMenuForms';
 import IconMenuPages from '../Icon/Menu/IconMenuPages';
@@ -137,12 +138,20 @@ const Header = () => {
     const [flag, setFlag] = useState(themeConfig.locale);
 
     const { t } = useTranslation();
-
+    const { logout, user } = useAuth();
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        navigate('/auth/boxed-signin');
+    const handleLogout = async () => {
+        try {
+            console.log('🚪 Header: Logging out user...');
+            await logout();
+            console.log('✅ Header: Logout successful, redirecting to login');
+            navigate('/auth/boxed-signin');
+        } catch (error) {
+            console.error('❌ Header: Logout failed:', error);
+            // Even if logout fails, redirect to login for security
+            navigate('/auth/boxed-signin');
+        }
     };
 
 
@@ -432,11 +441,13 @@ const Header = () => {
                                             <img className="rounded-md w-10 h-10 object-cover" src="/assets/images/user-profile.jpeg" alt="userProfile" />
                                             <div className="ltr:pl-4 rtl:pr-4 truncate">
                                                 <h4 className="text-base">
-                                                    John Doe
-                                                    <span className="text-xs bg-success-light rounded text-success px-1 ltr:ml-2 rtl:ml-2">Pro</span>
+                                                    {user?.name || 'User'}
+                                                    <span className="text-xs bg-success-light rounded text-success px-1 ltr:ml-2 rtl:ml-2">
+                                                        {user?.emailVerification ? 'Verified' : 'Unverified'}
+                                                    </span>
                                                 </h4>
                                                 <button type="button" className="text-black/60 hover:text-primary dark:text-dark-light/60 dark:hover:text-white">
-                                                    johndoe@gmail.com
+                                                    {user?.email || 'No email'}
                                                 </button>
                                             </div>
                                         </div>
