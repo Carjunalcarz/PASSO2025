@@ -1,15 +1,17 @@
 import { Link } from 'react-router-dom';
-import Dropdown from '../components/Dropdown';
 import ReactApexChart from 'react-apexcharts';
 import { useDispatch, useSelector } from 'react-redux';
 import { IRootState } from '../store';
 import { setPageTitle } from '../store/themeConfigSlice';
 import { useEffect } from 'react';
-import IconCircleCheck from '../components/Icon/IconCircleCheck';
-import IconInfoCircle from '../components/Icon/IconInfoCircle';
 import axios from 'axios';
 import MunicipalityPanel from './Components/MunicipalityPanel';
 import { useQueries } from '@tanstack/react-query';
+
+interface ChartData {
+    name: string;
+    data: number[];
+}
 
 const Finance = () => {
     const token = localStorage.getItem('token');
@@ -117,36 +119,56 @@ const Finance = () => {
         ],
     });
 
+    const isLoading = queries.some(q => q.isLoading);
+    const isError = queries.some(q => q.isError);
 
+    // Show loading state
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+
+    // Show error state
+    if (isError) {
+        return <div>Error loading data</div>;
+    }
 
     // Destructure data safely and set default to 0 if NaN
     const [
-        totalRpus,
-        taxable,
-        exempt,
-        taxableMarketValue,
-        exemptMarketValue,
-        taxableAssessmentValue,
-        exemptAssessmentValue,
-        taxableArea,
-        exemptArea,
+        totalRpus = 0,
+        taxable = 0,
+        exempt = 0,
+        taxableMarketValue = 0,
+        exemptMarketValue = 0,
+        taxableAssessmentValue = 0,
+        exemptAssessmentValue = 0,
+        taxableArea = 0,
+        exemptArea = 0,
     ] = queries.map(q => {
         const value = Number(q.data);
         return isNaN(value) ? 0 : value;
     });
 
-    const isLoading = queries.some(q => q.isLoading);
-    const exempt_marketvalue_percentage = exemptMarketValue === 0 ? 0 : Math.min(100, Math.max(0, (exemptMarketValue / (exemptMarketValue + taxableMarketValue)) * 100));
-    const taxable_marketvalue_percentage = exemptMarketValue === 0 ? 0 : Math.min(100, Math.max(0, (taxableMarketValue / (exemptMarketValue + taxableMarketValue)) * 100));
-    const taxable_rpu_percentage = taxable === 0 ? 0 : Math.min(100, Math.max(0, (taxable / (exempt + taxable)) * 100));
-    const exempt_rpu_percentage = exempt === 0 ? 0 : Math.min(100, Math.max(0, (exempt / (exempt + taxable)) * 100));
-    const taxable_ass_percentage = taxableAssessmentValue === 0 ? 0 : Math.min(100, Math.max(0, (taxableAssessmentValue / (taxableAssessmentValue + exemptAssessmentValue)) * 100));
-    const exempt_ass_percentage = exemptAssessmentValue === 0 ? 0 : Math.min(100, Math.max(0, (exemptAssessmentValue / (exemptAssessmentValue + taxableAssessmentValue)) * 100));
-    const taxable_area_percentage = taxableArea === 0 ? 0 : Math.min(100, Math.max(0, (taxableArea / (taxableArea + exemptArea)) * 100));
-    const exempt_area_percentage = exemptArea === 0 ? 0 : Math.min(100, Math.max(0, (exemptArea / (exemptArea + taxableArea)) * 100));
-
-
-
+    // Common chart options
+    const commonChartOptions = {
+        chart: {
+            toolbar: { show: false },
+            type: 'bar' as const,
+        },
+        plotOptions: {
+            bar: {
+                horizontal: false,
+                columnWidth: '55%',
+                borderRadius: 3,
+            },
+        },
+        dataLabels: {
+            enabled: true,
+        },
+        colors: ['#4361ee', '#e7515a'],
+        legend: {
+            position: 'top' as const,
+        },
+    };
 
     return (
         <div>
@@ -160,275 +182,145 @@ const Finance = () => {
                     <span>Agusan del Norte</span>
                 </li>
             </ul>
-            <div className="pt-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl1360:grid-cols-4 gap-4 mb-6">
-                    {/* RPUS */}
-                    <div className="panel bg-gradient-to-r from-cyan-500 to-cyan-400 p-4 rounded-xl shadow-md w-full max-w-2xl mx-auto">
-                        <div className="flex justify-between items-center mb-2">
-
-                            <Link to={`/assessment/adn`}>
-                                <img
-                                    src={`/mun_logo/pgan.webp`}
-                                    alt={`pgan Logo`}
-                                    className="opacity-90 hover:opacity-100 transition-opacity duration-200 w-20 h-20 cursor-pointer"
-                                />
-                            </Link>
-                            <h2 className='text-lg text-white'>Agusan del Norte</h2>
-                            <div className="text-xl sm:text-2xl font-semibold text-white">
-
-                                <h2 className='text-right'>RPUS</h2>
-                            </div>
-                        </div>
 
 
-
-                        {/* TAXABLE */}
-                        <div>
-                            <div>
-                                <div className="flex justify-between items-center text-lg  text-white text-right">
-                                    <h2 className="flex items-center gap-1">
-                                        <IconCircleCheck className="w-5 h-5" /> Taxable <span className='pl-2 font-bold'> {taxable_rpu_percentage.toFixed(2)} %</span>
-                                    </h2>
-                                    {isLoading ? (
-                                        <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
-                                    ) : (
-                                        <span>{formatCurrency(taxable)}</span>
-                                    )}
-
-                                </div>
-                                <div className="rounded-md h-6 bg-gray-100 shadow-inner overflow-hidden relative mt-1">
-                                    {exempt_rpu_percentage > 0 && (
-                                        <div
-                                            className="bg-green-500 h-full rounded-md transition-all duration-500 ease-in-out flex items-center justify-center text-white text-xs sm:text-sm font-medium"
-                                            style={{ width: `${taxable_rpu_percentage}%` }}
-                                        />
-                                    )}
-                                </div>
-                            </div>
-
-
-
-                        </div>
-
-                        {/* EXEMPT */}
-                        <div>
-                            <div>
-                                <div className="flex justify-between items-center text-lg  text-white text-right">
-                                    <h2 className="flex items-center gap-1">
-                                        <IconCircleCheck className="w-5 h-5" /> Exempt <span className='pl-2 font-bold'> {exempt_rpu_percentage.toFixed(2)} %</span>
-                                    </h2>
-                                    {isLoading ? (
-                                        <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
-                                    ) : (
-                                        <span>{formatCurrency(exempt)}</span>
-                                    )}
-
-                                </div>
-                                <div className="rounded-md h-6 bg-gray-100 shadow-inner overflow-hidden relative mt-1">
-                                    {exempt_rpu_percentage > 0 && (
-                                        <div
-                                            className="bg-yellow-500 h-full rounded-md transition-all duration-500 ease-in-out flex items-center justify-center text-white text-xs sm:text-sm font-medium"
-                                            style={{ width: `${exempt_rpu_percentage}%` }}
-                                        />
-                                    )}
-                                </div>
-                            </div>
-
-
-
-                        </div>
-
+            {/* Charts Grid */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+                {/* RPU Distribution Chart */}
+                <div className="panel">
+                    <div className="flex items-center justify-between mb-5">
+                        <h5 className="font-semibold text-lg dark:text-white-light">RPU Distribution</h5>
                     </div>
-
-
-                    {/* Market Value */}
-                    <div className="panel bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-md w-full max-w-2xl mx-auto">
-                        <div className="flex items-center ">
-                            <div className="text-md sm:text-lg font-semibold text-white">Market Value</div>
-                        </div>
-
-                        <div className="grid grid-cols-1">
-                            {/* TAXABLE */}
-                            <div className="items-center text-lg  text-white text-right">
-                                <div>
-                                    <h2 className="flex items-center">
-                                        <IconCircleCheck className="w-5 h-5" /> Taxable {taxable_marketvalue_percentage.toFixed(2)} %
-                                    </h2></div>
-                                {isLoading ? (
-                                    <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
-                                ) : (
-                                    <span>{formatCurrencyPHP(taxableMarketValue)}</span>
-                                )}
-                            </div>
-                            <div className="rounded-md h-6 bg-gray-100 shadow-inner overflow-hidden relative">
-                                {exempt_rpu_percentage > 0 && (
-                                    <div
-                                        className="bg-green-600 h-full rounded-md transition-all duration-500 ease-in-out flex items-center justify-center text-white text-xs sm:text-sm font-medium"
-                                        style={{ width: `${taxable_marketvalue_percentage}%` }}
-                                    />
-                                )}
-                            </div>
-
-                            {/* EXEMPT */}
-                            <div>
-                                <div className="flex items-center text-lg  text-white text-right mt-2">
-                                    <h2 className="flex items-center">
-                                        <IconInfoCircle className="w-5 h-5" /> Exempt <span className='pl-2 font-bold'> {exempt_marketvalue_percentage.toFixed(2)} %</span>
-                                    </h2>
-
-
-                                </div>
-                                <div className='items-center text-lg  text-white text-right'>
-                                    {isLoading ? (
-                                        <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
-                                    ) : (
-                                        <span>{formatCurrencyPHP(exemptMarketValue)}</span>
-                                    )}
-                                </div>
-                                <div className="rounded-md h-6 bg-gray-100 shadow-inner overflow-hidden relative">
-                                    {exempt_rpu_percentage > 0 && (
-                                        <div
-                                            className="bg-yellow-500 h-full rounded-md transition-all duration-500 ease-in-out flex items-center justify-center text-white text-xs sm:text-sm font-medium"
-                                            style={{ width: `${exempt_marketvalue_percentage}%` }}
-                                        />
-                                    )}
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-
-                    {/* Assessed Value */}
-                    <div className="panel bg-gradient-to-r from-violet-500 to-violet-400 rounded-xl shadow-md w-full max-w-2xl mx-auto">
-                        <div className="flex items-center ">
-                            <div className="text-md sm:text-lg font-semibold text-white">Assessment Value</div>
-                        </div>
-
-                        <div className="grid grid-cols-1">
-                            {/* TAXABLE */}
-                            <div className="items-center text-lg  text-white text-right">
-                                <div>
-                                    <h2 className="flex items-center">
-                                        <IconCircleCheck className="w-5 h-5" /> Taxable {taxable_ass_percentage.toFixed(2)} %
-                                    </h2></div>
-                                {isLoading ? (
-                                    <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
-                                ) : (
-                                    <span>{formatCurrencyPHP(taxableAssessmentValue)}</span>
-                                )}
-                            </div>
-                            <div className="rounded-md h-6 bg-gray-100 shadow-inner overflow-hidden relative">
-                                {exempt_rpu_percentage > 0 && (
-                                    <div
-                                        className="bg-green-500 h-full rounded-md transition-all duration-500 ease-in-out flex items-center justify-center text-white text-xs sm:text-sm font-medium"
-                                        style={{ width: `${taxable_ass_percentage}%` }}
-                                    />
-                                )}
-                            </div>
-
-                            {/* EXEMPT */}
-                            <div>
-                                <div className="flex items-center text-lg  text-white text-right mt-2">
-                                    <h2 className="flex items-center">
-                                        <IconInfoCircle className="w-5 h-5" /> Exempt <span className='pl-2 font-bold'> {exempt_ass_percentage.toFixed(2)} %</span>
-                                    </h2>
-
-
-                                </div>
-                                <div className='items-center text-lg  text-white text-right'>
-                                    {isLoading ? (
-                                        <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
-                                    ) : (
-                                        <span>{formatCurrencyPHP(exemptAssessmentValue)}</span>
-                                    )}
-                                </div>
-                                <div className="rounded-md h-6 bg-gray-100 shadow-inner overflow-hidden relative">
-                                    {exempt_rpu_percentage > 0 && (
-                                        <div
-                                            className="bg-yellow-500 h-full rounded-md transition-all duration-500 ease-in-out flex items-center justify-center text-white text-xs sm:text-sm font-medium"
-                                            style={{ width: `${exempt_ass_percentage}%` }}
-                                        />
-                                    )}
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-
-
-                    {/* Area Value */}
-                    <div className="panel   bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-md w-full max-w-2xl mx-auto">
-                        <div className="flex items-center ">
-                            <div className="text-md sm:text-lg font-semibold text-white">Area Value</div>
-                        </div>
-
-                        <div className="grid grid-cols-1">
-                            {/* TAXABLE */}
-                            <div className="items-center text-lg  text-white text-right">
-                                <div>
-                                    <h2 className="flex items-center">
-                                        <IconCircleCheck className="w-5 h-5" /> Taxable  {taxable_area_percentage.toFixed(2)} %
-                                    </h2></div>
-                                {isLoading ? (
-                                    <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
-                                ) : (
-                                    <span>{formatCurrency(taxableArea)} sqm.</span>
-                                )}
-                            </div>
-                            <div className="rounded-md h-6 bg-gray-100 shadow-inner overflow-hidden relative">
-                                {exempt_rpu_percentage > 0 && (
-                                    <div
-                                        className="bg-green-500 h-full rounded-md transition-all duration-500 ease-in-out flex items-center justify-center text-white text-xs sm:text-sm font-medium"
-                                        style={{ width: `${taxable_area_percentage}%` }}
-                                    />
-                                )}
-                            </div>
-
-                            {/* EXEMPT */}
-                            <div>
-                                <div className="flex items-center text-lg  text-white text-right mt-2">
-                                    <h2 className="flex items-center">
-                                        <IconInfoCircle className="w-5 h-5" /> Exempt <span className='pl-2 font-bold'> {exempt_marketvalue_percentage.toFixed(2)} %</span>
-                                    </h2>
-
-
-                                </div>
-                                <div className='items-center text-lg  text-white text-right'>
-                                    {isLoading ? (
-                                        <span className="animate-spin border-4 border-[#f1f2f3] border-l-primary rounded-full w-6 h-6 inline-block" />
-                                    ) : (
-                                        <span>{formatCurrency(exemptArea)} sqm.</span>
-                                    )}
-                                </div>
-                                <div className="rounded-md h-6 bg-gray-100 shadow-inner overflow-hidden relative">
-                                    {exempt_rpu_percentage > 0 && (
-                                        <div
-                                            className="bg-yellow-500 h-full rounded-md transition-all duration-500 ease-in-out flex items-center justify-center text-white text-xs sm:text-sm font-medium"
-                                            style={{ width: `${exempt_area_percentage}%` }}
-                                        />
-                                    )}
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
+                    <ReactApexChart
+                        type="bar"
+                        height={300}
+                        options={{
+                            ...commonChartOptions,
+                            xaxis: { categories: ['RPUs'] },
+                            yaxis: {
+                                title: { text: 'Number of RPUs' },
+                                labels: {
+                                    formatter: (val) => Math.round(val).toString()
+                                }
+                            },
+                        }}
+                        series={[
+                            { name: 'Taxable', data: [taxable] },
+                            { name: 'Exempt', data: [exempt] }
+                        ]}
+                    />
                 </div>
 
-                <div>
+                {/* Area Distribution Chart */}
+                <div className="panel">
+                    <div className="flex items-center justify-between mb-5">
+                        <h5 className="font-semibold text-lg dark:text-white-light">Area Distribution (sqm)</h5>
+                    </div>
+                    <ReactApexChart
+                        type="bar"
+                        height={300}
+                        options={{
+                            ...commonChartOptions,
+                            xaxis: { categories: ['Area'] },
+                            yaxis: {
+                                title: { text: 'Square Meters' },
+                                labels: {
+                                    formatter: (val) => formatCurrency(val)
+                                }
+                            },
+                        }}
+                        series={[
+                            { name: 'Taxable Area', data: [taxableArea] },
+                            { name: 'Exempt Area', data: [exemptArea] }
+                        ]}
+                    />
+                </div>
+
+                {/* Market Value Distribution Chart */}
+                <div className="panel">
+                    <div className="flex items-center justify-between mb-5">
+                        <h5 className="font-semibold text-lg dark:text-white-light">Market Value Distribution</h5>
+                    </div>
+                    <ReactApexChart
+                        type="bar"
+                        height={300}
+                        options={{
+                            ...commonChartOptions,
+                            xaxis: { categories: ['Market Value'] },
+                            yaxis: {
+                                title: { text: 'Amount (PHP)' },
+                                labels: {
+                                    formatter: (val) => formatCurrencyPHP(val)
+                                }
+                            },
+                            dataLabels: {
+                                enabled: true,
+                                formatter: function (val: number) {
+                                    return formatCurrencyPHP(val);
+                                }
+                            },
+                            tooltip: {
+                                y: {
+                                    formatter: function (val: number) {
+                                        return formatCurrencyPHP(val);
+                                    }
+                                }
+                            }
+                        }}
+                        series={[
+                            { name: 'Taxable Market Value', data: [taxableMarketValue] },
+                            { name: 'Exempt Market Value', data: [exemptMarketValue] }
+                        ]}
+                    />
+                </div>
+
+                {/* Assessment Value Distribution Chart */}
+                <div className="panel">
+                    <div className="flex items-center justify-between mb-5">
+                        <h5 className="font-semibold text-lg dark:text-white-light">Assessment Value Distribution</h5>
+                    </div>
+                    <ReactApexChart
+                        type="bar"
+                        height={300}
+                        options={{
+                            ...commonChartOptions,
+                            xaxis: { categories: ['Assessment Value'] },
+                            yaxis: {
+                                title: { text: 'Amount (PHP)' },
+                                labels: {
+                                    formatter: (val) => formatCurrencyPHP(val)
+                                }
+                            },
+                            dataLabels: {
+                                enabled: true,
+                                formatter: function (val: number) {
+                                    return formatCurrencyPHP(val);
+                                }
+                            },
+                            tooltip: {
+                                y: {
+                                    formatter: function (val: number) {
+                                        return formatCurrencyPHP(val);
+                                    }
+                                }
+                            }
+                        }}
+                        series={[
+                            { name: 'Taxable Assessment Value', data: [taxableAssessmentValue] },
+                            { name: 'Exempt Assessment Value', data: [exemptAssessmentValue] }
+                        ]}
+                    />
+                </div>
+            </div>
+            {/* Municipality panels */}
+            <div className='overflow-x-auto scrollbar-hidden scrollbar-hover'>
+                <div className='flex flex-wrap gap-4 mb-6'>
                     {/* Favorites */}
                     <div>
-                        <div className="flex items-center mb-5 font-bold">
-                            <span className="text-lg">Favorites</span>
-                            <button
-                                type="button"
-                                className="ltr:ml-auto rtl:mr-auto text-primary hover:text-black dark:hover:text-white-dark"
-                            >
-                                See All
-                            </button>
-                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-6 md:mb-5">
+                            <div className="panel">
+                                <MunicipalityPanel municipality="" logo="pgan.webp" />
+                            </div>
                             <div className="panel">
                                 <MunicipalityPanel municipality="BUENAVISTA" logo="buenavista.png" />
                             </div>
@@ -445,7 +337,7 @@ const Finance = () => {
                                 <MunicipalityPanel municipality="MAGALLANES" logo="magallanes.png" />
                             </div>
                             <div className="panel">
-                                <MunicipalityPanel municipality="LASNIEVES" logo="las-nieves.png" />
+                                <MunicipalityPanel municipality="LAS NIEVES" logo="las-nieves.png" />
                             </div>
                             <div className="panel">
                                 <MunicipalityPanel municipality="NASIPIT" logo="nasipit.png" />
@@ -462,8 +354,10 @@ const Finance = () => {
                         </div>
                     </div>
                 </div>
-            </div >
-        </div >
+            </div>
+        </div>
+
+
     );
 };
 

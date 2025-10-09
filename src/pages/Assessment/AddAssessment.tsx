@@ -30,6 +30,7 @@ import { useAssessmentValidation } from './hooks/useAssessmentValidation';
 import ValidationDebug from './components/ValidationDebug';
 import FillDummyButton from './components/testing/FillDummyButton';
 import ErrorValidator from './components/error_validator/ErrorValidator';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Type definitions
 type BarangayData = {
@@ -113,18 +114,6 @@ const Add = () => {
         dispatch(setPageTitle('Invoice Add'));
     }, [dispatch]);
 
-    const currencyList = ['USD - US Dollar', 'GBP - British Pound', 'IDR - Indonesian Rupiah', 'INR - Indian Rupee', 'BRL - Brazilian Real', 'EUR - Germany (Euro)', 'TRY - Turkish Lira'];
-
-    const [items, setItems] = useState<any>([
-        {
-            id: 1,
-            title: '',
-            description: '',
-            rate: 0,
-            quantity: 0,
-            amount: 0,
-        },
-    ]);
 
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -405,6 +394,8 @@ const Add = () => {
 
     const { submitAssessment, isSubmitting: oldIsSubmitting } = useAssessmentSubmit();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    
     const onSubmit = async (data: AssessmentFormData) => {
         console.log('Sending form data to API:', data);
         
@@ -446,6 +437,10 @@ const Add = () => {
             setImages2([]);
 
             // navigate(0); // This will reload the current route
+
+            // ✅ Invalidate cache and navigate
+            queryClient.invalidateQueries({ queryKey: ['assessments', 'Building'] });
+            navigate('/assessment/building_assessment');
 
         } catch (error) {
             console.error('Submission error:', error);
@@ -511,9 +506,6 @@ const Add = () => {
                         setValue={setValue}
                         trigger={trigger} // Add trigger function
                         getNestedError={getNestedError}
-                        ownerPhotos={ownerPhotos}
-                        onOwnerPhotosChange={handleOwnerPhotosChange}
-                        onPreviewImage={setPreviewImage}
                     />
                 </div>
                 {/* ##########ENTRY############### */}

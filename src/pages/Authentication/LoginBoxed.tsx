@@ -100,6 +100,7 @@ const LoginBoxed = () => {
         onSuccess: (result) => {
             console.log("Login Success", result);
             localStorage.setItem('token', result.access_token);
+            localStorage.setItem('username', result.username);
             setLoginError('');
             navigate('/');
         },

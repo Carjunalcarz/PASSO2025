@@ -6,12 +6,10 @@ import { set } from 'lodash';
 import type { ImageListType } from 'react-images-uploading';
 
 interface BuildingLocationProps {
-    reset : any
+    reset: any
     register: any;
     setValue: any;
     watch: any;
-    trigger: any;
-    getNestedError: any;
     municipalitySuggestions: string[];
     provinceSuggestions: string[];
     barangaySuggestions: string[];
@@ -29,12 +27,19 @@ interface BuildingLocationProps {
     setShowBarangaySuggestions: (show: boolean) => void;
 }
 
+// Define floor options and GR code mapping
+const FLOOR_OPTIONS = ["5TH", "6TH"] as const;
+const GR_CODE_MAP: Record<string, string> = {
+    "5TH": "22",
+    "6TH": "25",
+    
+} as const;
+
+const gr_options = ["5TH", "6TH"];
 const UpdateBuildingLocation = ({
     setValue,
     watch,
     register,
-    trigger,
-    getNestedError,
     municipalitySuggestions,
     provinceSuggestions,
     barangaySuggestions,
@@ -56,7 +61,9 @@ const UpdateBuildingLocation = ({
     const update_street = watch("update_buildingLocation.update_street");
     const update_province = watch("update_buildingLocation.update_address_province");
     const image_list = watch("update_buildingLocation.image_list");
-
+    const currentYear = new Date().getFullYear();
+    const gr_name = watch("buildingLocation.gr_name");
+    const year = watch("update_buildingLocation.update_year");
     // Add back the missing handler functions
     const handleMunicipalityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setValue("update_buildingLocation.update_address_municipality", e.target.value);
@@ -75,16 +82,21 @@ const UpdateBuildingLocation = ({
 
     // Handle building location images change
     const handleBuildingLocationImagesChange = (imageList: ImageListType, addUpdateIndex: number[] | undefined) => {
+        // Handle empty image list (when "Remove All" is clicked)
+        if (!imageList || imageList.length === 0) {
+            setValue('update_buildingLocation.image_list', []);
+            return;
+        }
+
         // Convert images to base64 format like other components
         const base64List = imageList.map(img => img.data_url.split(',')[1]);
-        
+
         // Get the current value to avoid unnecessary updates
         const currentImageList = watch('update_buildingLocation.image_list') || [];
-        
+
         // Only update if different
         if (JSON.stringify(currentImageList) !== JSON.stringify(base64List)) {
             setValue('update_buildingLocation.image_list', base64List);
-            if (trigger) trigger('update_buildingLocation.image_list');
         }
     };
 
@@ -97,7 +109,7 @@ const UpdateBuildingLocation = ({
         return image_list.map((imageData, index) => {
             // Handle different possible formats from API
             let dataUrl = '';
-            
+
             // If it's already a data URL
             if (typeof imageData === 'string' && imageData.startsWith('data:')) {
                 dataUrl = imageData;
@@ -136,7 +148,7 @@ const UpdateBuildingLocation = ({
                 }
             }
 
-            return { 
+            return {
                 data_url: dataUrl
             };
         });
@@ -148,11 +160,21 @@ const UpdateBuildingLocation = ({
             return 'empty';
         }
         // Check if this looks like API data (base64 strings)
-        const isApiData = image_list.some(img => 
+        const isApiData = image_list.some(img =>
             typeof img === 'string' && !img.startsWith('data:')
         );
         return isApiData ? `api-${image_list.length}` : 'upload';
     }, [image_list]);
+
+
+    const handleGRChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedValue = e.target.value;
+        setValue("update_buildingLocation.update_gr_name", selectedValue);
+        
+        const code = GR_CODE_MAP[selectedValue] || "";
+        setValue("update_buildingLocation.update_gr_code", code);
+    };
+
 
     return (
         <div className="px-10 border border-[#e0e6ed] dark:border-[#17263c] rounded-lg p-4 bg-white dark:bg-[#0e1726]">
@@ -222,22 +244,75 @@ const UpdateBuildingLocation = ({
                         setShowSuggestions={setShowProvinceSuggestions}
                         value={update_province || ""}
                     />
+
+                    {/* Year */}
+                    <div className="mt-4 flex items-center">
+                        <div className="p-2 justify-center items-center ltr:rounded-l-md rtl:rounded-r-md px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                            Year :
+                        </div>
+                        <select 
+                            name="year" 
+                            id="year" 
+                            className="form-input ltr:rounded-l-none rtl:rounded-r-none flex-1" 
+                            {...register("update_buildingLocation.update_year")}
+                        >
+                            <option value={currentYear}>{currentYear}</option>
+                            <option value={currentYear + 3}>{currentYear + 3}</option>
+                            <option value={currentYear + 2}>{currentYear + 2}</option>
+                            <option value={currentYear + 1}>{currentYear + 1}</option>
+                            <option value={currentYear }>{currentYear }</option>
+                            <option value={currentYear - 1}>{currentYear - 1}</option>
+                            <option value={currentYear - 2}>{currentYear - 2}</option>
+                            <option value={currentYear - 3}>{currentYear - 3}</option>
+                            <option value={currentYear - 4}>{currentYear - 4}</option>
+                        </select>
+                    </div>
+
+
+                    {/* GR Year */}
+                        <div className="mt-4 flex items-center">
+                        <div className="p-2 justify-center items-center ltr:rounded-l-md rtl:rounded-r-md px-3 font-semibold border ltr:border-r-0 rtl:border-l-0 border-white-light dark:border-[#17263c] dark:bg-[#1b2e4b]">
+                            GR Year :
+                        </div>
+                        <select
+                            name="gr"
+                            id="gr"
+                            value={gr_name}
+                            className="form-input ltr:rounded-l-none rtl:rounded-r-none flex-1"
+                            onChange={handleGRChange}
+                        >
+                            <option value={watch("update_buildingLocation.update_gr_name")}>{watch("update_buildingLocation.update_gr_name")}</option>
+                            {gr_options.map((option) => (
+                                <option key={option} value={option}>
+                                    {option} ({GR_CODE_MAP[option]})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    
                 </div>
+                
             </div>
 
             {/* Building Location Images Section */}
-            <div className="mt-6 border-t pt-4">
-                <h3 className="text-lg font-semibold mb-4">Building Location Photos</h3>
-                
-                <ImageUploadGallery
-                    key={galleryKey}
-                    images={imageListForPreview}
-                    onChange={handleBuildingLocationImagesChange}
-                    maxNumber={5}
-                    multiple={true}
-                    maxImageHeight="500px"
-                    imageFit="cover"
-                />
+            {/* Image Upload Section */}
+            <div className="mt-6 border-t pt-6 w-full flex justify-center items-center">
+                <div className="w-full max-w-3xl mx-auto text-center">
+                    <h3 className="text-lg font-semibold mb-6 text-center">Location Photos</h3>
+                    <div className="flex justify-center">
+                        <ImageUploadGallery
+                            key={galleryKey}
+                            images={imageListForPreview}
+                            onChange={handleBuildingLocationImagesChange}
+                            maxNumber={5}
+                            multiple={true}
+                            maxImageHeight="500px"
+                            maxImageWidth="500px"
+                            imageFit="contain"
+                            containerWidth="500px"
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     );

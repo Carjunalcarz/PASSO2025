@@ -10,6 +10,13 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
+function cleanUrl(url: string) {
+  if (url.startsWith('data:image') && url.includes('http')) {
+    return url.replace(/^data:image\/[a-zA-Z]+;base64,/, '');
+  }
+  return url;
+}
+
 interface ImageUploadGalleryProps {
     images: ImageListType;
     onChange: (imageList: ImageListType, addUpdateIndex: number[] | undefined) => void;
@@ -122,16 +129,16 @@ const ImageUploadGallery: React.FC<ImageUploadGalleryProps> = ({
                         {/* Upload Area */}
                         <div
                             {...dragProps}
-                            className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                            className={`border-2 border-dashed rounded-lg p-3 text-center transition-colors w-full ${
                                 isDragging
                                     ? 'border-primary bg-primary/10'
                                     : 'border-gray-300 dark:border-gray-600 hover:border-primary'
                             }`}
                         >
-                            <div className="space-y-3">
-                                <div className="mx-auto w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                            <div className="space-y-2 w-full">
+                                <div className="mx-auto bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center w-8 h-8">
                                     <svg
-                                        className="w-6 h-6 text-gray-400"
+                                        className="w-4 h-4 text-gray-400"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -148,7 +155,7 @@ const ImageUploadGallery: React.FC<ImageUploadGalleryProps> = ({
                                     <button
                                         type="button"
                                         onClick={onImageUpload}
-                                        className="btn btn-primary btn-sm"
+                                        className="btn btn-primary btn-xs"
                                     >
                                         Choose Files
                                     </button>
@@ -160,7 +167,7 @@ const ImageUploadGallery: React.FC<ImageUploadGalleryProps> = ({
                                     <button
                                         type="button"
                                         onClick={onImageRemoveAll}
-                                        className="btn btn-outline-danger btn-sm"
+                                        className="btn btn-outline-danger btn-xs"
                                     >
                                         Remove All
                                     </button>
@@ -198,7 +205,7 @@ const ImageUploadGallery: React.FC<ImageUploadGalleryProps> = ({
                                                         onClick={handleContainerClick}
                                                     >
                                                         <img
-                                                            src={image.data_url}
+                                                            src={cleanUrl(image.data_url)}
                                                             alt={`Image ${index + 1}`}
                                                             className="w-full rounded-lg transition-transform duration-300"
                                                             style={{
@@ -307,7 +314,7 @@ const ImageUploadGallery: React.FC<ImageUploadGalleryProps> = ({
                                         {imageList.map((image, index) => (
                                             <div key={`thumb-${swiperKey}-${index}`} className="relative group">
                                                 <img
-                                                    src={image.data_url}
+                                                    src={cleanUrl(image.data_url)}
                                                     alt={`Thumbnail ${index + 1}`}
                                                     className={`w-full h-16 object-cover rounded cursor-pointer transition-all duration-200 ${
                                                         index === activeIndex

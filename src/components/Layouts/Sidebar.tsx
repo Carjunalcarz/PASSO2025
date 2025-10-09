@@ -114,6 +114,9 @@ const Sidebar = () => {
                                         <li>
                                             <NavLink to="/map">{t('MAP')}</NavLink>
                                         </li>
+                                        <li>
+                                            <NavLink to="/unit_value">{t('Unit Value')}</NavLink>
+                                        </li>
                                         {/* <li>
                                             <NavLink to="/analytics">{t('analytics')}</NavLink>
                                         </li>
@@ -277,6 +280,19 @@ const Sidebar = () => {
                                             >
                                                 <IconPlus className="w-5 h-5" />
                                                 {t('Add Assessment')}
+                                            </NavLink>
+                                        </div>
+                                    </div>
+                                </AnimateHeight>
+                                <AnimateHeight duration={300} height={currentMenu === 'Assessment' ? 'auto' : 0}>
+                                    <div className="sub-menu text-gray-500 px-4 ml-4">
+                                        <div className="py-2 -mx-4">
+                                            <NavLink to="/assessment/building_assessment" className={({ isActive }) =>
+                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-gray-100 dark:bg-gray-800 text-primary font-bold' : ''
+                                                }`
+                                            }>
+                                                <IconMenuPages className="w-5 h-5" />
+                                                {t('Building Assessment')}
                                             </NavLink>
                                         </div>
                                     </div>
