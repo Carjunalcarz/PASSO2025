@@ -10,6 +10,7 @@ import { databaseService, AssessmentDocument } from '../../services/databaseServ
 import { useQuery, useMutation, UseMutationResult } from '@tanstack/react-query';
 import IconEdit from '../../components/Icon/IconEdit';
 import IconTrash from '../../components/Icon/IconTrash';
+import IconTrashLines from '../../components/Icon/IconTrashLines';
 import { Modal } from '@mantine/core';
 import { toast } from 'react-toastify';
 import SuggesstionSearchInput from './Components/SuggesstionSearchInput';
@@ -17,6 +18,8 @@ import TaxableSwitch from './Components/TaxableSwitch';
 import GRFilter from './Components/GRFilter';
 import { Link } from 'react-router-dom';
 import SubclassSuggesstion from './Components/SubclassSuggesstion';
+import CSVImport from './Components/CSVImport';
+import IconUpload from '../../components/Icon/IconUpload';
 
 // Use AssessmentDocument from databaseService
 type Assessment = AssessmentDocument;
@@ -53,7 +56,7 @@ const ADNAssessment = () => {
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
     const [search, setSearch] = useState('');
     const [searchColumn, setSearchColumn] = useState('tdn');
-    const [hideCols, setHideCols] = useState<Array<keyof Assessment>>(['name', 'barangay_code', 'mun_code', 'gr_code', 'eff_date' ,'owner_no']);
+    const [hideCols, setHideCols] = useState<Array<keyof Assessment>>(['name', 'bcode', 'mun_code', 'gr_code', 'eff_date' ,'owner_no']);
     const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
         columnAccessor: 'tdn',
         direction: 'asc',
@@ -64,6 +67,11 @@ const ADNAssessment = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletingRecord, setDeletingRecord] = useState<Assessment | null>(null);
+    const [isCSVImportOpen, setIsCSVImportOpen] = useState(false);
+    const [isClearAllModalOpen, setIsClearAllModalOpen] = useState(false);
+    const [clearProgress, setClearProgress] = useState<{ processed: number; total: number; deleted: number; failed: number } | null>(null);
+    const [clearResult, setClearResult] = useState<{ deleted: number; failed: number; errors: string[] } | null>(null);
+    const [clearConfirmText, setClearConfirmText] = useState('');
 
     const cols: Column[] = [
         { accessor: 'tdn', title: 'TDN', sortable: true },
@@ -139,7 +147,7 @@ const ADNAssessment = () => {
 
         { accessor: 'mun_code', title: 'Municipality Code', sortable: true },
         { accessor: 'municipality', title: 'Municipality', sortable: true },
-        { accessor: 'barangay_code', title: 'Barangay Code', sortable: true },
+        { accessor: 'bcode', title: 'Barangay Code', sortable: true },
         { accessor: 'barangay', title: 'Barangay', sortable: true },
         { accessor: 'gr_code', title: 'GR Code', sortable: true },
         { accessor: 'gr', title: 'GR', sortable: true },
@@ -340,6 +348,42 @@ const ADNAssessment = () => {
         },
     });
 
+    const clearAllMutation = useMutation<
+        { deleted: number; failed: number; errors: string[] },
+        Error,
+        void,
+        unknown
+    >({
+        mutationFn: async () => {
+            return await databaseService.clearAllAssessments(
+                ADN_COLLECTION_ID,
+                (progress) => {
+                    setClearProgress(progress);
+                }
+            );
+        },
+        onSuccess: (result) => {
+            setClearResult(result);
+            toast.success(`Successfully cleared ${result.deleted} records from the table`);
+            if (result.failed > 0) {
+                toast.warning(`${result.failed} records failed to delete. You can retry the failed deletions.`);
+            } else {
+                // Only close modal if all succeeded
+                setTimeout(() => {
+                    setIsClearAllModalOpen(false);
+                    setClearResult(null);
+                }, 2000);
+            }
+            setClearProgress(null);
+            refetch();
+        },
+        onError: (error) => {
+            toast.error('Failed to clear table: ' + error.message);
+            setClearProgress(null);
+            setIsClearAllModalOpen(false);
+        },
+    });
+
     const handleCreate = (data: Partial<Assessment>) => {
         createMutation.mutate(data);
     };
@@ -374,6 +418,16 @@ const ADNAssessment = () => {
         if (editingRecord) {
             updateMutation.mutate(editingRecord);
         }
+    };
+
+    const handleClearAll = () => {
+        setClearConfirmText('');
+        setClearResult(null);
+        setIsClearAllModalOpen(true);
+    };
+
+    const confirmClearAll = () => {
+        clearAllMutation.mutate();
     };
 
     return (
@@ -460,6 +514,25 @@ const ADNAssessment = () => {
 
             <div className="panel md:w-[920px] xl:w-full">
                 <div className="flex md:items-center md:flex-row flex-col mb-5 gap-5">
+                    <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setIsCSVImportOpen(true)}
+                            className="btn btn-primary gap-2"
+                        >
+                            <IconUpload className="w-4 h-4" />
+                            Import CSV
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleClearAll}
+                            className="btn btn-danger gap-2"
+                            disabled={rowData.length === 0}
+                        >
+                            <IconTrashLines className="w-4 h-4" />
+                            Clear All
+                        </button>
+                    </div>
                     <div className="flex items-center gap-5 ltr:ml-auto rtl:mr-auto">
                         <Dropdown
                             placement={isRtl ? 'bottom-end' : 'bottom-start'}
@@ -646,13 +719,13 @@ const ADNAssessment = () => {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label htmlFor="barangay_code">Barangay Code</label>
+                                    <label htmlFor="bcode">Barangay Code</label>
                                     <input
                                         type="text"
-                                        id="barangay_code"
+                                        id="bcode"
                                         className="form-input dark:bg-white text-black"
-                                        value={editingRecord.barangay_code}
-                                        onChange={(e) => setEditingRecord(prev => ({ ...prev!, barangay_code: e.target.value }))}
+                                        value={editingRecord.bcode}
+                                        onChange={(e) => setEditingRecord(prev => ({ ...prev!, bcode: e.target.value }))}
                                     />
                                 </div>
                                 <div className="form-group">
@@ -755,6 +828,202 @@ const ADNAssessment = () => {
                         </div>
                     </div>
                 </Modal>
+
+                {/* Clear All Confirmation Modal */}
+                <Modal
+                    opened={isClearAllModalOpen}
+                    onClose={() => {
+                        if (!clearAllMutation.isPending) {
+                            setIsClearAllModalOpen(false);
+                            setClearProgress(null);
+                            setClearResult(null);
+                            setClearConfirmText('');
+                        }
+                    }}
+                    title="Clear All Records"
+                    size="md"
+                    closeOnClickOutside={!clearAllMutation.isPending}
+                    closeOnEscape={!clearAllMutation.isPending}
+                >
+                    <div className="space-y-4">
+                        {clearResult ? (
+                            <div className="text-center py-6">
+                                <div className="mb-4">
+                                    {clearResult.failed === 0 ? (
+                                        <div className="w-16 h-16 mx-auto bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
+                                            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                    ) : (
+                                        <div className="w-16 h-16 mx-auto bg-yellow-100 dark:bg-yellow-900/20 rounded-full flex items-center justify-center">
+                                            <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                            </svg>
+                                        </div>
+                                    )}
+                                </div>
+                                <h3 className="text-lg font-semibold mb-2">
+                                    {clearResult.failed === 0 ? 'All Records Cleared Successfully!' : 'Clear Operation Completed with Issues'}
+                                </h3>
+                                <div className="space-y-2 text-sm">
+                                    <p className="text-green-600 dark:text-green-400">
+                                        ✅ Successfully deleted: {clearResult.deleted} records
+                                    </p>
+                                    {clearResult.failed > 0 && (
+                                        <>
+                                            <p className="text-red-600 dark:text-red-400">
+                                                ❌ Failed to delete: {clearResult.failed} records
+                                            </p>
+                                            {clearResult.errors.length > 0 && (
+                                                <details className="mt-3">
+                                                    <summary className="cursor-pointer text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+                                                        View Error Details ({clearResult.errors.length} errors)
+                                                    </summary>
+                                                    <div className="mt-2 max-h-32 overflow-y-auto bg-gray-50 dark:bg-gray-800 rounded p-2 text-xs">
+                                                        {clearResult.errors.slice(0, 10).map((error, index) => (
+                                                            <div key={index} className="mb-1 text-red-600 dark:text-red-400 font-mono">
+                                                                {error}
+                                                            </div>
+                                                        ))}
+                                                        {clearResult.errors.length > 10 && (
+                                                            <div className="text-gray-500 italic">
+                                                                ... and {clearResult.errors.length - 10} more errors
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </details>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                                
+                                <div className="flex justify-center gap-3 mt-6">
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary"
+                                        onClick={() => {
+                                            setIsClearAllModalOpen(false);
+                                            setClearResult(null);
+                                            setClearConfirmText('');
+                                        }}
+                                    >
+                                        Close
+                                    </button>
+                                    {clearResult.failed > 0 && (
+                                        <button
+                                            type="button"
+                                            className="btn btn-warning gap-2"
+                                            onClick={() => {
+                                                setClearResult(null);
+                                                clearAllMutation.mutate();
+                                            }}
+                                            disabled={clearAllMutation.isPending}
+                                        >
+                                            <IconTrashLines className="w-4 h-4" />
+                                            Retry Failed Deletions
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        ) : !clearAllMutation.isPending && !clearProgress ? (
+                            <>
+                                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                                    <div className="flex items-start gap-3">
+                                        <IconTrashLines className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                                        <div>
+                                            <h3 className="font-semibold text-red-800 dark:text-red-200 mb-1">
+                                                Warning: This action cannot be undone!
+                                            </h3>
+                                            <p className="text-red-700 dark:text-red-300 text-sm">
+                                                You are about to permanently delete <strong>{rowData.length.toLocaleString()}</strong> records from the ADN Assessment table. 
+                                                This will remove all property assessment data and cannot be recovered.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p className="text-gray-600 dark:text-gray-400">
+                                    Please type <strong>"CLEAR ALL"</strong> to confirm this action:
+                                </p>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    placeholder="Type CLEAR ALL to confirm"
+                                    value={clearConfirmText}
+                                    onChange={(e) => setClearConfirmText(e.target.value)}
+                                />
+                            </>
+                        ) : (
+                            <div className="text-center py-6">
+                                <div className="mb-4">
+                                    <svg className="animate-spin h-8 w-8 mx-auto text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg font-semibold mb-2">Clearing All Records...</h3>
+                                {clearProgress && (
+                                    <div className="space-y-2">
+                                        <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                            <div 
+                                                className="bg-red-600 h-2 rounded-full transition-all duration-300" 
+                                                style={{ width: `${(clearProgress.processed / clearProgress.total) * 100}%` }}
+                                            ></div>
+                                        </div>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            Processed: {clearProgress.processed} / {clearProgress.total}
+                                        </p>
+                                        <p className="text-sm text-green-600 dark:text-green-400">
+                                            Deleted: {clearProgress.deleted}
+                                        </p>
+                                        {clearProgress.failed > 0 && (
+                                            <p className="text-sm text-red-600 dark:text-red-400">
+                                                Failed: {clearProgress.failed}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                                <p className="text-sm text-gray-500 mt-4">
+                                    Please wait while we delete all records...
+                                </p>
+                            </div>
+                        )}
+                        
+                        {!clearAllMutation.isPending && !clearProgress && (
+                            <div className="flex justify-end gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-secondary"
+                                    onClick={() => {
+                                        setIsClearAllModalOpen(false);
+                                        setClearProgress(null);
+                                        setClearConfirmText('');
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-danger"
+                                    onClick={confirmClearAll}
+                                    disabled={clearConfirmText !== 'CLEAR ALL'}
+                                >
+                                    Clear All Records
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </Modal>
+
+                {/* CSV Import Modal */}
+                <CSVImport
+                    isOpen={isCSVImportOpen}
+                    onClose={() => setIsCSVImportOpen(false)}
+                    onImportComplete={() => {
+                        refetch(); // Refresh the data after import
+                    }}
+                    collectionId={ADN_COLLECTION_ID}
+                />
             </div>
         </div >
     );
