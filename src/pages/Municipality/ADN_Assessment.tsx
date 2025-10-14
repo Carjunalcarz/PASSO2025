@@ -72,6 +72,7 @@ const ADNAssessment = () => {
     const [clearProgress, setClearProgress] = useState<{ processed: number; total: number; deleted: number; failed: number } | null>(null);
     const [clearResult, setClearResult] = useState<{ deleted: number; failed: number; errors: string[] } | null>(null);
     const [clearConfirmText, setClearConfirmText] = useState('');
+    const [clearAbortController, setClearAbortController] = useState<AbortController | null>(null);
 
     const cols: Column[] = [
         { accessor: 'tdn', title: 'TDN', sortable: true },
@@ -355,12 +356,20 @@ const ADNAssessment = () => {
         unknown
     >({
         mutationFn: async () => {
-            return await databaseService.clearAllAssessments(
-                ADN_COLLECTION_ID,
-                (progress) => {
-                    setClearProgress(progress);
-                }
-            );
+            const abortController = new AbortController();
+            setClearAbortController(abortController);
+            
+            try {
+                return await databaseService.clearAllAssessments(
+                    ADN_COLLECTION_ID,
+                    (progress) => {
+                        setClearProgress(progress);
+                    },
+                    abortController.signal
+                );
+            } finally {
+                setClearAbortController(null);
+            }
         },
         onSuccess: (result) => {
             setClearResult(result);
@@ -383,6 +392,15 @@ const ADNAssessment = () => {
             setIsClearAllModalOpen(false);
         },
     });
+
+    const handleCancelClear = () => {
+        if (clearAbortController) {
+            clearAbortController.abort();
+            setClearAbortController(null);
+            setClearProgress(null);
+            toast.info('Clear operation cancelled');
+        }
+    };
 
     const handleCreate = (data: Partial<Assessment>) => {
         createMutation.mutate(data);
@@ -838,12 +856,18 @@ const ADNAssessment = () => {
                             setClearProgress(null);
                             setClearResult(null);
                             setClearConfirmText('');
+                        } else if (clearAbortController) {
+                            // If clearing is in progress but we have abort controller, cancel the operation
+                            handleCancelClear();
+                            setIsClearAllModalOpen(false);
+                            setClearResult(null);
+                            setClearConfirmText('');
                         }
                     }}
                     title="Clear All Records"
                     size="md"
-                    closeOnClickOutside={!clearAllMutation.isPending}
-                    closeOnEscape={!clearAllMutation.isPending}
+                    closeOnClickOutside={!clearAllMutation.isPending || !!clearAbortController}
+                    closeOnEscape={!clearAllMutation.isPending || !!clearAbortController}
                 >
                     <div className="space-y-4">
                         {clearResult ? (
@@ -986,6 +1010,18 @@ const ADNAssessment = () => {
                                 <p className="text-sm text-gray-500 mt-4">
                                     Please wait while we delete all records...
                                 </p>
+                                
+                                {/* Cancel button during clearing */}
+                                <div className="flex justify-center mt-6">
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-danger"
+                                        onClick={handleCancelClear}
+                                        disabled={!clearAbortController}
+                                    >
+                                        Cancel Operation
+                                    </button>
+                                </div>
                             </div>
                         )}
                         

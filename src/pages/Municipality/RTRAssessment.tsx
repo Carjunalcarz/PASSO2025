@@ -6,7 +6,6 @@ import { IRootState } from '../../store';
 import Dropdown from '../../components/Dropdown';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import IconCaretDown from '../../components/Icon/IconCaretDown';
-import axios from 'axios';
 import { useQuery, useMutation, UseMutationResult } from '@tanstack/react-query';
 import IconEdit from '../../components/Icon/IconEdit';
 import IconTrash from '../../components/Icon/IconTrash';
@@ -17,6 +16,9 @@ import TaxableSwitch from './Components/TaxableSwitch';
 import { Link } from 'react-router-dom';
 import SubclassSuggesstion from './Components/SubclassSuggesstion';
 import GRFilter from './Components/GRFilter';
+import { databaseService, AssessmentDocument } from '../../services/databaseService';
+import { useAuth } from '../../contexts/AuthContext';
+
 // Define column interface
 interface Column {
     accessor: keyof Assessment | 'actions';
@@ -25,31 +27,11 @@ interface Column {
     render?: (record: Assessment) => React.ReactNode;
 }
 
-// Define the Assessment interface (renamed from AssessmentData for consistency)
-interface Assessment {
-    pin: string;
-    name: string;
-    tdn: string;
-    market_val: number;
-    ass_value: number;
-    area: number;
-    unit_value: number;
-    kind: string;
-    ass_level:number;
-    classification: string;
-    sub_class: string;
-    taxability: string;
-    trans_cd: string;
-    tax_beg_yr: number;
-    eff_date: string;
-    owner_no: string;
-    mun_code: string;
-    municipality: string;
-    barangay_code: string;
-    barangay: string;
-    gr_code: string;
-    gr: string;
-}
+// Use AssessmentDocument from databaseService
+type Assessment = AssessmentDocument;
+
+// Use main property assessments collection with municipality filter
+const PROPERTY_ASSESSMENTS_COLLECTION_ID = import.meta.env.VITE_APPWRITE_PROPERTY_ASSESSMENTS_COLLECTION_ID || 'property_assessments';
 
 const formatCurrency = (amount: number) => {
     return `₱${new Intl.NumberFormat('en-PH', {
@@ -59,10 +41,10 @@ const formatCurrency = (amount: number) => {
 };
 
 const RTRAssessment = () => {
-    const [taxabilityFilter, setTaxabilityFilter] = useState('exempt'); // Add this line
+    const [taxabilityFilter, setTaxabilityFilter] = useState('exempt');
     const [subclassFilter, setSubclassFilter] = useState<string>('all');
     const [grFilter, setGrFilter] = useState<string>('all');
-    const token = localStorage.getItem('token');
+    const { user } = useAuth();
     const dispatch = useDispatch();
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl';
 
@@ -71,7 +53,7 @@ const RTRAssessment = () => {
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
     const [search, setSearch] = useState('');
     const [searchColumn, setSearchColumn] = useState('tdn');
-    const [hideCols, setHideCols] = useState<Array<keyof Assessment>>(['name', 'barangay_code', 'mun_code', 'gr_code', 'eff_date' , 'owner_no']);
+    const [hideCols, setHideCols] = useState<Array<keyof Assessment>>(['name', 'bcode', 'mun_code', 'gr_code', 'eff_date' , 'owner_no' ]);
     const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
         columnAccessor: 'tdn',
         direction: 'asc',
@@ -157,36 +139,36 @@ const RTRAssessment = () => {
      
         { accessor: 'mun_code', title: 'Municipality Code', sortable: true },
         { accessor: 'municipality', title: 'Municipality', sortable: true },
-        { accessor: 'barangay_code', title: 'Barangay Code', sortable: true },
+        { accessor: 'bcode', title: 'Barangay Code', sortable: true },
         { accessor: 'barangay', title: 'Barangay', sortable: true },
         { accessor: 'gr_code', title: 'GR Code', sortable: true },
         { accessor: 'gr', title: 'GR', sortable: true },
 
-        {
-            accessor: 'actions',
-            sortable: false,
-            title: 'Actions',
-            render: (record: Assessment) => (
-                <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={() => handleUpdate(record)}
-                        className="p-1 bg-transparent border border-primary text-primary rounded hover:bg-primary hover:text-white hover:border-primary transition-colors duration-200"
-                        title="Edit Record"
-                    >
-                        <IconEdit className="w-4 h-4" />
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => handleDelete(record.tdn)}
-                        className="p-1 bg-transparent border border-danger text-danger rounded hover:bg-danger hover:text-white hover:border-danger transition-colors duration-200"
-                        title="Delete Record"
-                    >
-                        <IconTrash className="w-4 h-4" />
-                    </button>
-                </div>
-            ),
-        },
+        // {
+        //     accessor: 'actions',
+        //     sortable: false,
+        //     title: 'Actions',
+        //     render: (record: Assessment) => (
+        //         <div className="flex items-center gap-2">
+        //             <button
+        //                 type="button"
+        //                 onClick={() => handleUpdate(record)}
+        //                 className="p-1 bg-transparent border border-primary text-primary rounded hover:bg-primary hover:text-white hover:border-primary transition-colors duration-200"
+        //                 title="Edit Record"
+        //             >
+        //                 <IconEdit className="w-4 h-4" />
+        //             </button>
+        //             <button
+        //                 type="button"
+        //                 onClick={() => handleDelete(record.$id!)}
+        //                 className="p-1 bg-transparent border border-danger text-danger rounded hover:bg-danger hover:text-white hover:border-danger transition-colors duration-200"
+        //                 title="Delete Record"
+        //             >
+        //                 <IconTrash className="w-4 h-4" />
+        //             </button>
+        //         </div>
+        //     ),
+        // },
     ];
 
     useEffect(() => {
@@ -194,33 +176,32 @@ const RTRAssessment = () => {
     }, [dispatch]);
 
     const fetchAssessments = async (): Promise<Assessment[]> => {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/get-general-revision?municipality=rtr&skip=0&limit=300000`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        if (!user) {
+            throw new Error('User not authenticated');
+        }
 
-        const taxability = response.data.data.map((item: Assessment) => {
-            item.taxability = item.taxability === "1" ? "Taxable" : item.taxability === "0" ? "Exempt" : item.taxability;
-            return item;
-        });
-
-        response.data.data = taxability;
-        return response.data.data;
+        console.log(' RTRAssessment: Fetching RTR municipality assessments from Appwrite...');
+        const assessments = await databaseService.getAssessments(PROPERTY_ASSESSMENTS_COLLECTION_ID);
+        
+        // Filter by RTR municipality
+        const rtrAssessments = assessments.filter(assessment => 
+            assessment.municipality?.toLowerCase() === 'rtr'
+        );
+        
+        console.log(' RTRAssessment: Fetched RTR assessments:', rtrAssessments.length);
+        return rtrAssessments;
     };
 
     const { data: rowData = [], isLoading: queryLoading, refetch } = useQuery<Assessment[]>({
         queryKey: ['assessments', 'rtr'],
         queryFn: fetchAssessments,
+        enabled: !!user, // Only run query if user is authenticated
         refetchOnWindowFocus: false,
         refetchOnMount: false,
         refetchOnReconnect: false,
         staleTime: Infinity,
     });
 
-    // const filteredData = rowData.filter((item: Assessment) => {
-    //     const value = item[searchColumn.toLowerCase() as keyof Assessment];
-    //     return (value?.toString() ?? '').toLowerCase().includes(search.toLowerCase());
     // });
 
     // First filter by search
@@ -312,32 +293,37 @@ const RTRAssessment = () => {
     };
 
     const createMutation = useMutation<Assessment, Error, Partial<Assessment>>({
-        mutationFn: (newData) =>
-            axios.post('your-endpoint', newData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }).then(response => response.data),
+        mutationFn: async (newData) => {
+            console.log('🔄 RTRAssessment: Creating assessment...');
+            // Ensure municipality is set to 'rtr'
+            const dataWithMunicipality = { ...newData, municipality: 'rtr' };
+            const result = await databaseService.createAssessment(PROPERTY_ASSESSMENTS_COLLECTION_ID, dataWithMunicipality as Omit<AssessmentDocument, '$id' | '$createdAt' | '$updatedAt'>);
+            console.log('✅ RTRAssessment: Assessment created successfully');
+            return result;
+        },
         onSuccess: () => {
+            toast.success('Record created successfully');
             refetch();
+        },
+        onError: (error) => {
+            console.error('❌ RTRAssessment: Error creating assessment:', error);
+            toast.error('Failed to create record: ' + error.message);
         },
     });
 
     const updateMutation = useMutation<
-        any,
+        Assessment,
         Error,
         Assessment,
         unknown
     >({
         mutationFn: async (data: Assessment) => {
-            const response = await axios.put(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/${data.tdn}`, data, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            const taxability = data.taxability === "1" ? "Taxable" : data.taxability === "0" ? "Exempt" : data.taxability;
-            data.taxability = taxability;
-            return response.data;
+            console.log('🔄 RTRAssessment: Updating assessment:', data.$id);
+            // Ensure municipality remains 'rtr'
+            const dataWithMunicipality = { ...data, municipality: 'rtr' };
+            const result = await databaseService.updateAssessment(PROPERTY_ASSESSMENTS_COLLECTION_ID, data.$id!, dataWithMunicipality);
+            console.log('✅ RTRAssessment: Assessment updated successfully');
+            return result;
         },
         onSuccess: () => {
             toast.success('Record updated successfully');
@@ -345,29 +331,30 @@ const RTRAssessment = () => {
             refetch();
         },
         onError: (error) => {
+            console.error('❌ RTRAssessment: Error updating assessment:', error);
             toast.error('Failed to update record: ' + error.message);
         },
     });
 
     const deleteMutation = useMutation<
-        any,
+        void,
         Error,
         string,
         unknown
     >({
-        mutationFn: async (tdn: string) => {
-            const response = await axios.delete(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/${tdn}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            return response.data;
+        mutationFn: async (documentId: string) => {
+            console.log('🗑️ RTRAssessment: Deleting assessment:', documentId);
+            await databaseService.deleteAssessment(PROPERTY_ASSESSMENTS_COLLECTION_ID, documentId);
+            console.log('✅ RTRAssessment: Assessment deleted successfully');
         },
         onSuccess: () => {
             toast.success('Record deleted successfully');
+            setIsDeleteModalOpen(false);
+            setDeletingTdn(null);
             refetch();
         },
         onError: (error) => {
+            console.error('❌ RTRAssessment: Error deleting assessment:', error);
             toast.error('Failed to delete record: ' + error.message);
         },
     });
@@ -381,16 +368,14 @@ const RTRAssessment = () => {
         setIsEditModalOpen(true);
     };
 
-    const handleDelete = (tdn: string) => {
-        setDeletingTdn(tdn);
+    const handleDelete = (documentId: string) => {
+        setDeletingTdn(documentId);
         setIsDeleteModalOpen(true);
     };
 
     const confirmDelete = () => {
         if (deletingTdn) {
             deleteMutation.mutate(deletingTdn);
-            setIsDeleteModalOpen(false);
-            setDeletingTdn(null);
         }
     };
 
@@ -665,16 +650,6 @@ const RTRAssessment = () => {
                                         className="form-input dark:bg-white text-black"
                                         value={editingRecord.municipality}
                                         onChange={(e) => setEditingRecord(prev => ({ ...prev!, municipality: e.target.value }))}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="barangay_code">Barangay Code</label>
-                                    <input
-                                        type="text"
-                                        id="barangay_code"
-                                        className="form-input dark:bg-white text-black"
-                                        value={editingRecord.barangay_code}
-                                        onChange={(e) => setEditingRecord(prev => ({ ...prev!, barangay_code: e.target.value }))}
                                     />
                                 </div>
                                 <div className="form-group">

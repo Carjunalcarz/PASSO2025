@@ -4,27 +4,27 @@ import { useDispatch, useSelector } from 'react-redux';
 import { IRootState } from '../store';
 import { setPageTitle } from '../store/themeConfigSlice';
 import { useEffect } from 'react';
-import axios from 'axios';
 import MunicipalityPanel from './Components/MunicipalityPanel';
-import { useQueries } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
+import { databaseService } from '../services/databaseService';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ChartData {
     name: string;
     data: number[];
 }
 
+// Collection ID for property assessments from environment variables
+const PROPERTY_ASSESSMENTS_COLLECTION_ID = import.meta.env.VITE_APPWRITE_PROPERTY_ASSESSMENTS_COLLECTION_ID || 'property_assessments';
+
 const Finance = () => {
-    const token = localStorage.getItem('token');
+    const { user } = useAuth();
     const dispatch = useDispatch();
     useEffect(() => {
         dispatch(setPageTitle('ADN-DATA'));
     }, [dispatch]);
 
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl';
-
-    // Common headers for axios requests
-    const headers = { Authorization: `Bearer ${token}` };
-    const baseUrl = `${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments`;
 
     // Currency formatters
     const formatCurrencyPHP = (amount: number) =>
@@ -41,86 +41,23 @@ const Finance = () => {
             maximumFractionDigits: 2,
         }).format(amount);
 
-    // Using useQueries to fetch all required data in parallel
-    const queries = useQueries({
-        queries: [
-            {
-                queryKey: ['finance', 'total'],
-                queryFn: async () => {
-                    const res = await axios.get(baseUrl, { headers });
-                    return res.data.total;
-                },
-                staleTime: 5 * 60 * 1000,
-            },
-            {
-                queryKey: ['finance', 'countTaxable'],
-                queryFn: async () => {
-                    const res = await axios.get(`${baseUrl}/count/taxable`, { headers });
-                    return res.data.count;
-                },
-                staleTime: 5 * 60 * 1000,
-            },
-            {
-                queryKey: ['finance', 'countExempt'],
-                queryFn: async () => {
-                    const res = await axios.get(`${baseUrl}/count/exempt`, { headers });
-                    return res.data.count;
-                },
-                staleTime: 5 * 60 * 1000,
-            },
-            {
-                queryKey: ['finance', 'taxableMarketValue'],
-                queryFn: async () => {
-                    const res = await axios.get(`${baseUrl}/market-value/taxable`, { headers });
-                    return res.data.taxable_market_value;
-                },
-                staleTime: 5 * 60 * 1000,
-            },
-            {
-                queryKey: ['finance', 'exemptMarketValue'],
-                queryFn: async () => {
-                    const res = await axios.get(`${baseUrl}/market-value/exempt`, { headers });
-                    return res.data.exempt_market_value;
-                },
-                staleTime: 5 * 60 * 1000,
-            },
-            {
-                queryKey: ['finance', 'taxableAssessmentValue'],
-                queryFn: async () => {
-                    const res = await axios.get(`${baseUrl}/assessment-value/taxable`, { headers });
-                    return res.data.taxable_assessment_value;
-                },
-                staleTime: 5 * 60 * 1000,
-            },
-            {
-                queryKey: ['finance', 'exemptAssessmentValue'],
-                queryFn: async () => {
-                    const res = await axios.get(`${baseUrl}/assessment-value/exempt`, { headers });
-                    return res.data.exempt_assessment_value;
-                },
-                staleTime: 5 * 60 * 1000,
-            },
-            {
-                queryKey: ['finance', 'taxableArea'],
-                queryFn: async () => {
-                    const res = await axios.get(`${baseUrl}/area/taxable`, { headers });
-                    return res.data.taxable_area;
-                },
-                staleTime: 5 * 60 * 1000,
-            },
-            {
-                queryKey: ['finance', 'exemptArea'],
-                queryFn: async () => {
-                    const res = await axios.get(`${baseUrl}/area/exempt`, { headers });
-                    return res.data.exempt_area;
-                },
-                staleTime: 5 * 60 * 1000,
-            },
-        ],
+    // Using useQuery to fetch analytics data from Appwrite
+    const { data: analyticsData, isLoading, isError } = useQuery({
+        queryKey: ['finance', 'analytics', PROPERTY_ASSESSMENTS_COLLECTION_ID],
+        queryFn: async () => {
+            if (!user) {
+                throw new Error('User not authenticated');
+            }
+            return await databaseService.getAnalytics(PROPERTY_ASSESSMENTS_COLLECTION_ID);
+        },
+        staleTime: 5 * 60 * 1000,
+        enabled: !!user, // Only run query if user is authenticated
     });
 
-    const isLoading = queries.some(q => q.isLoading);
-    const isError = queries.some(q => q.isError);
+    // Show loading state if not authenticated
+    if (!user) {
+        return <div>Please log in to view analytics data</div>;
+    }
 
     // Show loading state
     if (isLoading) {
@@ -132,21 +69,18 @@ const Finance = () => {
         return <div>Error loading data</div>;
     }
 
-    // Destructure data safely and set default to 0 if NaN
-    const [
+    // Destructure analytics data safely with defaults
+    const {
         totalRpus = 0,
-        taxable = 0,
-        exempt = 0,
+        taxableCount: taxable = 0,
+        exemptCount: exempt = 0,
         taxableMarketValue = 0,
         exemptMarketValue = 0,
         taxableAssessmentValue = 0,
         exemptAssessmentValue = 0,
         taxableArea = 0,
         exemptArea = 0,
-    ] = queries.map(q => {
-        const value = Number(q.data);
-        return isNaN(value) ? 0 : value;
-    });
+    } = analyticsData || {};
 
     // Common chart options
     const commonChartOptions = {

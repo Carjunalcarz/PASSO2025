@@ -403,10 +403,166 @@ class DatabaseService {
         }
     }
 
+    // Analytics methods for Finance dashboard
+    async getAnalytics(collectionId: string): Promise<{
+        totalRpus: number;
+        taxableCount: number;
+        exemptCount: number;
+        taxableMarketValue: number;
+        exemptMarketValue: number;
+        taxableAssessmentValue: number;
+        exemptAssessmentValue: number;
+        taxableArea: number;
+        exemptArea: number;
+    }> {
+        try {
+            console.log('📊 DatabaseService: Fetching analytics data...');
+            
+            const response = await databases.listDocuments(
+                this.databaseId,
+                collectionId,
+                [Query.limit(100000)] // Get all documents for accurate analytics
+            );
+
+            const documents = response.documents as unknown as AssessmentDocument[];
+            
+            // Separate taxable and exempt records
+            const taxableRecords = documents.filter(doc => 
+                doc.taxability === 'Taxable' || doc.taxability === '1'
+            );
+            const exemptRecords = documents.filter(doc => 
+                doc.taxability === 'Exempt' || doc.taxability === '0'
+            );
+
+            const analytics = {
+                totalRpus: documents.length,
+                taxableCount: taxableRecords.length,
+                exemptCount: exemptRecords.length,
+                taxableMarketValue: taxableRecords.reduce((sum, doc) => sum + (doc.market_val || 0), 0),
+                exemptMarketValue: exemptRecords.reduce((sum, doc) => sum + (doc.market_val || 0), 0),
+                taxableAssessmentValue: taxableRecords.reduce((sum, doc) => sum + (doc.ass_value || 0), 0),
+                exemptAssessmentValue: exemptRecords.reduce((sum, doc) => sum + (doc.ass_value || 0), 0),
+                taxableArea: taxableRecords.reduce((sum, doc) => sum + (doc.area || 0), 0),
+                exemptArea: exemptRecords.reduce((sum, doc) => sum + (doc.area || 0), 0)
+            };
+
+            console.log('✅ DatabaseService: Analytics data fetched successfully:', analytics);
+            return analytics;
+        } catch (error) {
+            console.error('❌ DatabaseService: Error fetching analytics:', error);
+            throw error;
+        }
+    }
+
+    // Get total count of assessments
+    async getTotalCount(collectionId: string): Promise<number> {
+        try {
+            const response = await databases.listDocuments(
+                this.databaseId,
+                collectionId,
+                [Query.limit(1)] // Just get count, not actual documents
+            );
+            return response.total;
+        } catch (error) {
+            console.error('Error fetching total count:', error);
+            throw error;
+        }
+    }
+
+    // Get count of taxable assessments
+    async getTaxableCount(collectionId: string): Promise<number> {
+        try {
+            const response = await databases.listDocuments(
+                this.databaseId,
+                collectionId,
+                [
+                    Query.equal('taxability', 'Taxable'),
+                    Query.limit(1)
+                ]
+            );
+            return response.total;
+        } catch (error) {
+            console.error('Error fetching taxable count:', error);
+            throw error;
+        }
+    }
+
+    // Get count of exempt assessments
+    async getExemptCount(collectionId: string): Promise<number> {
+        try {
+            const response = await databases.listDocuments(
+                this.databaseId,
+                collectionId,
+                [
+                    Query.equal('taxability', 'Exempt'),
+                    Query.limit(1)
+                ]
+            );
+            return response.total;
+        } catch (error) {
+            console.error('Error fetching exempt count:', error);
+            throw error;
+        }
+    }
+
+    // Get analytics for a specific municipality
+    async getMunicipalityAnalytics(collectionId: string, municipality: string): Promise<{
+        taxableCount: number;
+        exemptCount: number;
+        taxableMarketValue: number;
+        exemptMarketValue: number;
+        taxableAssessmentValue: number;
+        exemptAssessmentValue: number;
+        taxableArea: number;
+        exemptArea: number;
+    }> {
+        try {
+            console.log(`📊 DatabaseService: Fetching analytics for municipality: ${municipality}`);
+            
+            // Get all documents for the specific municipality
+            const response = await databases.listDocuments(
+                this.databaseId,
+                collectionId,
+                [
+                    Query.equal('municipality', municipality),
+                    Query.limit(100000) // Get all documents for this municipality
+                ]
+            );
+
+            const documents = response.documents as unknown as AssessmentDocument[];
+            
+            // Separate taxable and exempt records
+            const taxableRecords = documents.filter(doc => 
+                doc.taxability === 'Taxable' || doc.taxability === '1'
+            );
+            const exemptRecords = documents.filter(doc => 
+                doc.taxability === 'Exempt' || doc.taxability === '0'
+            );
+
+            const analytics = {
+                taxableCount: taxableRecords.length,
+                exemptCount: exemptRecords.length,
+                taxableMarketValue: taxableRecords.reduce((sum, doc) => sum + (doc.market_val || 0), 0),
+                exemptMarketValue: exemptRecords.reduce((sum, doc) => sum + (doc.market_val || 0), 0),
+                taxableAssessmentValue: taxableRecords.reduce((sum, doc) => sum + (doc.ass_value || 0), 0),
+                exemptAssessmentValue: exemptRecords.reduce((sum, doc) => sum + (doc.ass_value || 0), 0),
+                taxableArea: taxableRecords.reduce((sum, doc) => sum + (doc.area || 0), 0),
+                exemptArea: exemptRecords.reduce((sum, doc) => sum + (doc.area || 0), 0)
+            };
+
+            console.log(`✅ DatabaseService: Municipality analytics fetched for ${municipality}:`, analytics);
+            return analytics;
+        } catch (error) {
+            console.error(`❌ DatabaseService: Error fetching municipality analytics for ${municipality}:`, error);
+            throw error;
+        }
+    }
+
     // Clear all assessments from a collection
     async clearAllAssessments(
         collectionId: string,
-        onProgress?: (progress: { processed: number; total: number; deleted: number; failed: number; errors: string[] }) => void
+        onProgress?: (progress: { processed: number; total: number; deleted: number; failed: number; errors: string[] }) => void,
+        abortSignal?: AbortSignal
     ): Promise<{ deleted: number; failed: number; errors: string[] }> {
         try {
             console.log('🗑️ DatabaseService: Starting to clear all assessments from collection:', collectionId);
@@ -434,63 +590,72 @@ class DatabaseService {
                 return { deleted: 0, failed: 0, errors: [] };
             }
 
-            // Delete documents in batches to avoid overwhelming the API
-            const batchSize = 3; // Reduced batch size to handle rate limits better
-            
-            for (let i = 0; i < documents.length; i += batchSize) {
-                const batch = documents.slice(i, i + batchSize);
+            // Process documents one by one to avoid rate limits
+            // Appwrite has strict rate limits, so we need to be very conservative
+            for (let i = 0; i < documents.length; i++) {
+                // Check if operation was aborted
+                if (abortSignal?.aborted) {
+                    console.log('🛑 Clear operation aborted by user');
+                    throw new Error('Operation cancelled by user');
+                }
+
+                const doc = documents[i];
                 
-                const batchResults = await Promise.allSettled(
-                    batch.map(async (doc) => {
-                        // Retry logic for failed deletions
-                        const maxRetries = 3;
-                        let retryCount = 0;
+                // Retry logic for failed deletions
+                const maxRetries = 3;
+                let retryCount = 0;
+                let success = false;
+                
+                while (retryCount < maxRetries && !success) {
+                    // Check abort signal before each retry
+                    if (abortSignal?.aborted) {
+                        console.log('🛑 Clear operation aborted during retry');
+                        throw new Error('Operation cancelled by user');
+                    }
+                    try {
+                        await databases.deleteDocument(
+                            this.databaseId,
+                            collectionId,
+                            doc.$id
+                        );
+                        deleted++;
+                        success = true;
+                        console.log(`✅ Deleted document: ${doc.$id} (${i + 1}/${total})`);
+                    } catch (error: any) {
+                        retryCount++;
                         
-                        while (retryCount < maxRetries) {
-                            try {
-                                await databases.deleteDocument(
-                                    this.databaseId,
-                                    collectionId,
-                                    doc.$id
-                                );
-                                deleted++;
-                                console.log(`✅ Deleted document: ${doc.$id} (attempt ${retryCount + 1})`);
-                                return { success: true };
-                            } catch (error: any) {
-                                retryCount++;
-                                
-                                // Enhanced error logging
-                                const errorDetails = {
-                                    documentId: doc.$id,
-                                    attempt: retryCount,
-                                    errorType: error?.type || 'unknown',
-                                    errorCode: error?.code || 'unknown',
-                                    errorMessage: error?.message || 'Unknown error',
-                                    statusCode: error?.response?.status || 'unknown'
-                                };
-                                
-                                console.warn(`⚠️ Retry ${retryCount}/${maxRetries} for document ${doc.$id}:`, errorDetails);
-                                
-                                if (retryCount < maxRetries) {
-                                    // Wait before retry with exponential backoff
-                                    await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-                                } else {
-                                    // Final failure after all retries
-                                    failed++;
-                                    const errorMsg = `TDN: ${(doc as any).tdn || 'unknown'} | ID: ${doc.$id} | Error: ${errorDetails.errorType} (${errorDetails.errorCode}) - ${errorDetails.errorMessage}`;
-                                    errors.push(errorMsg);
-                                    console.error(`❌ Failed to delete document ${doc.$id} after ${maxRetries} retries:`, errorDetails);
-                                    return { success: false, error: errorMsg };
-                                }
-                            }
+                        // Enhanced error logging
+                        const errorDetails = {
+                            documentId: doc.$id,
+                            attempt: retryCount,
+                            errorType: error?.type || 'unknown',
+                            errorCode: error?.code || 'unknown',
+                            errorMessage: error?.message || 'Unknown error',
+                            statusCode: error?.response?.status || 'unknown'
+                        };
+                        
+                        console.warn(`⚠️ Retry ${retryCount}/${maxRetries} for document ${doc.$id}:`, errorDetails);
+                        
+                        if (retryCount < maxRetries) {
+                            // Wait before retry with exponential backoff
+                            const waitTime = error?.code === 429 || error?.response?.status === 429 
+                                ? 2000 * retryCount // Longer wait for rate limit errors
+                                : 1000 * retryCount;
+                            await new Promise(resolve => setTimeout(resolve, waitTime));
+                        } else {
+                            // Final failure after all retries
+                            failed++;
+                            const errorMsg = `TDN: ${(doc as any).tdn || 'unknown'} | ID: ${doc.$id} | Error: ${errorDetails.errorType} (${errorDetails.errorCode}) - ${errorDetails.errorMessage}`;
+                            errors.push(errorMsg);
+                            console.error(`❌ Failed to delete document ${doc.$id} after ${maxRetries} retries:`, errorDetails);
                         }
-                    })
-                );
+                    }
+                }
 
                 // Call progress callback if provided
                 if (onProgress) {
                     onProgress({
-                        processed: Math.min(i + batchSize, total),
+                        processed: i + 1,
                         total,
                         deleted,
                         failed,
@@ -498,9 +663,10 @@ class DatabaseService {
                     });
                 }
 
-                // Longer delay between batches to avoid overwhelming the API
-                if (i + batchSize < documents.length) {
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                // Wait between each deletion to respect rate limits
+                // Longer delay to ensure we don't hit rate limits
+                if (i < documents.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 200)); // 200ms between each deletion
                 }
             }
 

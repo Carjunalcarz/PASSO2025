@@ -1,66 +1,73 @@
 import IconCircleCheck from '../../components/Icon/IconCircleCheck';
 import IconInfoCircle from '../../components/Icon/IconInfoCircle';
-import axios from 'axios';
 import { useState } from 'react';
-import { useQueries } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { databaseService } from '../../services/databaseService';
+import { useAuth } from '../../contexts/AuthContext';
 
-const token = localStorage.getItem('token');
+// Collection ID for property assessments from environment variables
+const PROPERTY_ASSESSMENTS_COLLECTION_ID = import.meta.env.VITE_APPWRITE_PROPERTY_ASSESSMENTS_COLLECTION_ID || 'property_assessments';
 
 interface MunicipalityPanelProps {
     municipality: string;
     logo: string;
 }
 
-const endpoints = [
-    { key: 'taxable', url: 'count/taxable' },
-    { key: 'exempt', url: 'count/exempt' },
-    { key: 'taxableMarketValue', url: 'market-value/taxable' },
-    { key: 'exemptMarketValue', url: 'market-value/exempt' },
-    { key: 'taxableAssessmentValue', url: 'assessment-value/taxable' },
-    { key: 'exemptAssessmentValue', url: 'assessment-value/exempt' },
-    { key: 'taxableArea', url: 'area/taxable' },
-    { key: 'exemptArea', url: 'area/exempt' },
-];
 
 const MunicipalityPanel = ({ municipality, logo }: MunicipalityPanelProps) => {
+    const { user } = useAuth();
     const [showTaxable, setShowTaxable] = useState(true);
 
-    const queries = useQueries({
-        queries: endpoints.map(({ key, url }) => ({
-            queryKey: ['municipality', key, municipality],
-            queryFn: async () => {
-                const res = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/${url}?municipality=${municipality}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                return Object.values(res.data)[0]; // single value per endpoint
-            },
-            staleTime: 5 * 60 * 1000,
-        })),
+    // Skip query for empty municipality (used for provincial logo)
+    const { data: analyticsData, isLoading, isError } = useQuery({
+        queryKey: ['municipality', 'analytics', municipality, PROPERTY_ASSESSMENTS_COLLECTION_ID],
+        queryFn: async () => {
+            if (!user) {
+                throw new Error('User not authenticated');
+            }
+            if (!municipality) {
+                // Return empty data for provincial panel
+                return {
+                    taxableCount: 0,
+                    exemptCount: 0,
+                    taxableMarketValue: 0,
+                    exemptMarketValue: 0,
+                    taxableAssessmentValue: 0,
+                    exemptAssessmentValue: 0,
+                    taxableArea: 0,
+                    exemptArea: 0
+                };
+            }
+            return await databaseService.getMunicipalityAnalytics(PROPERTY_ASSESSMENTS_COLLECTION_ID, municipality);
+        },
+        staleTime: 5 * 60 * 1000,
+        enabled: !!user, // Only run query if user is authenticated
     });
 
-    const isLoading = queries.some(q => q.isLoading);
-    const isError = queries.some(q => q.isError);
+    // Show loading state if not authenticated
+    if (!user) {
+        return <div className="text-white-dark">Please log in to view data</div>;
+    }
 
     if (isLoading) return <div>
-        <p className='text-white-dark'> Fetching Data ... - {municipality}</p>
+        <p className='text-white-dark'> Fetching Data ... - {municipality || 'Provincial'}</p>
         <span className="animate-[spin_3s_linear_infinite] border-8 border-r-warning border-l-primary border-t-danger border-b-success rounded-full w-14 h-14 inline-block align-middle m-auto mb-10"></span></div>;
     if (isError) return <div>Error fetching data</div>;
 
-    const [
-        taxable,
-        exempt,
-        taxableMarketValue,
-        exemptMarketValue,
-        taxableAssessmentValue,
-        exemptAssessmentValue,
-        taxableArea,
-        exemptArea,
-    ] = queries.map(q => q.data as number);
+    // Destructure analytics data safely with defaults
+    const {
+        taxableCount: taxable = 0,
+        exemptCount: exempt = 0,
+        taxableMarketValue = 0,
+        exemptMarketValue = 0,
+        taxableAssessmentValue = 0,
+        exemptAssessmentValue = 0,
+        taxableArea = 0,
+        exemptArea = 0,
+    } = analyticsData || {};
 
-    const totalRpus = taxable;
+    const totalRpus = taxable + exempt;
 
     const current = {
         marketValue: showTaxable ? taxableMarketValue : exemptMarketValue,
@@ -82,7 +89,7 @@ const MunicipalityPanel = ({ municipality, logo }: MunicipalityPanelProps) => {
 
     return (
         <div className="font-semibold mb-5">
-            <Link to={`/assessment/${municipality}`}>
+            <Link to={municipality ? `/assessment/${municipality}` : '#'}>
                 <img
                     src={`/mun_logo/${logo}`}
                     alt={`${municipality} Logo`}
@@ -92,7 +99,7 @@ const MunicipalityPanel = ({ municipality, logo }: MunicipalityPanelProps) => {
             <div className="flex items-center font-semibold mb-5">
                 <div className="ltr:ml-2 rtl:mr-2">
                     <h6 className="text-dark dark:text-white-light">
-                        {municipality === 'REMEDIOS T. ROMUALDEZ' ? 'RTR' : municipality}
+                        {municipality === 'REMEDIOS T. ROMUALDEZ' ? 'RTR' : municipality || 'PROVINCIAL'}
                     </h6>
                     <p className="text-xs text-gray-500">RPUS</p>
                     <div className="flex items-center space-x-2">
