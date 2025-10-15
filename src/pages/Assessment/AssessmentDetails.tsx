@@ -176,8 +176,11 @@ const AssessmentDetails = () => {
                         <button 
                             className="btn btn-info"
                             onClick={() => {
-                                const faasUrl = "http://192.168.2.3/v1/storage/buckets/68db4ad90006b1bac1e7/files/68ef0363000699496cdf/view?project=68db49f7000440e58683";
-                                window.open(faasUrl, '_blank');
+                                if (assessment?.faas) {
+                                    window.open(assessment.faas, '_blank');
+                                } else {
+                                    toast.error('FAAS document not available');
+                                }
                             }}
                         >
                             <IconPrinter className="w-4 h-4 mr-2" />

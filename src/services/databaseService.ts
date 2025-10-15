@@ -62,6 +62,7 @@ export interface BuildingAssessmentDocument {
     additionalItems?: string; // JSON string
     superseded_records?: string; // JSON string
     memoranda?: string; // JSON string
+    faas?: string; // FAAS document URL
     $createdAt?: string;
     $updatedAt?: string;
 }
