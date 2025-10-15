@@ -30,11 +30,76 @@ export interface AssessmentDocument {
     $updatedAt?: string;
 }
 
+// New interface for Building Assessment based on your Appwrite schema
+export interface BuildingAssessmentDocument {
+    $id?: string;
+    clientLocalId?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    userId?: string;
+    synced?: boolean;
+    ownerName?: string;
+    transactionCode?: string;
+    tdArp?: string;
+    pin?: string;
+    barangay?: string;
+    municipality?: string;
+    province?: string;
+    marketValueTotal?: number;
+    taxable?: boolean;
+    effYear?: string;
+    effQuarter?: string;
+    totalArea?: number;
+    additionalItem?: string;
+    isSuperseded?: boolean;
+    owner_details?: string; // JSON string
+    building_location?: string; // JSON string
+    land_reference?: string; // JSON string
+    general_description?: string; // JSON string
+    structural_materials?: string; // JSON string
+    property_appraisal?: string; // JSON string
+    property_assessment?: string; // JSON string
+    additionalItems?: string; // JSON string
+    superseded_records?: string; // JSON string
+    memoranda?: string; // JSON string
+    $createdAt?: string;
+    $updatedAt?: string;
+}
+
 class DatabaseService {
     private databaseId: string;
     
     constructor() {
         this.databaseId = appwriteConfig.databaseId;
+    }
+
+    // Get all building assessments from a collection
+    async getBuildingAssessments(collectionId: string, limit: number = 100000): Promise<BuildingAssessmentDocument[]> {
+        try {
+            const response = await databases.listDocuments(
+                this.databaseId,
+                collectionId,
+                [
+                    Query.limit(limit),
+                    Query.orderAsc('pin')
+                ]
+            );
+            
+            const assessments = response.documents.map((doc: Models.Document) => {
+                return doc as unknown as BuildingAssessmentDocument;
+            });
+
+            return assessments;
+        } catch (error: any) {
+            console.error('❌ DatabaseService: Error fetching building assessments:', error);
+            console.error('❌ DatabaseService: Error details:', {
+                name: error.name,
+                message: error.message,
+                code: error.code,
+                type: error.type
+            });
+            throw error;
+        }
     }
 
     // Get all assessments from a collection
@@ -72,6 +137,28 @@ class DatabaseService {
                 code: error.code,
                 type: error.type
             });
+            throw error;
+        }
+    }
+
+    // Get a single building assessment by TDN
+    async getBuildingAssessmentByTdn(collectionId: string, tdn: string): Promise<BuildingAssessmentDocument | null> {
+        try {
+            const response = await databases.listDocuments(
+                this.databaseId,
+                collectionId,
+                [
+                    Query.equal('tdArp', tdn),
+                    Query.limit(1)
+                ]
+            );
+
+            if (response.documents.length > 0) {
+                return response.documents[0] as unknown as BuildingAssessmentDocument;
+            }
+            return null;
+        } catch (error) {
+            console.error('Error fetching building assessment by TDN:', error);
             throw error;
         }
     }
@@ -120,6 +207,23 @@ class DatabaseService {
         }
     }
 
+    // Create a new building assessment
+    async createBuildingAssessment(collectionId: string, data: Omit<BuildingAssessmentDocument, '$id' | '$createdAt' | '$updatedAt'>): Promise<BuildingAssessmentDocument> {
+        try {
+            const response = await databases.createDocument(
+                this.databaseId,
+                collectionId,
+                ID.unique(),
+                data
+            );
+
+            return response as unknown as BuildingAssessmentDocument;
+        } catch (error) {
+            console.error('Error creating building assessment:', error);
+            throw error;
+        }
+    }
+
     // Create a new assessment
     async createAssessment(collectionId: string, data: Omit<AssessmentDocument, '$id' | '$createdAt' | '$updatedAt'>): Promise<AssessmentDocument> {
         try {
@@ -133,6 +237,32 @@ class DatabaseService {
             return response as unknown as AssessmentDocument;
         } catch (error) {
             console.error('Error creating assessment:', error);
+            throw error;
+        }
+    }
+
+    // Update a building assessment
+    async updateBuildingAssessment(collectionId: string, documentId: string, data: Partial<BuildingAssessmentDocument>): Promise<BuildingAssessmentDocument> {
+        try {
+            console.log('🔄 DatabaseService: Updating building assessment:', documentId);
+            
+            // Remove read-only fields
+            const updateData = { ...data };
+            delete updateData.$id;
+            delete updateData.$createdAt;
+            delete updateData.$updatedAt;
+
+            const response = await databases.updateDocument(
+                this.databaseId,
+                collectionId,
+                documentId,
+                updateData
+            );
+
+            console.log('✅ DatabaseService: Building assessment updated successfully');
+            return response as unknown as BuildingAssessmentDocument;
+        } catch (error) {
+            console.error('❌ DatabaseService: Error updating building assessment:', error);
             throw error;
         }
     }
@@ -159,6 +289,24 @@ class DatabaseService {
             return response as unknown as AssessmentDocument;
         } catch (error) {
             console.error('❌ DatabaseService: Error updating assessment:', error);
+            throw error;
+        }
+    }
+
+    // Delete a building assessment
+    async deleteBuildingAssessment(collectionId: string, documentId: string): Promise<void> {
+        try {
+            console.log('🗑️ DatabaseService: Deleting building assessment:', documentId);
+            
+            await databases.deleteDocument(
+                this.databaseId,
+                collectionId,
+                documentId
+            );
+
+            console.log('✅ DatabaseService: Building assessment deleted successfully');
+        } catch (error) {
+            console.error('❌ DatabaseService: Error deleting building assessment:', error);
             throw error;
         }
     }
@@ -307,11 +455,17 @@ class DatabaseService {
                         }
                         
                     } catch (error: any) {
-                        if (error?.code === 429 || error?.message?.includes('Too Many Requests')) {
+                        const isRateLimit = error?.code === 429 || error?.response?.status === 429 || 
+                                          error?.type === 'general_rate_limit_exceeded' ||
+                                          error?.message?.includes('Rate limit') ||
+                                          error?.message?.includes('Too Many Requests');
+                        
+                        if (isRateLimit) {
                             retryCount++;
                             if (retryCount <= maxRetries) {
-                                console.log(`⏳ Rate limit hit for ${assessment.tdn}, retrying in ${retryCount * 2} seconds... (${retryCount}/${maxRetries})`);
-                                await new Promise(resolve => setTimeout(resolve, retryCount * 2000)); // Exponential backoff
+                                const waitTime = 1000 * retryCount; // 1s, 2s, 3s - faster with abuse protection disabled
+                                console.log(`⏳ Rate limit hit for ${assessment.tdn}, retrying in ${waitTime}ms... (${retryCount}/${maxRetries})`);
+                                await new Promise(resolve => setTimeout(resolve, waitTime));
                                 continue;
                             }
                         }
@@ -337,9 +491,9 @@ class DatabaseService {
                 });
             }
 
-            // Longer delay between each record to avoid rate limits
+            // Faster processing with abuse protection disabled
             if (i < assessments.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay between records
+                await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay between records
             }
         }
 
@@ -637,10 +791,17 @@ class DatabaseService {
                         console.warn(`⚠️ Retry ${retryCount}/${maxRetries} for document ${doc.$id}:`, errorDetails);
                         
                         if (retryCount < maxRetries) {
-                            // Wait before retry with exponential backoff
-                            const waitTime = error?.code === 429 || error?.response?.status === 429 
-                                ? 2000 * retryCount // Longer wait for rate limit errors
-                                : 1000 * retryCount;
+                            // Wait before retry with much longer delays for rate limit errors
+                            const isRateLimit = error?.code === 429 || error?.response?.status === 429 || 
+                                              error?.type === 'general_rate_limit_exceeded' ||
+                                              error?.message?.includes('Rate limit') ||
+                                              error?.message?.includes('Too Many Requests');
+                            
+                            const waitTime = isRateLimit 
+                                ? 1000 * retryCount // Faster retry for rate limit errors (1s, 2s, 3s)
+                                : 500 * retryCount; // Faster exponential backoff for other errors
+                                
+                            console.log(`⏳ Waiting ${waitTime}ms before retry ${retryCount + 1}/${maxRetries}...`);
                             await new Promise(resolve => setTimeout(resolve, waitTime));
                         } else {
                             // Final failure after all retries
@@ -663,10 +824,9 @@ class DatabaseService {
                     });
                 }
 
-                // Wait between each deletion to respect rate limits
-                // Longer delay to ensure we don't hit rate limits
+                // Wait between each deletion - much faster now with abuse protection disabled
                 if (i < documents.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 200)); // 200ms between each deletion
+                    await new Promise(resolve => setTimeout(resolve, 50)); // 50ms between each deletion
                 }
             }
 

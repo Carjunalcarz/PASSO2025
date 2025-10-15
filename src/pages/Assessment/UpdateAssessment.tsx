@@ -26,7 +26,8 @@ import useAssessmentSubmit from './hooks/useAssessmentSubmit';
 import SubmitAssessment from './components/SubmitAssessment';
 import { toast } from 'react-hot-toast';
 import FillDummyButton from './components/testing/FillDummyButton';
-import axios from 'axios';
+import { useAuth } from '../../contexts/AuthContext';
+import { databaseService, BuildingAssessmentDocument } from '../../services/databaseService';
 
 
 // Type definitions
@@ -127,9 +128,12 @@ export interface AssessmentFormData {
 
 const UpdateAssessment = () => {
     const { id } = useParams(); // Assuming route is like /assessment/update/:id
-    const token = localStorage.getItem('token');
+    const { user, isAuthenticated } = useAuth();
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    
+    // Collection ID for building assessments
+    const BUILDING_COLLECTION_ID = import.meta.env.VITE_APPWRITE_BUILDING_ASSESSMENTS_COLLECTION_ID || 'building-assessments';
 
     // Use plain useForm (no validation)
     const {
@@ -144,144 +148,108 @@ const UpdateAssessment = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            if (!id) return;
+            if (!id || !isAuthenticated) return;
             try {
-                const response = await axios.get(
-                    `${import.meta.env.VITE_API_URL_FASTAPI}/assessment/get-assessment/${id}`,
-                    {
-                        headers: { Authorization: `Bearer ${token}` }
-                    }
-                );
-                const data = response.data;
+                const response = await databaseService.getBuildingAssessments(BUILDING_COLLECTION_ID);
+                const data = response.find(item => item.$id === id);
                 
-                // Map API data to your form structure here
+                if (!data) {
+                    toast.error('Assessment not found');
+                    navigate('/assessment/building_assessment');
+                    return;
+                }
+                
+                // Parse JSON strings safely
+                const parseJSON = (jsonString?: string) => {
+                    if (!jsonString) return {};
+                    try {
+                        return JSON.parse(jsonString);
+                    } catch (error) {
+                        console.warn('Failed to parse JSON:', jsonString);
+                        return {};
+                    }
+                };
+                
+                const ownerDetails = parseJSON(data.owner_details);
+                const buildingLocation = parseJSON(data.building_location);
+                const generalDescription = parseJSON(data.general_description);
+                const propertyAppraisal = parseJSON(data.property_appraisal);
+                const propertyAssessment = parseJSON(data.property_assessment);
+                const structuralMaterials = parseJSON(data.structural_materials);
+                const additionalItems = parseJSON(data.additionalItems);
+                const memoranda = parseJSON(data.memoranda);
+                
+                // Map Appwrite data to form structure
                 const mappedData = {
                     approvalSection: {
-                        appraisedBy: data.approval_section?.appraised_by || "",
-                        appraisedDate: data.approval_section?.appraised_date || "",
-                        recommendingApproval: data.approval_section?.recommending_approval || "",
-                        municipalityAssessorDate: data.approval_section?.municipality_assessor_date || "",
-                        approvedByProvince: data.approval_section?.approved_by_province || "",
-                        provincialAssessorDate: data.approval_section?.provincial_assessor_date || "",
+                        appraisedBy: "",
+                        appraisedDate: "",
+                        recommendingApproval: "",
+                        municipalityAssessorDate: "",
+                        approvedByProvince: "",
+                        provincialAssessorDate: "",
                     },
-                    street: data.building_assessment?.street || "",
+                    street: buildingLocation.street || "",
                     ownerDetails: {
-                        id: data.owner_details?.id || "",
-                        td: data.owner_details?.td || "",
-                        owner: data.owner_details?.owner || "",
-                        ownerAddress: data.owner_details?.owner_address || "",
-                        admin_ben_user: data.owner_details?.admin_ben_user || "",
-                        admin_ben_user_address: data.owner_details?.admin_ben_user_address || "",
-                        transactionCode: data.owner_details?.transaction_code || "",
-                        pin: data.owner_details?.pin || "",
-                        tin: data.owner_details?.tin || "",
-                        telNo: data.owner_details?.tel_no || "",
-                        image_list: (() => {
-                            const FTP_URL_BASE = import.meta.env.VITE_FTP_URL_BASE;
-                            const rawImageList = data.owner_details?.image_list || [];
-                            let filenames: string[] = [];
-                            if (Array.isArray(rawImageList)) {
-                                filenames = rawImageList;
-                            } else if (typeof rawImageList === 'string') {
-                                try {
-                                    filenames = JSON.parse(rawImageList);
-                                } catch {
-                                    filenames = [];
-                                }
-                            }
-                            return filenames.map(fname => `${FTP_URL_BASE}/${fname}`);
-                        })(),
+                        id: ownerDetails.id || "",
+                        td: data.tdArp || ownerDetails.td || "",
+                        owner: data.ownerName || ownerDetails.owner || "",
+                        ownerAddress: ownerDetails.ownerAddress || "",
+                        admin_ben_user: ownerDetails.admin_ben_user || "",
+                        admin_ben_user_address: ownerDetails.admin_ben_user_address || "",
+                        transactionCode: data.transactionCode || ownerDetails.transaction_code || "",
+                        pin: data.pin || ownerDetails.pin || "",
+                        tin: ownerDetails.tin || "",
+                        telNo: ownerDetails.telNo || "",
+                        image_list: ownerDetails.image_list || [],
                     },
                     ownerDetail: {
-                        ownerAddress: data.owner_details?.owner_address || "",
+                        ownerAddress: ownerDetails.ownerAddress || "",
                     },
-                    landReference: {
-                        land_owner: data.land_reference?.land_owner || "",
-                        block_no: data.land_reference?.block_no || "",
-                        tdn_no: data.land_reference?.tdn_no || "",
-                        pin: data.land_reference?.pin || "",
-                        lot_no: data.land_reference?.lot_no || "",
-                        survey_no: data.land_reference?.survey_no || "",
-                        area: data.land_reference?.area || "",
+                    landReference: parseJSON(data.land_reference) || {
+                        land_owner: "",
+                        block_no: "",
+                        tdn_no: "",
+                        pin: "",
+                        lot_no: "",
+                        survey_no: "",
+                        area: "",
                     },
                     update_buildingLocation: {
-                        update_address_province: data.building_assessment?.address_province || "",
-                        update_address_municipality: data.building_assessment?.address_municipality || "",
-                        update_address_barangay: data.building_assessment?.address_barangay || "",
-                        update_street: data.building_assessment?.street || "",
-                        update_year: data.building_assessment?.building_location?.year || "",
-                        update_gr_name: data.building_assessment?.building_location?.gr_name || "",
-                        update_gr_code: data.building_assessment?.building_location?.gr_code || "",
-                        image_list: (() => {
-                            const FTP_URL_BASE = import.meta.env.VITE_FTP_URL_BASE;
-                            const rawImageList = data.building_assessment.building_location?.image_list || [];
-                            let filenames: string[] = [];
-                            if (Array.isArray(rawImageList)) {
-                                filenames = rawImageList;
-                            } else if (typeof rawImageList === 'string') {
-                                try {
-                                    filenames = JSON.parse(rawImageList);
-                                } catch {
-                                    filenames = [];
-                                }
-                            }
-                            return filenames.map(fname => `${FTP_URL_BASE}/${fname}`);
-                        })(),
-
+                        update_address_province: data.province || buildingLocation.address_province || "",
+                        update_address_municipality: data.municipality || buildingLocation.address_municipality || "",
+                        update_address_barangay: data.barangay || buildingLocation.address_barangay || "",
+                        update_street: buildingLocation.street || "",
+                        update_year: buildingLocation.year || "",
+                        update_gr_name: buildingLocation.gr_name || "",
+                        update_gr_code: buildingLocation.gr_code || "",
+                        image_list: buildingLocation.image_list || [],
                     },
                     generalDescription: {
-                        building_permit_no: data.building_assessment?.general_description?.building_permit_no || "",
-                        certificate_of_completion_issued_on: data.building_assessment?.general_description?.certificate_of_completion_issued_on || "",
-                        certificate_of_occupancy_issued_on: data.building_assessment?.general_description?.certificate_of_occupancy_issued_on || "",
-                        date_of_occupied: data.building_assessment?.general_description?.date_of_occupied || "",
-                        bldg_age: data.building_assessment?.general_description?.bldg_age || "",
-                        no_of_storeys: data.building_assessment?.general_description?.no_of_storeys || "",
-                        area_of_1st_floor: data.building_assessment?.general_description?.area_of_1st_floor || "",
-                        area_of_2nd_floor: data.building_assessment?.general_description?.area_of_2nd_floor || "",
-                        area_of_3rd_floor: data.building_assessment?.general_description?.area_of_3rd_floor || "",
-                        area_of_4th_floor: data.building_assessment?.general_description?.area_of_4th_floor || "",
-                        total_floor_area: data.building_assessment?.general_description?.total_floor_area?.toString() || "",
-                        kind_of_bldg: data.building_assessment?.general_description?.kind_of_bldg || "",
-                        structural_type: data.building_assessment?.general_description?.structural_type || "",
-                        unitValue: data.building_assessment?.general_description?.unit_value || 0,
-                        cct_image: (() => {
-                            const FTP_URL_BASE = import.meta.env.VITE_FTP_URL_BASE;
-                            const rawImageList = data.building_assessment.general_description?.cct_image || [];
-                            let filenames: string[] = [];
-                            if (Array.isArray(rawImageList)) {
-                                filenames = rawImageList;
-                            } else if (typeof rawImageList === 'string') {
-                                try {
-                                    filenames = JSON.parse(rawImageList);
-                                } catch {
-                                    filenames = [];
-                                }
-                            }
-                            return filenames.map(fname => `${FTP_URL_BASE}/${fname}`);
-                        })(),
-                        floor_plan_image: (() => {
-                            const FTP_URL_BASE = import.meta.env.VITE_FTP_URL_BASE;
-                            const rawImageList = data.building_assessment.general_description?.floor_plan_image || [];
-                            let filenames: string[] = [];
-                            if (Array.isArray(rawImageList)) {
-                                filenames = rawImageList;
-                            } else if (typeof rawImageList === 'string') {
-                                try {
-                                    filenames = JSON.parse(rawImageList);
-                                } catch {
-                                    filenames = [];
-                                }
-                            }
-                            return filenames.map(fname => `${FTP_URL_BASE}/${fname}`);
-                        })()
+                        building_permit_no: generalDescription.building_permit_no || "",
+                        certificate_of_completion_issued_on: generalDescription.certificate_of_completion_issued_on || "",
+                        certificate_of_occupancy_issued_on: generalDescription.certificate_of_occupancy_issued_on || "",
+                        date_of_occupied: generalDescription.date_of_occupied || "",
+                        bldg_age: generalDescription.bldg_age || "",
+                        no_of_storeys: generalDescription.no_of_storeys || "",
+                        area_of_1st_floor: generalDescription.area_of_1st_floor || "",
+                        area_of_2nd_floor: generalDescription.area_of_2nd_floor || "",
+                        area_of_3rd_floor: generalDescription.area_of_3rd_floor || "",
+                        area_of_4th_floor: generalDescription.area_of_4th_floor || "",
+                        total_floor_area: (data.totalArea || generalDescription.total_floor_area)?.toString() || "",
+                        kind_of_bldg: generalDescription.kind_of_bldg || "",
+                        structural_type: generalDescription.structural_type || "",
+                        unitValue: generalDescription.unit_value || 0,
+                        cct_image: generalDescription.cct_image || [],
+                        floor_plan_image: generalDescription.floor_plan_image || []
                     },
 
-                    memoranda: data.building_assessment?.memoranda?.map((memo: any) => ({
+                    memoranda: Array.isArray(memoranda) ? memoranda.map((memo: any) => ({
                         date: memo.date || "",
                         details: memo.details || ""
-                    })) || [],
+                    })) : [],
                     recordOfSupersededAssessment: {
-                        records: data.building_assessment?.recordOfSupersededAssessment?.records?.map((record: any) => ({
+                        records: parseJSON(data.superseded_records)?.records?.map((record: any) => ({
                             id: record.id || "",
                             pin: record.pin || "",
                             tdArpNo: record.tdArpNo || "",
@@ -295,29 +263,28 @@ const UpdateAssessment = () => {
                         })) || [],
                     },
                     update_propertyAssessment: {
-                        id: data.building_assessment?.property_assessment_items?.[0]?.id || 1,
-                        market_value: data.building_assessment?.property_assessment_items?.[0]?.market_value || 0,
-                        building_category: data.building_assessment?.property_assessment_items?.[0]?.building_category || "",
-                        assessment_level: data.building_assessment?.property_assessment_items?.[0]?.assessment_level?.toString() || "",
-                        assessment_value: data.building_assessment?.property_assessment_items?.[0]?.assessment_value || 0,
-                        taxable: data.building_assessment?.property_assessment_items?.[0]?.taxable ?? 1,
-                        eff_year: data.building_assessment?.property_assessment_items?.[0]?.eff_year || new Date().getFullYear().toString(),
-                        eff_quarter: data.building_assessment?.property_assessment_items?.[0]?.eff_quarter || "QTR1",
-                        total_area: data.building_assessment?.property_assessment_items?.[0]?.total_area || 0
-                        
+                        id: 1,
+                        market_value: data.marketValueTotal || propertyAppraisal.market_value || 0,
+                        building_category: propertyAssessment.building_category || "",
+                        assessment_level: propertyAssessment.assessment_level?.toString() || "",
+                        assessment_value: propertyAssessment.assessment_value || 0,
+                        taxable: data.taxable ? 1 : 0,
+                        eff_year: data.effYear || propertyAssessment.eff_year || new Date().getFullYear().toString(),
+                        eff_quarter: data.effQuarter || propertyAssessment.eff_quarter || "QTR1",
+                        total_area: data.totalArea || propertyAssessment.total_area || 0
                     },
-                    structuralMaterial: data.building_assessment?.structural_material?.material_data || {},
+                    structuralMaterial: structuralMaterials.material_data || structuralMaterials || {},
                     additionalItems: {
-                        items: data.building_assessment?.additional_items?.map((item: any) => ({
+                        items: Array.isArray(additionalItems) ? additionalItems.map((item: any) => ({
                             id: item.id,
                             label: item.label,
                             value: item.item_value,
                             quantity: item.quantity,
                             amount: item.amount,
                             description: item.description || ""
-                        })) || [],
-                        subTotal: data.building_assessment?.additional_items_summary?.sub_total || 0,
-                        total: data.building_assessment?.additional_items_summary?.total || 0
+                        })) : [],
+                        subTotal: additionalItems?.sub_total || 0,
+                        total: additionalItems?.total || 0
                     },
                 };
                 reset(mappedData); // This will pre-fill your form
@@ -327,7 +294,7 @@ const UpdateAssessment = () => {
             }
         };
         fetchData();
-    }, [id, reset, token]);
+    }, [id, reset, isAuthenticated, BUILDING_COLLECTION_ID]);
 
     const currencyList = ['USD - US Dollar', 'GBP - British Pound', 'IDR - Indonesian Rupiah', 'INR - Indian Rupee', 'BRL - Brazilian Real', 'EUR - Germany (Euro)', 'TRY - Turkish Lira'];
 
@@ -606,21 +573,112 @@ const UpdateAssessment = () => {
 
     const { submitAssessment, isSubmitting: oldIsSubmitting } = useAssessmentSubmit();
 
-    const onSubmit = async (data: any) => {
+    const onSubmit = async (formData: any) => {
+        if (!id || !isAuthenticated) {
+            toast.error('Authentication required');
+            return;
+        }
+
         try {
-            const url = `${import.meta.env.VITE_API_URL_FASTAPI}/assessment/update`;
-            const response = await axios.put(url, data, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                }
-            });
-            console.log("data", data);
+            console.log('Form data:', formData);
+            
+            // Convert form data to BuildingAssessmentDocument format
+            const updateData: Partial<BuildingAssessmentDocument> = {
+                ownerName: formData.ownerDetails?.owner || '',
+                transactionCode: formData.ownerDetails?.transactionCode || '',
+                tdArp: formData.ownerDetails?.td || '',
+                pin: formData.ownerDetails?.pin || '',
+                barangay: formData.update_buildingLocation?.update_address_barangay || '',
+                municipality: formData.update_buildingLocation?.update_address_municipality || '',
+                province: formData.update_buildingLocation?.update_address_province || '',
+                marketValueTotal: formData.update_propertyAssessment?.market_value || 0,
+                taxable: formData.update_propertyAssessment?.taxable === 1,
+                effYear: formData.update_propertyAssessment?.eff_year || '',
+                effQuarter: formData.update_propertyAssessment?.eff_quarter || '',
+                totalArea: formData.generalDescription?.total_floor_area ? parseFloat(formData.generalDescription.total_floor_area) : 0,
+                userId: user?.$id,
+                synced: false,
+                
+                // Update JSON fields
+                owner_details: JSON.stringify({
+                    id: formData.ownerDetails?.id || '',
+                    pin: formData.ownerDetails?.pin || '',
+                    owner: formData.ownerDetails?.owner || '',
+                    td: formData.ownerDetails?.td || '',
+                    transaction_code: formData.ownerDetails?.transactionCode || '',
+                    ownerAddress: formData.ownerDetails?.ownerAddress || '',
+                    admin_ben_user: formData.ownerDetails?.admin_ben_user || '',
+                    admin_ben_user_address: formData.ownerDetails?.admin_ben_user_address || '',
+                    tin: formData.ownerDetails?.tin || '',
+                    telNo: formData.ownerDetails?.telNo || '',
+                    image_list: formData.ownerDetails?.image_list || []
+                }),
+                
+                building_location: JSON.stringify({
+                    address_province: formData.update_buildingLocation?.update_address_province || '',
+                    address_municipality: formData.update_buildingLocation?.update_address_municipality || '',
+                    address_barangay: formData.update_buildingLocation?.update_address_barangay || '',
+                    street: formData.update_buildingLocation?.update_street || '',
+                    year: formData.update_buildingLocation?.update_year || '',
+                    gr_name: formData.update_buildingLocation?.update_gr_name || '',
+                    gr_code: formData.update_buildingLocation?.update_gr_code || '',
+                    mun_code: '', // Will be calculated
+                    bcode: '', // Will be calculated
+                    image_list: formData.update_buildingLocation?.image_list || []
+                }),
+                
+                land_reference: JSON.stringify(formData.landReference || {}),
+                
+                general_description: JSON.stringify({
+                    building_permit_no: formData.generalDescription?.building_permit_no || '',
+                    certificate_of_completion_issued_on: formData.generalDescription?.certificate_of_completion_issued_on || '',
+                    certificate_of_occupancy_issued_on: formData.generalDescription?.certificate_of_occupancy_issued_on || '',
+                    date_of_occupied: formData.generalDescription?.date_of_occupied || '',
+                    bldg_age: formData.generalDescription?.bldg_age || '',
+                    no_of_storeys: formData.generalDescription?.no_of_storeys || '',
+                    area_of_1st_floor: formData.generalDescription?.area_of_1st_floor || '',
+                    area_of_2nd_floor: formData.generalDescription?.area_of_2nd_floor || '',
+                    area_of_3rd_floor: formData.generalDescription?.area_of_3rd_floor || '',
+                    area_of_4th_floor: formData.generalDescription?.area_of_4th_floor || '',
+                    total_floor_area: formData.generalDescription?.total_floor_area || '',
+                    kind_of_bldg: formData.generalDescription?.kind_of_bldg || '',
+                    structural_type: formData.generalDescription?.structural_type || '',
+                    unit_value: formData.generalDescription?.unitValue || 0,
+                    cct_image: formData.generalDescription?.cct_image || [],
+                    floor_plan_image: formData.generalDescription?.floor_plan_image || []
+                }),
+                
+                structural_materials: JSON.stringify({
+                    material_data: formData.structuralMaterial || {}
+                }),
+                
+                property_appraisal: JSON.stringify({
+                    market_value: formData.update_propertyAssessment?.market_value || 0
+                }),
+                
+                property_assessment: JSON.stringify({
+                    assessment_value: formData.update_propertyAssessment?.assessment_value || 0,
+                    assessment_level: formData.update_propertyAssessment?.assessment_level || '',
+                    building_category: formData.update_propertyAssessment?.building_category || '',
+                    eff_year: formData.update_propertyAssessment?.eff_year || '',
+                    eff_quarter: formData.update_propertyAssessment?.eff_quarter || '',
+                    total_area: formData.update_propertyAssessment?.total_area || 0
+                }),
+                
+                additionalItems: JSON.stringify(formData.additionalItems || { items: [], subTotal: 0, total: 0 }),
+                
+                memoranda: JSON.stringify(formData.memoranda || []),
+                
+                superseded_records: JSON.stringify(formData.recordOfSupersededAssessment || { records: [] })
+            };
+
+            await databaseService.updateBuildingAssessment(BUILDING_COLLECTION_ID, id, updateData);
+            
             toast.success('Assessment updated successfully!');
-            // navigate(0);
+            navigate(`/assessment/view/${id}`);
         } catch (error) {
-            toast.error('Failed to update assessment.');
-            console.error(error);
+            console.error('Update error:', error);
+            toast.error('Failed to update assessment: ' + (error instanceof Error ? error.message : 'Unknown error'));
         }
     };
 

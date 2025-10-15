@@ -6,8 +6,7 @@ import { IRootState } from '../../store';
 import Dropdown from '../../components/Dropdown';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import IconCaretDown from '../../components/Icon/IconCaretDown';
-import axios from 'axios';
-import { useQuery, useMutation, UseMutationResult } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import IconEdit from '../../components/Icon/IconEdit';
 import IconTrash from '../../components/Icon/IconTrash';
 import { Modal } from '@mantine/core';
@@ -19,6 +18,8 @@ import SubclassSuggesstion from '../Municipality/Components/SubclassSuggesstion'
 import GRFilter from '../Municipality/Components/GRFilter';
 import { useState } from 'react';
 import IconEye from '../../components/Icon/IconEye';
+import { useAuth } from '../../contexts/AuthContext';
+import { databaseService, BuildingAssessmentDocument } from '../../services/databaseService';
 
 // Define column interface
 interface Column {
@@ -29,7 +30,7 @@ interface Column {
     rowKey?: string;
 }
 
-// Define the Assessment interface (renamed from AssessmentData for consistency)
+// Define the Assessment interface for display (transformed from BuildingAssessmentDocument)
 interface Assessment {
     pin: string;
     name: string;
@@ -39,7 +40,7 @@ interface Assessment {
     area: number;
     unit_value: number;
     kind: string;
-    ass_level:number;
+    ass_level: number;
     classification: string;
     sub_class: string;
     taxability: string;
@@ -65,13 +66,16 @@ const formatCurrency = (amount: number) => {
 };
 
 const BuildingAssessment = () => {
-    const [taxabilityFilter, setTaxabilityFilter] = useState('exempt'); // Add this line
+    const [taxabilityFilter, setTaxabilityFilter] = useState('exempt');
     const [subclassFilter, setSubclassFilter] = useState<string>('all');
     const [grFilter, setGrFilter] = useState<string>('all');
-    const token = localStorage.getItem('token');
+    const { user, isAuthenticated } = useAuth();
     const dispatch = useDispatch();
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl';
     const navigate = useNavigate();
+    
+    // Collection ID for building assessments - you'll need to set this in your environment
+    const BUILDING_COLLECTION_ID = import.meta.env.VITE_APPWRITE_BUILDING_ASSESSMENTS_COLLECTION_ID || 'building-assessments';
     const [page, setPage] = useState(1);
     const PAGE_SIZES = [10, 20, 30, 50, 100];
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
@@ -207,72 +211,80 @@ const BuildingAssessment = () => {
         dispatch(setPageTitle('Building'));
     }, [dispatch]);
 
-    const assessment_data = (data: any): Assessment => ({
-        id: data.owner_details.id ?? '',
-        pin: data.owner_details.pin,
-        name: data.owner_details.owner,
-        tdn: data.owner_details.td,
-        market_val: data.building_assessment?.property_appraisal?.market_value ?? 0,
-        ass_value: data.building_assessment?.assessment_value ?? 0,
-        area: Number(data.building_assessment?.general_description?.total_floor_area ?? 0),
-        unit_value: data.building_assessment?.general_description?.unit_value ?? 0,
-        kind: data.building_assessment?.general_description?.kind_of_bldg ?? '',
-        ass_level: Number(data.building_assessment?.assessment_level ?? 0),
-        classification: data.building_assessment?.building_category ?? '',
-        sub_class: data.building_assessment?.general_description?.structural_type ?? '',
-        taxability: data.building_assessment?.property_assessment_items?.[0]?.taxable === 1 ? 'Taxable' : 'Exempt',
-        trans_cd: data.owner_details.transaction_code ?? '',
-        tax_beg_yr: Number(data.building_assessment?.property_assessment_items?.[0]?.eff_year ?? 0),
-        eff_date: data.building_assessment?.property_assessment_items?.[0]?.eff_year ?? '',
-        owner_no: data.owner_details.id?.toString() ?? '',
-        mun_code: data.building_assessment?.building_location?.mun_code ?? '',
-        municipality: data.building_assessment?.building_location?.address_municipality ?? '',
-        barangay_code: data.building_assessment?.building_location?.bcode ?? '',
-        barangay: data.building_assessment?.building_location?.address_barangay ?? '',
-        gr_code: data.building_assessment?.building_location?.gr_code ?? '',
-        gr: data.building_assessment?.building_location?.gr_name ?? '',
-       
-    });
+    // Transform BuildingAssessmentDocument to Assessment interface
+    const transformBuildingAssessment = (data: BuildingAssessmentDocument): Assessment => {
+        // Parse JSON strings safely
+        const parseJSON = (jsonString?: string) => {
+            if (!jsonString) return {};
+            try {
+                return JSON.parse(jsonString);
+            } catch (error) {
+                console.warn('Failed to parse JSON:', jsonString);
+                return {};
+            }
+        };
 
-    const fetchAssessments = async (): Promise<Assessment[]> => {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/assessment/get-assessments`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-        // If your API returns { data: [ ... ] }
-        return response.data.map(assessment_data);
+        const ownerDetails = parseJSON(data.owner_details);
+        const buildingLocation = parseJSON(data.building_location);
+        const generalDescription = parseJSON(data.general_description);
+        const propertyAppraisal = parseJSON(data.property_appraisal);
+        const propertyAssessment = parseJSON(data.property_assessment);
+
+        return {
+            id: data.$id ?? '',
+            pin: data.pin ?? ownerDetails.pin ?? '',
+            name: data.ownerName ?? ownerDetails.owner ?? '',
+            tdn: data.tdArp ?? ownerDetails.td ?? '',
+            market_val: data.marketValueTotal ?? propertyAppraisal.market_value ?? 0,
+            ass_value: propertyAssessment.assessment_value ?? 0,
+            area: data.totalArea ?? Number(generalDescription.total_floor_area ?? 0),
+            unit_value: generalDescription.unit_value ?? 0,
+            kind: generalDescription.kind_of_bldg ?? '',
+            ass_level: Number(propertyAssessment.assessment_level ?? 0),
+            classification: propertyAssessment.building_category ?? '',
+            sub_class: generalDescription.structural_type ?? '',
+            taxability: data.taxable ? 'Taxable' : 'Exempt',
+            trans_cd: data.transactionCode ?? ownerDetails.transaction_code ?? '',
+            tax_beg_yr: Number(data.effYear ?? propertyAssessment.eff_year ?? 0),
+            eff_date: data.effYear ?? propertyAssessment.eff_year ?? '',
+            owner_no: ownerDetails.id?.toString() ?? '',
+            mun_code: buildingLocation.mun_code ?? '',
+            municipality: data.municipality ?? buildingLocation.address_municipality ?? '',
+            barangay_code: buildingLocation.bcode ?? '',
+            barangay: data.barangay ?? buildingLocation.address_barangay ?? '',
+            gr_code: buildingLocation.gr_code ?? '',
+            gr: buildingLocation.gr_name ?? '',
+        };
+    };
+
+    const fetchBuildingAssessments = async (): Promise<Assessment[]> => {
+        if (!isAuthenticated) {
+            throw new Error('User not authenticated');
+        }
+        
+        console.log('🏢 Fetching building assessments from collection:', BUILDING_COLLECTION_ID);
+        const buildingAssessments = await databaseService.getBuildingAssessments(BUILDING_COLLECTION_ID);
+        
+        // Transform to Assessment interface for display
+        return buildingAssessments.map(transformBuildingAssessment);
     };
 
     const { data: rowData = [], isLoading: queryLoading, refetch } = useQuery<Assessment[]>({
-        queryKey: ['assessments', 'Building'],
-        queryFn: fetchAssessments,
-        refetchOnWindowFocus: true,  // Changed to true
-        refetchOnMount: true,        // Changed to true
-        refetchOnReconnect: true,    // Changed to true
-        staleTime: 5 * 60 * 1000,   // Changed to 5 minutes instead of Infinity
+        queryKey: ['building-assessments'],
+        queryFn: fetchBuildingAssessments,
+        enabled: isAuthenticated,
+        refetchOnWindowFocus: true,
+        refetchOnMount: true,
+        refetchOnReconnect: true,
+        staleTime: 5 * 60 * 1000,
     });
     console.log("rowData", rowData);
-
-    // const filteredData = rowData.filter((item: Assessment) => {
-    //     const value = item[searchColumn.toLowerCase() as keyof Assessment];
-    //     return (value?.toString() ?? '').toLowerCase().includes(search.toLowerCase());
-    // });
 
     // First filter by search
     const searchFilteredData = rowData.filter((item: Assessment) => {
         const value = item[searchColumn.toLowerCase() as keyof Assessment];
         return (value?.toString() ?? '').toLowerCase().includes(search.toLowerCase());
     });
-
-    // // Then filter by taxability
-    // const filteredData = searchFilteredData.filter((item: Assessment) => {
-    //     if (taxabilityFilter === 'all') return true;
-    //     if (taxabilityFilter === 'taxable') return item.taxability === 'Taxable';
-    //     if (taxabilityFilter === 'exempt') return item.taxability === 'Exempt';
-    //     return true;
-    // });
-
 
     // 2. Filter by taxability and subclass
     const filteredData = searchFilteredData.filter((item: Assessment) => {
@@ -289,10 +301,6 @@ const BuildingAssessment = () => {
 
         return matchesTaxability && matchesSubclass && matchesGR;
     });
-
-
-
-
 
     const sortedData = sortBy(filteredData, (item) => {
         switch (sortStatus.columnAccessor) {
@@ -340,73 +348,169 @@ const BuildingAssessment = () => {
         };
     };
 
-
-
     const sums = calculateSums();
 
     const toggleColumn = (col: keyof Assessment) => {
         setHideCols((prev) => (prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col]));
     };
 
-    const createMutation = useMutation<Assessment, Error, Partial<Assessment>>({
-        mutationFn: (newData) =>
-            axios.post('your-endpoint', newData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }).then(response => response.data),
+    const createMutation = useMutation<BuildingAssessmentDocument, Error, Partial<Assessment>>({
+        mutationFn: async (newData: Partial<Assessment>) => {
+            if (!isAuthenticated) {
+                throw new Error('User not authenticated');
+            }
+            
+            // Convert Assessment to BuildingAssessmentDocument format
+            const createData: Omit<BuildingAssessmentDocument, '$id' | '$createdAt' | '$updatedAt'> = {
+                ownerName: newData.name || '',
+                transactionCode: newData.trans_cd || '',
+                tdArp: newData.tdn || '',
+                pin: newData.pin || '',
+                barangay: newData.barangay || '',
+                municipality: newData.municipality || '',
+                marketValueTotal: newData.market_val || 0,
+                taxable: newData.taxability === 'Taxable',
+                effYear: newData.eff_date || '',
+                totalArea: newData.area || 0,
+                userId: user?.$id,
+                synced: false,
+                // Create JSON fields
+                owner_details: JSON.stringify({
+                    id: newData.owner_no,
+                    pin: newData.pin,
+                    owner: newData.name,
+                    td: newData.tdn,
+                    transaction_code: newData.trans_cd
+                }),
+                building_location: JSON.stringify({
+                    mun_code: newData.mun_code,
+                    address_municipality: newData.municipality,
+                    bcode: newData.barangay_code,
+                    address_barangay: newData.barangay,
+                    gr_code: newData.gr_code,
+                    gr_name: newData.gr
+                }),
+                general_description: JSON.stringify({
+                    total_floor_area: newData.area,
+                    unit_value: newData.unit_value,
+                    kind_of_bldg: newData.kind,
+                    structural_type: newData.sub_class
+                }),
+                property_appraisal: JSON.stringify({
+                    market_value: newData.market_val
+                }),
+                property_assessment: JSON.stringify({
+                    assessment_value: newData.ass_value,
+                    assessment_level: newData.ass_level,
+                    building_category: newData.classification,
+                    eff_year: newData.eff_date
+                })
+            };
+            
+            return await databaseService.createBuildingAssessment(BUILDING_COLLECTION_ID, createData);
+        },
         onSuccess: () => {
+            toast.success('Building assessment created successfully');
             refetch();
+        },
+        onError: (error) => {
+            console.error('Create error:', error);
+            toast.error('Failed to create building assessment: ' + error.message);
         },
     });
 
     const updateMutation = useMutation<
-        any,
+        BuildingAssessmentDocument,
         Error,
         Assessment,
         unknown
     >({
         mutationFn: async (data: Assessment) => {
-            const response = await axios.put(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/${data.tdn}`, data, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            const taxability = data.taxability === "1" ? "Taxable" : data.taxability === "0" ? "Exempt" : data.taxability;
-            data.taxability = taxability;
-            return response.data;
+            if (!isAuthenticated) {
+                throw new Error('User not authenticated');
+            }
+            
+            // Convert Assessment back to BuildingAssessmentDocument format
+            const updateData: Partial<BuildingAssessmentDocument> = {
+                ownerName: data.name,
+                transactionCode: data.trans_cd,
+                tdArp: data.tdn,
+                pin: data.pin,
+                barangay: data.barangay,
+                municipality: data.municipality,
+                marketValueTotal: data.market_val,
+                taxable: data.taxability === 'Taxable',
+                effYear: data.eff_date,
+                totalArea: data.area,
+                // Update JSON fields as needed
+                owner_details: JSON.stringify({
+                    id: data.owner_no,
+                    pin: data.pin,
+                    owner: data.name,
+                    td: data.tdn,
+                    transaction_code: data.trans_cd
+                }),
+                building_location: JSON.stringify({
+                    mun_code: data.mun_code,
+                    address_municipality: data.municipality,
+                    bcode: data.barangay_code,
+                    address_barangay: data.barangay,
+                    gr_code: data.gr_code,
+                    gr_name: data.gr
+                }),
+                general_description: JSON.stringify({
+                    total_floor_area: data.area,
+                    unit_value: data.unit_value,
+                    kind_of_bldg: data.kind,
+                    structural_type: data.sub_class
+                }),
+                property_appraisal: JSON.stringify({
+                    market_value: data.market_val
+                }),
+                property_assessment: JSON.stringify({
+                    assessment_value: data.ass_value,
+                    assessment_level: data.ass_level,
+                    building_category: data.classification,
+                    eff_year: data.eff_date
+                })
+            };
+            
+            return await databaseService.updateBuildingAssessment(BUILDING_COLLECTION_ID, data.id, updateData);
         },
         onSuccess: () => {
-            toast.success('Record updated successfully');
+            toast.success('Building assessment updated successfully');
             setIsEditModalOpen(false);
-            console.log('Calling refetch...'); // Add this debug log
+            setEditingRecord(null);
             refetch();
         },
         onError: (error) => {
-            toast.error('Failed to update record: ' + error.message);
+            console.error('Update error:', error);
+            toast.error('Failed to update building assessment: ' + error.message);
         },
     });
 
     const deleteMutation = useMutation<
-        any,
+        void,
         Error,
         string,
         unknown
     >({
-        mutationFn: async (tdn: string) => {
-            const response = await axios.delete(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/${tdn}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            return response.data;
+        mutationFn: async (documentId: string) => {
+            if (!isAuthenticated) {
+                throw new Error('User not authenticated');
+            }
+            
+            await databaseService.deleteBuildingAssessment(BUILDING_COLLECTION_ID, documentId);
         },
         onSuccess: () => {
-            toast.success('Record deleted successfully');
+            toast.success('Building assessment deleted successfully');
+            setIsDeleteModalOpen(false);
+            setDeletingTdn(null);
             refetch();
         },
         onError: (error) => {
-            toast.error('Failed to delete record: ' + error.message);
+            console.error('Delete error:', error);
+            toast.error('Failed to delete building assessment: ' + error.message);
         },
     });
 
@@ -420,15 +524,17 @@ const BuildingAssessment = () => {
     };
 
     const handleDelete = (tdn: string) => {
-        setDeletingTdn(tdn);
-        setIsDeleteModalOpen(true);
+        // Find the record to get the document ID
+        const record = rowData.find(r => r.tdn === tdn);
+        if (record) {
+            setDeletingTdn(record.id); // Store document ID instead of TDN
+            setIsDeleteModalOpen(true);
+        }
     };
 
     const confirmDelete = () => {
         if (deletingTdn) {
-            deleteMutation.mutate(deletingTdn);
-            setIsDeleteModalOpen(false);
-            setDeletingTdn(null);
+            deleteMutation.mutate(deletingTdn); // deletingTdn now contains document ID
         }
     };
 
@@ -440,7 +546,7 @@ const BuildingAssessment = () => {
     };
 
     const handleView = (record: Assessment) => {
-        navigate(`/assessment/update/${record.id}`);
+        navigate(`/assessment/view/${record.id}`);
     };
 
     return (

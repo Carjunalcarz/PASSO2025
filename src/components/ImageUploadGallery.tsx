@@ -11,6 +11,9 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
 function cleanUrl(url: string) {
+  if (!url || typeof url !== 'string') {
+    return '';
+  }
   if (url.startsWith('data:image') && url.includes('http')) {
     return url.replace(/^data:image\/[a-zA-Z]+;base64,/, '');
   }
@@ -126,7 +129,7 @@ const ImageUploadGallery: React.FC<ImageUploadGalleryProps> = ({
                     dragProps
                 }) => (
                     <div className="space-y-4">
-                        {/* Upload Area */}
+                        {/* Upload Area
                         <div
                             {...dragProps}
                             className={`border-2 border-dashed rounded-lg p-3 text-center transition-colors w-full ${
@@ -173,7 +176,7 @@ const ImageUploadGallery: React.FC<ImageUploadGalleryProps> = ({
                                     </button>
                                 )}
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Gallery Preview */}
                         {imageList.length > 0 && (
@@ -201,16 +204,19 @@ const ImageUploadGallery: React.FC<ImageUploadGalleryProps> = ({
                                             <SwiperSlide key={`slide-${swiperKey}-${index}`}>
                                                 <div className="relative group">
                                                     <div 
-                                                        className={`relative overflow-hidden rounded-lg ${isZoomed ? 'cursor-grab' : 'cursor-zoom-in'}`}
+                                                        className={`relative overflow-hidden rounded-lg flex items-center justify-center ${isZoomed ? 'cursor-grab' : 'cursor-zoom-in'}`}
                                                         onClick={handleContainerClick}
+                                                        style={{ minHeight: maxImageHeight || '400px' }}
                                                     >
                                                         <img
                                                             src={cleanUrl(image.data_url)}
                                                             alt={`Image ${index + 1}`}
-                                                            className="w-full rounded-lg transition-transform duration-300"
+                                                            className="rounded-lg transition-transform duration-300"
                                                             style={{
-                                                                maxHeight: isZoomed ? 'none' : (maxImageHeight || '600px'),
-                                                                maxWidth: isZoomed ? 'none' : (maxImageWidth || '100%'),
+                                                                maxHeight: isZoomed ? 'none' : (maxImageHeight || '400px'),
+                                                                maxWidth: isZoomed ? 'none' : '100%',
+                                                                width: 'auto',
+                                                                height: 'auto',
                                                                 objectFit: imageFit || 'contain',
                                                                 transform: `scale(${zoomLevel})`,
                                                                 transformOrigin: 'center center',

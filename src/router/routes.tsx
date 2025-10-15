@@ -119,6 +119,7 @@ import ADNAssessment from '../pages/Municipality/ADN_Assessment';
 import Map from '../pages/Map'
 import UpdateAssessment from '../pages/Assessment/UpdateAssessment';
 import BuildingAssessment from '../pages/Assessment/BuildingAssessment';
+import AssessmentDetails from '../pages/Assessment/AssessmentDetails';
 import UnitValue from '../pages/Municipality/unit_value';
 const routes = [
     // dashboard
@@ -737,6 +738,14 @@ const routes = [
         element: (
             <ProtectedRoute>
                 <UpdateAssessment />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/assessment/view/:id',
+        element: (
+            <ProtectedRoute>
+                <AssessmentDetails />
             </ProtectedRoute>
         ),
     },
