@@ -114,7 +114,7 @@ const AssessmentDetails = () => {
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
         );
     }
@@ -156,23 +156,23 @@ const AssessmentDetails = () => {
                         </button>
                         <div>
                             <h1 className="text-2xl font-bold">Building Assessment Details</h1>
-                            <p className="text-gray-600 dark:text-gray-400">
+                            <p className="text-slate-600 dark:text-slate-400">
                                 TDN: {assessment.tdArp || 'N/A'}
                             </p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button
+                        {/* <button
                             onClick={() => navigate(`/assessment/update/${id}`)}
                             className="btn btn-primary"
                         >
                             <IconEdit className="w-4 h-4 mr-2" />
                             Edit
-                        </button>
-                        <button className="btn btn-secondary">
+                        </button> */}
+                        {/* <button className="btn btn-secondary">
                             <IconDownload className="w-4 h-4 mr-2" />
                             Export
-                        </button>
+                        </button> */}
                         <button 
                             className="btn btn-info"
                             onClick={() => {
@@ -200,59 +200,59 @@ const AssessmentDetails = () => {
 
             {/* Owner Details Section */}
             <div className="panel">
-                <div className="border-b border-[#e0e6ed] dark:border-[#17263c] pb-4 mb-6">
+                <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
                     <h2 className="text-xl font-semibold">Owner Details</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Owner Name</label>
+                        <label className="font-medium text-slate-700 dark:text-slate-300">Owner Name</label>
                         <p className="text-lg mt-1">{assessment.ownerName || ownerDetails.owner || 'N/A'}</p>
                     </div>
                     <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">TDN/ARP No.</label>
+                        <label className="font-medium text-slate-700 dark:text-slate-300">TDN/ARP No.</label>
                         <p className="text-lg mt-1">{assessment.tdArp || ownerDetails.td || 'N/A'}</p>
                     </div>
                     <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">PIN</label>
+                        <label className="font-medium text-slate-700 dark:text-slate-300">PIN</label>
                         <p className="text-lg mt-1">{assessment.pin || ownerDetails.pin || 'N/A'}</p>
                     </div>
                     <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Transaction Code</label>
+                        <label className="font-medium text-slate-700 dark:text-slate-300">Transaction Code</label>
                         <p className="text-lg mt-1">{assessment.transactionCode || ownerDetails.transaction_code || 'N/A'}</p>
                     </div>
                     <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">TIN</label>
+                        <label className="font-medium text-slate-700 dark:text-slate-300">TIN</label>
                         <p className="text-lg mt-1">{ownerDetails.tin || 'N/A'}</p>
                     </div>
                     <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Tel No.</label>
+                        <label className="font-medium text-slate-700 dark:text-slate-300">Tel No.</label>
                         <p className="text-lg mt-1">{ownerDetails.telNo || 'N/A'}</p>
                     </div>
                     <div className="md:col-span-2 lg:col-span-3">
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Owner Address</label>
+                        <label className="font-medium text-slate-700 dark:text-slate-300">Owner Address</label>
                         <p className="text-lg mt-1">{ownerDetails.address || ownerDetails.ownerAddress || 'N/A'}</p>
                     </div>
                     
                     {/* Administrator/Beneficiary Section */}
                     {ownerDetails.hasAdministratorBeneficiary && ownerDetails.administratorBeneficiary && (
                         <>
-                            <div className="md:col-span-3 border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                            <div className="md:col-span-3 border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
                                 <h3 className="text-lg font-semibold mb-4">Administrator/Beneficial User</h3>
                             </div>
                             <div>
-                                <label className="font-medium text-gray-700 dark:text-gray-300">Name</label>
+                                <label className="font-medium text-slate-700 dark:text-slate-300">Name</label>
                                 <p className="text-lg mt-1">{ownerDetails.administratorBeneficiary.name || 'N/A'}</p>
                             </div>
                             <div>
-                                <label className="font-medium text-gray-700 dark:text-gray-300">TIN</label>
+                                <label className="font-medium text-slate-700 dark:text-slate-300">TIN</label>
                                 <p className="text-lg mt-1">{ownerDetails.administratorBeneficiary.tin || 'N/A'}</p>
                             </div>
                             <div>
-                                <label className="font-medium text-gray-700 dark:text-gray-300">Tel No.</label>
+                                <label className="font-medium text-slate-700 dark:text-slate-300">Tel No.</label>
                                 <p className="text-lg mt-1">{ownerDetails.administratorBeneficiary.telNo || 'N/A'}</p>
                             </div>
                             <div className="md:col-span-2 lg:col-span-3">
-                                <label className="font-medium text-gray-700 dark:text-gray-300">Address</label>
+                                <label className="font-medium text-slate-700 dark:text-slate-300">Address</label>
                                 <p className="text-lg mt-1">{ownerDetails.administratorBeneficiary.address || 'N/A'}</p>
                             </div>
                         </>
@@ -260,7 +260,7 @@ const AssessmentDetails = () => {
                     
                     {/* Valid ID Images */}
                     {ownerDetails.validIdImages && Array.isArray(ownerDetails.validIdImages) && ownerDetails.validIdImages.length > 0 && (
-                        <div className="md:col-span-3 border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                        <div className="md:col-span-3 border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
                             <h3 className="text-lg font-semibold mb-4">Owner Valid ID Images</h3>
                             <ImageUploadGallery
                                 images={convertToImageList(ownerDetails.validIdImages)}
@@ -275,7 +275,7 @@ const AssessmentDetails = () => {
                     
                     {/* Administrator Valid ID Images */}
                     {ownerDetails.administratorBeneficiary?.validIdImages && Array.isArray(ownerDetails.administratorBeneficiary.validIdImages) && ownerDetails.administratorBeneficiary.validIdImages.length > 0 && (
-                        <div className="md:col-span-3 border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                        <div className="md:col-span-3 border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
                             <h3 className="text-lg font-semibold mb-4">Administrator Valid ID Images</h3>
                             <ImageUploadGallery
                                 images={convertToImageList(ownerDetails.administratorBeneficiary.validIdImages)}
@@ -292,20 +292,20 @@ const AssessmentDetails = () => {
 
             {/* Building Location Section */}
             <div className="panel">
-                <div className="border-b border-[#e0e6ed] dark:border-[#17263c] pb-4 mb-6">
+                <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
                     <h2 className="text-xl font-semibold">Building Location</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Province</label>
+                        <label className="font-medium text-slate-700 dark:text-slate-300">Province</label>
                         <p className="text-lg mt-1">{assessment.province || buildingLocation.address_province || 'N/A'}</p>
                     </div>
                     <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Municipality</label>
+                        <label className="font-medium text-slate-700 dark:text-slate-300">Municipality</label>
                         <p className="text-lg mt-1">{assessment.municipality || buildingLocation.address_municipality || 'N/A'}</p>
                     </div>
                     <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Barangay</label>
+                        <label className="font-medium text-slate-700 dark:text-slate-300">Barangay</label>
                         <p className="text-lg mt-1">{assessment.barangay || buildingLocation.address_barangay || 'N/A'}</p>
                     </div>
                     <div>
@@ -379,7 +379,7 @@ const AssessmentDetails = () => {
                                     Copy Coordinates
                                 </button>
                             </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
                                 Coordinates: {buildingLocation.latitude}, {buildingLocation.longitude}
                             </p>
                         </div>
@@ -387,7 +387,7 @@ const AssessmentDetails = () => {
                     
                     {/* Building Images */}
                     {buildingLocation.buildingImages && Array.isArray(buildingLocation.buildingImages) && buildingLocation.buildingImages.length > 0 && (
-                        <div className="md:col-span-3 border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                        <div className="md:col-span-3 border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
                             <h3 className="text-lg font-semibold mb-4">Building Images</h3>
                             <ImageUploadGallery
                                 images={convertToImageList(buildingLocation.buildingImages)}
@@ -404,7 +404,7 @@ const AssessmentDetails = () => {
 
             {/* Land Reference Section */}
             <div className="panel">
-                <div className="border-b border-[#e0e6ed] dark:border-[#17263c] pb-4 mb-6">
+                <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
                     <h2 className="text-xl font-semibold">Land Reference</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -440,7 +440,7 @@ const AssessmentDetails = () => {
                     {/* Superseded Assessment */}
                     {landReference.superseded_assessment && (
                         <>
-                            <div className="md:col-span-3 border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                            <div className="md:col-span-3 border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
                                 <h3 className="text-lg font-semibold mb-4">Superseded Assessment</h3>
                             </div>
                             <div>
@@ -472,9 +472,9 @@ const AssessmentDetails = () => {
                     
                     {/* Memoranda */}
                     {landReference.memoranda?.memoranda && (
-                        <div className="md:col-span-3 border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                        <div className="md:col-span-3 border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
                             <label className="font-medium text-gray-700 dark:text-gray-300">Land Reference Memoranda</label>
-                            <p className="text-sm mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded">{landReference.memoranda.memoranda}</p>
+                            <p className="text-sm mt-2 p-3 bg-slate-50 dark:bg-slate-800 rounded">{landReference.memoranda.memoranda}</p>
                         </div>
                     )}
                 </div>
@@ -482,7 +482,7 @@ const AssessmentDetails = () => {
 
             {/* General Description Section */}
             <div className="panel">
-                <div className="border-b border-[#e0e6ed] dark:border-[#17263c] pb-4 mb-6">
+                <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
                     <h2 className="text-xl font-semibold">General Description</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -537,13 +537,13 @@ const AssessmentDetails = () => {
                     
                     {/* Floor Areas */}
                     {generalDescription.floorAreas && generalDescription.floorAreas.length > 0 && (
-                        <div className="md:col-span-3 border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                        <div className="md:col-span-3 border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
                             <label className="font-medium text-gray-700 dark:text-gray-300 block mb-3">Floor Areas</label>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {generalDescription.floorAreas.map((floor: any, index: number) => (
                                     <div key={index} className="bg-gray-50 dark:bg-gray-800 p-3 rounded">
                                         <p className="font-medium">{floor.floorNumber}</p>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">{floor.area} sqm</p>
+                                        <p className="text-sm text-slate-600 dark:text-slate-400">{floor.area} sqm</p>
                                     </div>
                                 ))}
                             </div>
@@ -552,7 +552,7 @@ const AssessmentDetails = () => {
                     
                     {/* Floor Plan Images */}
                     {generalDescription.floorPlanImages && Array.isArray(generalDescription.floorPlanImages) && generalDescription.floorPlanImages.length > 0 && (
-                        <div className="md:col-span-3 border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                        <div className="md:col-span-3 border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
                             <h3 className="text-lg font-semibold mb-4">Floor Plan Images</h3>
                             <ImageUploadGallery
                                 images={convertToImageList(generalDescription.floorPlanImages)}
@@ -569,7 +569,7 @@ const AssessmentDetails = () => {
 
             {/* Structural Materials Section */}
             <div className="panel">
-                <div className="border-b border-[#e0e6ed] dark:border-[#17263c] pb-4 mb-6">
+                <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
                     <h2 className="text-xl font-semibold">Structural Materials</h2>
                 </div>
                 <div className="space-y-6">
@@ -678,7 +678,7 @@ const AssessmentDetails = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Property Appraisal */}
                 <div className="panel">
-                    <div className="border-b border-[#e0e6ed] dark:border-[#17263c] pb-4 mb-6">
+                    <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
                         <h2 className="text-xl font-semibold">Property Appraisal</h2>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -716,7 +716,7 @@ const AssessmentDetails = () => {
                 {/* Additional Items */}
                 {additionalItems && additionalItems.items && Array.isArray(additionalItems.items) && additionalItems.items.length > 0 && (
                     <div className="panel">
-                        <div className="border-b border-[#e0e6ed] dark:border-[#17263c] pb-4 mb-6">
+                        <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
                             <h2 className="text-xl font-semibold">Additional Items</h2>
                         </div>
                         <div className="space-y-3">
@@ -761,7 +761,7 @@ const AssessmentDetails = () => {
 
             {/* Property Assessment Section */}
             <div className="panel">
-                <div className="border-b border-[#e0e6ed] dark:border-[#17263c] pb-4 mb-6">
+                <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
                     <h2 className="text-xl font-semibold">Property Assessment</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -810,7 +810,7 @@ const AssessmentDetails = () => {
 
             {/* Tax Calculation */}
             <div className="panel bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
-                <div className="border-b border-[#e0e6ed] dark:border-[#17263c] pb-4 mb-6">
+                <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
                     <h2 className="text-xl font-semibold">Tax Calculation</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -840,7 +840,7 @@ const AssessmentDetails = () => {
                 {/* Memoranda */}
                 {memoranda && memoranda.length > 0 && (
                     <div className="panel">
-                        <div className="border-b border-[#e0e6ed] dark:border-[#17263c] pb-4 mb-6">
+                        <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
                             <h2 className="text-xl font-semibold">Memoranda</h2>
                         </div>
                         <div className="space-y-3">
@@ -857,7 +857,7 @@ const AssessmentDetails = () => {
 
             {/* System Information */}
             <div className="panel bg-gray-50 dark:bg-gray-800">
-                <div className="border-b border-[#e0e6ed] dark:border-[#17263c] pb-4 mb-6">
+                <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
                     <h2 className="text-xl font-semibold">System Information</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">

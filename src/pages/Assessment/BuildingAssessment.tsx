@@ -55,6 +55,8 @@ interface Assessment {
     gr_code: string;
     gr: string;
     id: string;
+    created_at: string;
+    updated_at: string;
     rowKey?: string;
 }
 
@@ -81,7 +83,7 @@ const BuildingAssessment = () => {
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
     const [search, setSearch] = useState('');
     const [searchColumn, setSearchColumn] = useState('tdn');
-    const [hideCols, setHideCols] = useState<Array<keyof Assessment>>(['name', 'barangay_code', 'mun_code', 'gr_code', 'eff_date', 'owner_no']);
+    const [hideCols, setHideCols] = useState<Array<keyof Assessment>>(['name', 'barangay_code', 'mun_code', 'gr_code', 'eff_date', 'owner_no', 'created_at', 'updated_at']);
     const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
         columnAccessor: 'tdn',
         direction: 'asc',
@@ -171,6 +173,38 @@ const BuildingAssessment = () => {
         { accessor: 'barangay', title: 'Barangay', sortable: true },
         { accessor: 'gr_code', title: 'GR Code', sortable: true },
         { accessor: 'gr', title: 'GR', sortable: true },
+        {
+            accessor: 'created_at',
+            title: 'Created At',
+            render: (record: Assessment) => (
+                <div className="text-sm">
+                    {record.created_at ? new Date(record.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }) : 'N/A'}
+                </div>
+            ),
+            sortable: true
+        },
+        {
+            accessor: 'updated_at',
+            title: 'Updated At',
+            render: (record: Assessment) => (
+                <div className="text-sm">
+                    {record.updated_at ? new Date(record.updated_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }) : 'N/A'}
+                </div>
+            ),
+            sortable: true
+        },
 
         {
             accessor: 'actions',
@@ -181,23 +215,23 @@ const BuildingAssessment = () => {
                     <button
                         type="button"
                         onClick={() => handleView(record)}
-                        className="p-1 bg-transparent border border-primary text-primary rounded hover:bg-primary hover:text-white hover:border-primary transition-colors duration-200"
+                        className="p-2 bg-transparent border border-blue-500 text-blue-500 rounded-md hover:bg-blue-500 hover:text-white transition-colors duration-200 flex items-center justify-center"
                         title="View Record"
                     >
                         <IconEye className="w-4 h-4" />
                     </button>
-                    <button
+                    {/* <button
                         type="button"
                         onClick={() => handleUpdate(record)}
                         className="p-1 bg-transparent border border-primary text-primary rounded hover:bg-primary hover:text-white hover:border-primary transition-colors duration-200"
                         title="Edit Record"
                     >
                         <IconEdit className="w-4 h-4" />
-                    </button>
+                    </button> */}
                     <button
                         type="button"
                         onClick={() => handleDelete(record.tdn)}
-                        className="p-1 bg-transparent border border-danger text-danger rounded hover:bg-danger hover:text-white hover:border-danger transition-colors duration-200"
+                        className="p-2 bg-transparent border border-red-500 text-red-500 rounded-md hover:bg-red-500 hover:text-white transition-colors duration-200 flex items-center justify-center"
                         title="Delete Record"
                     >
                         <IconTrash className="w-4 h-4" />
@@ -254,6 +288,8 @@ const BuildingAssessment = () => {
             barangay: data.barangay ?? buildingLocation.address_barangay ?? '',
             gr_code: buildingLocation.gr_code ?? '',
             gr: buildingLocation.gr_name ?? '',
+            created_at: data.$createdAt ?? '',
+            updated_at: data.$updatedAt ?? '',
         };
     };
 
@@ -310,6 +346,10 @@ const BuildingAssessment = () => {
                 return item.ass_value || 0;
             case 'area':
                 return item.area || 0;
+            case 'created_at':
+                return new Date(item.created_at || 0).getTime();
+            case 'updated_at':
+                return new Date(item.updated_at || 0).getTime();
             default:
                 return item[sortStatus.columnAccessor as keyof Assessment];
         }
@@ -570,14 +610,14 @@ const BuildingAssessment = () => {
                     <div className="panel bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg shadow-md">
                         <div className="flex justify-between items-start w-full">
                             <div className="flex flex-col items-start gap-2">
-                                <img src="/mun_logo/carmen.png" alt="carmen Logo" className="w-20 h-20 rounded-sm" />
+                                <img src="/mun_logo/pgan.webp" alt="pgan Logo" className="w-20 h-20 rounded-sm" />
                             </div>
                             <div className="flex flex-col items-end gap-1">
                                 <div className="text-3xl font-bold">{sums.recordCount.toLocaleString()}</div>
                                 <div className="text-blue-100">Total RPU Records</div>
                             </div>
                         </div>
-                        <p className="text-left text-xl m-2">Building</p>
+                        <p className="text-left text-xl m-2">Agusan del Norte</p>
                     </div>
 
                     {/* Panel 2 */}
@@ -637,7 +677,7 @@ const BuildingAssessment = () => {
                     <div className="flex items-center gap-5 ltr:ml-auto rtl:mr-auto">
                         <Dropdown
                             placement={isRtl ? 'bottom-end' : 'bottom-start'}
-                            btnClassName="!flex items-center border font-semibold border-white-light dark:border-[#253b5c] rounded-md px-4 py-2 text-sm dark:bg-[#1b2e4b] dark:text-white-dark"
+                            btnClassName="!flex items-center border font-semibold border-slate-300 dark:border-slate-600 rounded-md px-4 py-2 text-sm dark:bg-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                             button={
                                 <>
                                     <span className="ltr:mr-1 rtl:ml-1">Columns</span>
@@ -645,18 +685,18 @@ const BuildingAssessment = () => {
                                 </>
                             }
                         >
-                            <ul className="!min-w-[140px] bg-white shadow-md rounded-md dark:bg-[#1b2e4b]">
+                            <ul className="!min-w-[140px] bg-white shadow-lg rounded-md dark:bg-slate-800 border border-slate-200 dark:border-slate-600">
                                 {cols.map((col) => (
                                     <li key={col.accessor} onClick={(e) => e.stopPropagation()}>
-                                        <div className="flex items-center px-4 py-1">
-                                            <label className="cursor-pointer mb-0">
+                                        <div className="flex items-center px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                                            <label className="cursor-pointer mb-0 flex items-center">
                                                 <input
                                                     type="checkbox"
                                                     checked={!hideCols.includes(col.accessor as keyof Assessment)}
-                                                    className="form-checkbox"
+                                                    className="form-checkbox text-blue-500 focus:ring-blue-500"
                                                     onChange={() => toggleColumn(col.accessor as keyof Assessment)}
                                                 />
-                                                <span className="ltr:ml-2 rtl:mr-2">{col.title}</span>
+                                                <span className="ltr:ml-2 rtl:mr-2 text-slate-700 dark:text-slate-200">{col.title}</span>
                                             </label>
                                         </div>
                                     </li>
@@ -668,7 +708,13 @@ const BuildingAssessment = () => {
                             <SuggesstionSearchInput setSearchColumn={setSearchColumn} />
                         </div>
                         <div className="text-right">
-                            <input type="text" className="form-input" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                            <input 
+                                type="text" 
+                                className="form-input border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-500 rounded-md" 
+                                placeholder="Search..." 
+                                value={search} 
+                                onChange={(e) => setSearch(e.target.value)} 
+                            />
                         </div>
                     </div>
                 </div>
