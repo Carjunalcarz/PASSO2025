@@ -297,43 +297,27 @@ const AssessmentDetails = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div>
-                        <label className="font-medium text-slate-700 dark:text-slate-300">Province</label>
-                        <p className="text-lg mt-1">{assessment.province || buildingLocation.address_province || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-slate-700 dark:text-slate-300">Municipality</label>
-                        <p className="text-lg mt-1">{assessment.municipality || buildingLocation.address_municipality || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-slate-700 dark:text-slate-300">Barangay</label>
-                        <p className="text-lg mt-1">{assessment.barangay || buildingLocation.address_barangay || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Street</label>
+                        <label className="font-medium text-slate-700 dark:text-slate-300">Street</label>
                         <p className="text-lg mt-1">{buildingLocation.street || 'N/A'}</p>
                     </div>
                     <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Municipality Code</label>
-                        <p className="text-lg mt-1">{buildingLocation.mun_code || 'N/A'}</p>
+                        <label className="font-medium text-slate-700 dark:text-slate-300">Barangay</label>
+                        <p className="text-lg mt-1">{buildingLocation.barangay || assessment.barangay || 'N/A'}</p>
                     </div>
                     <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Barangay Code</label>
-                        <p className="text-lg mt-1">{buildingLocation.bcode || 'N/A'}</p>
+                        <label className="font-medium text-slate-700 dark:text-slate-300">Municipality</label>
+                        <p className="text-lg mt-1">{buildingLocation.municipality || assessment.municipality || 'N/A'}</p>
                     </div>
                     <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">GR Code</label>
-                        <p className="text-lg mt-1">{buildingLocation.gr_code || 'N/A'}</p>
+                        <label className="font-medium text-slate-700 dark:text-slate-300">Province</label>
+                        <p className="text-lg mt-1">{buildingLocation.province || assessment.province || 'N/A'}</p>
                     </div>
                     <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">GR Name</label>
-                        <p className="text-lg mt-1">{buildingLocation.gr_name || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Latitude</label>
+                        <label className="font-medium text-slate-700 dark:text-slate-300">Latitude</label>
                         <p className="text-lg mt-1">{buildingLocation.latitude || 'N/A'}</p>
                     </div>
                     <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Longitude</label>
+                        <label className="font-medium text-slate-700 dark:text-slate-300">Longitude</label>
                         <p className="text-lg mt-1">{buildingLocation.longitude || 'N/A'}</p>
                     </div>
                     

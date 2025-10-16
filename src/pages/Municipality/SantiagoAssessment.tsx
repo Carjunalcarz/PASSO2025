@@ -6,7 +6,6 @@ import { IRootState } from '../../store';
 import Dropdown from '../../components/Dropdown';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import IconCaretDown from '../../components/Icon/IconCaretDown';
-import axios from 'axios';
 import { useQuery, useMutation, UseMutationResult } from '@tanstack/react-query';
 import IconEdit from '../../components/Icon/IconEdit';
 import IconTrash from '../../components/Icon/IconTrash';
@@ -17,6 +16,9 @@ import TaxableSwitch from './Components/TaxableSwitch';
 import { Link } from 'react-router-dom';
 import SubclassSuggesstion from './Components/SubclassSuggesstion';
 import GRFilter from './Components/GRFilter';
+import { databaseService, AssessmentDocument } from '../../services/databaseService';
+import { useAuth } from '../../contexts/AuthContext';
+
 // Define column interface
 interface Column {
     accessor: keyof Assessment | 'actions';
@@ -26,30 +28,9 @@ interface Column {
 }
 
 // Define the Assessment interface (renamed from AssessmentData for consistency)
-interface Assessment {
-    pin: string;
-    name: string;
-    tdn: string;
-    market_val: number;
-    ass_value: number;
-    area: number;
-    unit_value: number;
-    kind: string;
-    ass_level:number;
-    classification: string;
-    sub_class: string;
-    taxability: string;
-    trans_cd: string;
-    tax_beg_yr: number;
-    eff_date: string;
-    owner_no: string;
-    mun_code: string;
-    municipality: string;
-    barangay_code: string;
-    barangay: string;
-    gr_code: string;
-    gr: string;
-}
+type Assessment = AssessmentDocument;
+
+const PROPERTY_ASSESSMENTS_COLLECTION_ID = import.meta.env.VITE_APPWRITE_PROPERTY_ASSESSMENTS_COLLECTION_ID || 'property_assessments';
 
 const formatCurrency = (amount: number) => {
     return `₱${new Intl.NumberFormat('en-PH', {
@@ -59,10 +40,10 @@ const formatCurrency = (amount: number) => {
 };
 
 const SantiagoAssessment = () => {
-    const [taxabilityFilter, setTaxabilityFilter] = useState('exempt'); // Add this line
+    const [taxabilityFilter, setTaxabilityFilter] = useState('exempt'); 
     const [subclassFilter, setSubclassFilter] = useState<string>('all');
     const [grFilter, setGrFilter] = useState<string>('all');
-    const token = localStorage.getItem('token');
+    const { user } = useAuth();
     const dispatch = useDispatch();
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl';
 
@@ -71,7 +52,7 @@ const SantiagoAssessment = () => {
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
     const [search, setSearch] = useState('');
     const [searchColumn, setSearchColumn] = useState('tdn');
-    const [hideCols, setHideCols] = useState<Array<keyof Assessment>>(['name', 'barangay_code', 'mun_code', 'gr_code', 'eff_date' , 'owner_no']);
+    const [hideCols, setHideCols] = useState<Array<keyof Assessment>>(['name', 'bcode', 'mun_code', 'gr_code', 'eff_date', 'owner_no']);
     const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
         columnAccessor: 'tdn',
         direction: 'asc',
@@ -157,7 +138,7 @@ const SantiagoAssessment = () => {
      
         { accessor: 'mun_code', title: 'Municipality Code', sortable: true },
         { accessor: 'municipality', title: 'Municipality', sortable: true },
-        { accessor: 'barangay_code', title: 'Barangay Code', sortable: true },
+        { accessor: 'bcode', title: 'Barangay Code', sortable: true },
         { accessor: 'barangay', title: 'Barangay', sortable: true },
         { accessor: 'gr_code', title: 'GR Code', sortable: true },
         { accessor: 'gr', title: 'GR', sortable: true },
@@ -194,23 +175,19 @@ const SantiagoAssessment = () => {
     }, [dispatch]);
 
     const fetchAssessments = async (): Promise<Assessment[]> => {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL_FASTAPI}/get-general-revision?municipality=santiago&skip=0&limit=300000`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-
-        const taxability = response.data.data.map((item: Assessment) => {
-            item.taxability = item.taxability === "1" ? "Taxable" : item.taxability === "0" ? "Exempt" : item.taxability;
-            return item;
-        });
-
-        response.data.data = taxability;
-        return response.data.data;
+        try {
+            const assessments = await databaseService.getAssessments(PROPERTY_ASSESSMENTS_COLLECTION_ID);
+            const santiagoAssessments = assessments.filter(assessment => 
+                assessment.municipality?.toLowerCase() === 'santiago'
+            );
+            return santiagoAssessments;
+        } catch (error) {
+            throw error;
+        }
     };
 
     const { data: rowData = [], isLoading: queryLoading, refetch } = useQuery<Assessment[]>({
-        queryKey: ['assessments', 'santiago'],
+        queryKey: ['assessments', 'Santiago'],
         queryFn: fetchAssessments,
         refetchOnWindowFocus: false,
         refetchOnMount: false,
@@ -312,32 +289,34 @@ const SantiagoAssessment = () => {
     };
 
     const createMutation = useMutation<Assessment, Error, Partial<Assessment>>({
-        mutationFn: (newData) =>
-            axios.post('your-endpoint', newData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }).then(response => response.data),
+        mutationFn: async (newData) => {
+            return await databaseService.createAssessment(
+                PROPERTY_ASSESSMENTS_COLLECTION_ID,
+                newData as Omit<AssessmentDocument, '$id' | '$createdAt' | '$updatedAt'>
+            );
+        },
         onSuccess: () => {
+            toast.success('Record created successfully');
             refetch();
+        },
+        onError: (error) => {
+            toast.error('Failed to create record: ' + error.message);
         },
     });
 
     const updateMutation = useMutation<
-        any,
+        Assessment,
         Error,
         Assessment,
         unknown
     >({
         mutationFn: async (data: Assessment) => {
-            const response = await axios.put(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/${data.tdn}`, data, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            const taxability = data.taxability === "1" ? "Taxable" : data.taxability === "0" ? "Exempt" : data.taxability;
-            data.taxability = taxability;
-            return response.data;
+            if (!data.$id) throw new Error('Assessment ID is required for update');
+            return await databaseService.updateAssessment(
+                PROPERTY_ASSESSMENTS_COLLECTION_ID,
+                data.$id,
+                data
+            );
         },
         onSuccess: () => {
             toast.success('Record updated successfully');
@@ -350,21 +329,28 @@ const SantiagoAssessment = () => {
     });
 
     const deleteMutation = useMutation<
-        any,
+        void,
         Error,
         string,
         unknown
     >({
         mutationFn: async (tdn: string) => {
-            const response = await axios.delete(`${import.meta.env.VITE_API_URL_FASTAPI}/property-assessments/${tdn}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            return response.data;
+            const assessment = await databaseService.getAssessmentByTdn(
+                PROPERTY_ASSESSMENTS_COLLECTION_ID,
+                tdn
+            );
+            if (!assessment || !assessment.$id) {
+                throw new Error(`Assessment with TDN ${tdn} not found`);
+            }
+            await databaseService.deleteAssessment(
+                PROPERTY_ASSESSMENTS_COLLECTION_ID,
+                assessment.$id
+            );
         },
         onSuccess: () => {
             toast.success('Record deleted successfully');
+            setIsDeleteModalOpen(false);
+            setDeletingTdn(null);
             refetch();
         },
         onError: (error) => {
@@ -389,8 +375,6 @@ const SantiagoAssessment = () => {
     const confirmDelete = () => {
         if (deletingTdn) {
             deleteMutation.mutate(deletingTdn);
-            setIsDeleteModalOpen(false);
-            setDeletingTdn(null);
         }
     };
 
@@ -673,8 +657,8 @@ const SantiagoAssessment = () => {
                                         type="text"
                                         id="barangay_code"
                                         className="form-input dark:bg-white text-black"
-                                        value={editingRecord.barangay_code}
-                                        onChange={(e) => setEditingRecord(prev => ({ ...prev!, barangay_code: e.target.value }))}
+                                        value={editingRecord.bcode}
+                                        onChange={(e) => setEditingRecord(prev => ({ ...prev!, bcode: e.target.value }))}
                                     />
                                 </div>
                                 <div className="form-group">
