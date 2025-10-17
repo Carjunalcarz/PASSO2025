@@ -415,8 +415,9 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
                     console.log('🔍 CSV Import: Sample data being imported:', assessmentsToImport.slice(0, 2));
                     console.log('🚀 Starting bulk import without validation checks...');
                     
-                    // Use the bulk import method with progress tracking
-                    const result = await databaseService.bulkImportAssessments(
+                    // Use ULTRA-FAST import method for maximum speed
+                    console.log('🚀 Using ULTRA-FAST import mode for maximum speed...');
+                    const result = await databaseService.ultraFastBulkImport(
                         collectionId,
                         assessmentsToImport,
                         (progress) => {

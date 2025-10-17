@@ -66,7 +66,10 @@ const ADNAssessment = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [deletingRecord, setDeletingRecord] = useState<Assessment | null>(null);
+    const [deletingTdn, setDeletingTdn] = useState<string | null>(null);
+    const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+    const [municipalityToDelete, setMunicipalityToDelete] = useState('');
+    const [deleteProgress, setDeleteProgress] = useState({ processed: 0, total: 0, deleted: 0, errors: 0 });
     const [isCSVImportOpen, setIsCSVImportOpen] = useState(false);
     const [isClearAllModalOpen, setIsClearAllModalOpen] = useState(false);
     const [clearProgress, setClearProgress] = useState<{ processed: number; total: number; deleted: number; failed: number } | null>(null);
@@ -203,25 +206,11 @@ const ADNAssessment = () => {
         staleTime: Infinity,
     });
 
-    // const filteredData = rowData.filter((item: Assessment) => {
-    //     const value = item[searchColumn.toLowerCase() as keyof Assessment];
-    //     return (value?.toString() ?? '').toLowerCase().includes(search.toLowerCase());
-    // });
-
     // First filter by search
     const searchFilteredData = rowData.filter((item: Assessment) => {
         const value = item[searchColumn.toLowerCase() as keyof Assessment];
         return (value?.toString() ?? '').toLowerCase().includes(search.toLowerCase());
     });
-
-    // // Then filter by taxability
-    // const filteredData = searchFilteredData.filter((item: Assessment) => {
-    //     if (taxabilityFilter === 'all') return true;
-    //     if (taxabilityFilter === 'taxable') return item.taxability === 'Taxable';
-    //     if (taxabilityFilter === 'exempt') return item.taxability === 'Exempt';
-    //     return true;
-    // });
-
 
     // 2. Filter by taxability, subclass, and gr
     const filteredData = searchFilteredData.filter((item: Assessment) => {
@@ -238,11 +227,6 @@ const ADNAssessment = () => {
 
         return matchesTaxability && matchesSubclass && matchesGr;
     });
-
-
-
-
-
 
     const sortedData = sortBy(filteredData, (item) => {
         switch (sortStatus.columnAccessor) {
@@ -287,8 +271,6 @@ const ADNAssessment = () => {
             recordCount: uniqueTdnCount
         };
     };
-
-
 
     const sums = calculateSums();
     const toggleColumn = (col: keyof Assessment) => {
@@ -346,6 +328,52 @@ const ADNAssessment = () => {
         },
         onError: (error) => {
             toast.error('Failed to delete record: ' + error.message);
+        },
+    });
+
+    const bulkDeleteMutation = useMutation<
+        { deleted: number; errors: string[] },
+        Error,
+        string,
+        unknown
+    >({
+        mutationFn: async (municipalityName: string) => {
+            try {
+                console.log('🔄 ADN_Assessment: Bulk deleting assessments for municipality:', municipalityName);
+                
+                // Reset progress
+                setDeleteProgress({ processed: 0, total: 0, deleted: 0, errors: 0 });
+                
+                const result = await databaseService.deleteAssessmentsByMunicipality(
+                    ADN_COLLECTION_ID,
+                    municipalityName,
+                    (progress) => {
+                        setDeleteProgress(progress);
+                    }
+                );
+                
+                console.log('✅ ADN_Assessment: Bulk delete completed:', result);
+                return result;
+            } catch (error) {
+                console.error('❌ ADN_Assessment: Error bulk deleting assessments:', error);
+                throw error;
+            }
+        },
+        onSuccess: (result) => {
+            const { deleted, errors } = result;
+            if (errors.length > 0) {
+                toast.warning(`Deleted ${deleted} records with ${errors.length} errors. Check console for details.`);
+                console.warn('Bulk delete errors:', errors);
+            } else {
+                toast.success(`Successfully deleted ${deleted} records for municipality: ${municipalityToDelete}`);
+            }
+            setIsBulkDeleteModalOpen(false);
+            setMunicipalityToDelete('');
+            setDeleteProgress({ processed: 0, total: 0, deleted: 0, errors: 0 });
+            refetch();
+        },
+        onError: (error) => {
+            toast.error('Failed to bulk delete records: ' + error.message);
         },
     });
 
@@ -415,19 +443,22 @@ const ADNAssessment = () => {
         // Find the record by TDN to get the document ID
         const record = rowData.find(item => item.tdn === tdn);
         if (record) {
-            setDeletingRecord(record);
+            setDeletingTdn(record.tdn);
             setIsDeleteModalOpen(true);
         }
     };
 
     const confirmDelete = () => {
-        if (deletingRecord && deletingRecord.$id) {
-            deleteMutation.mutate({ 
-                tdn: deletingRecord.tdn, 
-                documentId: deletingRecord.$id 
-            });
-            setIsDeleteModalOpen(false);
-            setDeletingRecord(null);
+        if (deletingTdn) {
+            const record = rowData.find(item => item.tdn === deletingTdn);
+            if (record && record.$id) {
+                deleteMutation.mutate({ 
+                    tdn: deletingTdn, 
+                    documentId: record.$id 
+                });
+                setIsDeleteModalOpen(false);
+                setDeletingTdn(null);
+            }
         }
     };
 
@@ -435,6 +466,16 @@ const ADNAssessment = () => {
         e.preventDefault();
         if (editingRecord) {
             updateMutation.mutate(editingRecord);
+        }
+    };
+
+    const handleBulkDelete = () => {
+        setIsBulkDeleteModalOpen(true);
+    };
+
+    const confirmBulkDelete = () => {
+        if (municipalityToDelete.trim()) {
+            bulkDeleteMutation.mutate(municipalityToDelete.trim());
         }
     };
 
@@ -549,6 +590,15 @@ const ADNAssessment = () => {
                         >
                             <IconTrashLines className="w-4 h-4" />
                             Clear All
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleBulkDelete}
+                            className="btn btn-danger gap-2"
+                            disabled={bulkDeleteMutation.isPending}
+                        >
+                            <IconTrash className="w-4 h-4" />
+                            Delete by Municipality
                         </button>
                     </div>
                     <div className="flex items-center gap-5 ltr:ml-auto rtl:mr-auto">
@@ -806,7 +856,7 @@ const ADNAssessment = () => {
                     opened={isDeleteModalOpen}
                     onClose={() => {
                         setIsDeleteModalOpen(false);
-                        setDeletingRecord(null);
+                        setDeletingTdn(null);
                     }}
                     title="Delete Record"
                     size="sm"
@@ -819,7 +869,7 @@ const ADNAssessment = () => {
                                 className="btn btn-outline-danger"
                                 onClick={() => {
                                     setIsDeleteModalOpen(false);
-                                    setDeletingRecord(null);
+                                    setDeletingTdn(null);
                                 }}
                                 disabled={deleteMutation.isPending}
                             >
@@ -1048,6 +1098,113 @@ const ADNAssessment = () => {
                                 </button>
                             </div>
                         )}
+                    </div>
+                </Modal>
+
+                {/* Bulk Delete Confirmation Modal */}
+                <Modal
+                    opened={isBulkDeleteModalOpen}
+                    onClose={() => {
+                        if (!bulkDeleteMutation.isPending) {
+                            setIsBulkDeleteModalOpen(false);
+                            setMunicipalityToDelete('');
+                            setDeleteProgress({ processed: 0, total: 0, deleted: 0, errors: 0 });
+                        }
+                    }}
+                    title="Delete All Records by Municipality"
+                    size="md"
+                >
+                    <div className="space-y-4">
+                        <p className="text-red-600 font-medium">
+                            ⚠️ Warning: This will permanently delete ALL assessment records for the specified municipality.
+                        </p>
+                        <p>This action cannot be undone. Please type the municipality name to confirm:</p>
+                        
+                        <div className="form-group">
+                            <label htmlFor="municipalityName" className="block text-sm font-medium mb-2">
+                                Municipality Name
+                            </label>
+                            <input
+                                type="text"
+                                id="municipalityName"
+                                className="form-input w-full"
+                                placeholder="Enter municipality name (e.g., ADN)"
+                                value={municipalityToDelete}
+                                onChange={(e) => setMunicipalityToDelete(e.target.value)}
+                                disabled={bulkDeleteMutation.isPending}
+                            />
+                        </div>
+
+                        {/* Progress Section */}
+                        {bulkDeleteMutation.isPending && deleteProgress.total > 0 && (
+                            <div className="space-y-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                <div className="flex justify-between text-sm">
+                                    <span>Deletion Progress</span>
+                                    <span>{deleteProgress.processed} / {deleteProgress.total}</span>
+                                </div>
+                                
+                                {/* Progress Bar */}
+                                <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                                    <div 
+                                        className="bg-red-600 h-2.5 rounded-full transition-all duration-300" 
+                                        style={{ 
+                                            width: `${deleteProgress.total > 0 ? (deleteProgress.processed / deleteProgress.total) * 100 : 0}%` 
+                                        }}
+                                    ></div>
+                                </div>
+                                
+                                {/* Statistics */}
+                                <div className="grid grid-cols-3 gap-4 text-sm">
+                                    <div className="text-center">
+                                        <div className="font-semibold text-green-600">{deleteProgress.deleted}</div>
+                                        <div className="text-gray-500">Deleted</div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="font-semibold text-red-600">{deleteProgress.errors}</div>
+                                        <div className="text-gray-500">Errors</div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="font-semibold text-blue-600">
+                                            {deleteProgress.total > 0 ? Math.round((deleteProgress.processed / deleteProgress.total) * 100) : 0}%
+                                        </div>
+                                        <div className="text-gray-500">Complete</div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        <div className="flex justify-end gap-3">
+                            <button
+                                type="button"
+                                className="btn btn-outline-danger"
+                                onClick={() => {
+                                    setIsBulkDeleteModalOpen(false);
+                                    setMunicipalityToDelete('');
+                                    setDeleteProgress({ processed: 0, total: 0, deleted: 0, errors: 0 });
+                                }}
+                                disabled={bulkDeleteMutation.isPending}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-danger"
+                                onClick={confirmBulkDelete}
+                                disabled={bulkDeleteMutation.isPending || !municipalityToDelete.trim()}
+                            >
+                                {bulkDeleteMutation.isPending ? (
+                                    <div className="flex items-center gap-2">
+                                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>Deleting...</span>
+                                    </div>
+                                ) : (
+                                    <span>Delete All Records</span>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </Modal>
 
