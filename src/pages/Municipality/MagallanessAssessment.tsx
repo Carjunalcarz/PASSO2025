@@ -63,6 +63,9 @@ const MagallanesAssessment = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletingTdn, setDeletingTdn] = useState<string | null>(null);
+    const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+    const [municipalityToDelete, setMunicipalityToDelete] = useState('');
+    const [deleteProgress, setDeleteProgress] = useState({ processed: 0, total: 0, deleted: 0, errors: 0 });
 
     const cols: Column[] = [
         { accessor: 'tdn', title: 'TDN', sortable: true },
@@ -359,6 +362,46 @@ const MagallanesAssessment = () => {
         },
     });
 
+    const bulkDeleteMutation = useMutation<
+        { deleted: number; errors: string[] },
+        Error,
+        string,
+        unknown
+    >({
+        mutationFn: async (municipalityName: string) => {
+            try {
+                console.log('🔄 MagallanessAssessment: Bulk deleting assessments for municipality:', municipalityName);
+                setDeleteProgress({ processed: 0, total: 0, deleted: 0, errors: 0 });
+                const result = await databaseService.deleteAssessmentsByMunicipality(
+                    PROPERTY_ASSESSMENTS_COLLECTION_ID,
+                    municipalityName,
+                    (progress) => setDeleteProgress(progress)
+                );
+                console.log('✅ MagallanessAssessment: Bulk delete completed:', result);
+                return result;
+            } catch (error) {
+                console.error('❌ MagallanessAssessment: Error bulk deleting assessments:', error);
+                throw error;
+            }
+        },
+        onSuccess: (result) => {
+            const { deleted, errors } = result;
+            if (errors.length > 0) {
+                toast.warning(`Deleted ${deleted} records with ${errors.length} errors. Check console for details.`);
+                console.warn('Bulk delete errors:', errors);
+            } else {
+                toast.success(`Successfully deleted ${deleted} records for municipality: ${municipalityToDelete}`);
+            }
+            setIsBulkDeleteModalOpen(false);
+            setMunicipalityToDelete('');
+            setDeleteProgress({ processed: 0, total: 0, deleted: 0, errors: 0 });
+            refetch();
+        },
+        onError: (error) => {
+            toast.error('Failed to bulk delete records: ' + error.message);
+        },
+    });
+
     const handleCreate = (data: Partial<Assessment>) => {
         createMutation.mutate(data);
     };
@@ -383,6 +426,17 @@ const MagallanesAssessment = () => {
         e.preventDefault();
         if (editingRecord) {
             updateMutation.mutate(editingRecord);
+        }
+    };
+
+    const handleBulkDelete = () => {
+        console.log('🔄 MagallanessAssessment: handleBulkDelete clicked');
+        setIsBulkDeleteModalOpen(true);
+    };
+
+    const confirmBulkDelete = () => {
+        if (municipalityToDelete.trim()) {
+            bulkDeleteMutation.mutate(municipalityToDelete.trim());
         }
     };
 
@@ -468,6 +522,15 @@ const MagallanesAssessment = () => {
             <div className="panel md:w-[920px] xl:w-full">
                 <div className="flex md:items-center md:flex-row flex-col mb-5 gap-5">
                     <div className="flex items-center gap-5 ltr:ml-auto rtl:mr-auto">
+                        <button
+                            type="button"
+                            onClick={handleBulkDelete}
+                            className="btn btn-danger gap-2"
+                            disabled={bulkDeleteMutation.isPending}
+                        >
+                            <IconTrash className="w-4 h-4" />
+                            Delete by Municipality
+                        </button>
                         <Dropdown
                             placement={isRtl ? 'bottom-end' : 'bottom-start'}
                             btnClassName="!flex items-center border font-semibold border-white-light dark:border-[#253b5c] rounded-md px-4 py-2 text-sm dark:bg-[#1b2e4b] dark:text-white-dark"
@@ -757,6 +820,116 @@ const MagallanesAssessment = () => {
                                     </div>
                                 ) : (
                                     <span>Delete</span>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </Modal>
+
+                <Modal
+                    opened={isBulkDeleteModalOpen}
+                    onClose={() => {
+                        console.log('🔄 MagallanessAssessment: Modal close clicked, isPending:', bulkDeleteMutation.isPending);
+                        if (!bulkDeleteMutation.isPending) {
+                            console.log('✅ MagallanessAssessment: Closing modal');
+                            setIsBulkDeleteModalOpen(false);
+                            setMunicipalityToDelete('');
+                            setDeleteProgress({ processed: 0, total: 0, deleted: 0, errors: 0 });
+                        } else {
+                            console.log('⚠️ MagallanessAssessment: Cannot close modal - deletion in progress');
+                        }
+                    }}
+                    title="Delete All Records by Municipality"
+                    size="md"
+                >
+                    <div className="space-y-4">
+                        <p className="text-red-600 font-medium">
+                            ⚠️ Warning: This will permanently delete ALL assessment records for the specified municipality.
+                        </p>
+                        <p>This action cannot be undone. Please type the municipality name to confirm:</p>
+                        
+                        <div className="form-group">
+                            <label htmlFor="municipalityName" className="block text-sm font-medium mb-2">
+                                Municipality Name
+                            </label>
+                            <input
+                                type="text"
+                                id="municipalityName"
+                                className="form-input w-full"
+                                placeholder="Enter municipality name (e.g., Magallanes)"
+                                value={municipalityToDelete}
+                                onChange={(e) => setMunicipalityToDelete(e.target.value)}
+                                disabled={bulkDeleteMutation.isPending}
+                            />
+                        </div>
+
+                        {/* Progress Section */}
+                        {bulkDeleteMutation.isPending && deleteProgress.total > 0 && (
+                            <div className="space-y-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                <div className="flex justify-between text-sm">
+                                    <span>Deletion Progress</span>
+                                    <span>{deleteProgress.processed} / {deleteProgress.total}</span>
+                                </div>
+                                
+                                {/* Progress Bar */}
+                                <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                                    <div 
+                                        className="bg-red-600 h-2.5 rounded-full transition-all duration-300" 
+                                        style={{ 
+                                            width: `${deleteProgress.total > 0 ? (deleteProgress.processed / deleteProgress.total) * 100 : 0}%` 
+                                        }}
+                                    ></div>
+                                </div>
+                                
+                                {/* Statistics */}
+                                <div className="grid grid-cols-3 gap-4 text-sm">
+                                    <div className="text-center">
+                                        <div className="font-semibold text-green-600">{deleteProgress.deleted}</div>
+                                        <div className="text-gray-500">Deleted</div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="font-semibold text-red-600">{deleteProgress.errors}</div>
+                                        <div className="text-gray-500">Errors</div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="font-semibold text-blue-600">
+                                            {deleteProgress.total > 0 ? Math.round((deleteProgress.processed / deleteProgress.total) * 100) : 0}%
+                                        </div>
+                                        <div className="text-gray-500">Complete</div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        <div className="flex justify-end gap-3">
+                            <button
+                                type="button"
+                                className="btn btn-outline-danger"
+                                onClick={() => {
+                                    setIsBulkDeleteModalOpen(false);
+                                    setMunicipalityToDelete('');
+                                    setDeleteProgress({ processed: 0, total: 0, deleted: 0, errors: 0 });
+                                }}
+                                disabled={bulkDeleteMutation.isPending}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-danger"
+                                onClick={confirmBulkDelete}
+                                disabled={bulkDeleteMutation.isPending || !municipalityToDelete.trim()}
+                            >
+                                {bulkDeleteMutation.isPending ? (
+                                    <div className="flex items-center gap-2">
+                                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 718-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>Deleting...</span>
+                                    </div>
+                                ) : (
+                                    <span>Delete All Records</span>
                                 )}
                             </button>
                         </div>
