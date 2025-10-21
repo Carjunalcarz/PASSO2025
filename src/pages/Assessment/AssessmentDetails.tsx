@@ -11,8 +11,10 @@ import IconEdit from '../../components/Icon/IconEdit';
 import IconDownload from '../../components/Icon/IconDownload';
 import IconPrinter from '../../components/Icon/IconPrinter';
 import IconCode from '../../components/Icon/IconCode';
+import IconCaretDown from '../../components/Icon/IconCaretDown';
 import ImageUploadGallery from '../../components/ImageUploadGallery';
 import ImagePreviewModal from '../Assessment/components/ImagePreviewModal';
+import FaasPdfListing from './components/FaasPdfListing';
 
 const AssessmentDetails = () => {
     const { id } = useParams<{ id: string }>();
@@ -26,6 +28,22 @@ const AssessmentDetails = () => {
     const [showDebugModal, setShowDebugModal] = useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [previewImageUrl, setPreviewImageUrl] = useState('');
+    
+    // Collapsible sections state
+    const [collapsedSections, setCollapsedSections] = useState({
+        faas: true,
+        owner: true,
+        location: true,
+        landRef: true,
+        general: true,
+        structural: true,
+        appraisal: true,
+        assessment: true,
+        tax: true,
+        additional: true,
+        memoranda: true,
+        system: true
+    });
 
     // Collection ID for building assessments
     const BUILDING_COLLECTION_ID = import.meta.env.VITE_APPWRITE_BUILDING_ASSESSMENTS_COLLECTION_ID || 'building-assessments';
@@ -63,6 +81,47 @@ const AssessmentDetails = () => {
         setIsPreviewOpen(false);
         setPreviewImageUrl('');
     };
+
+    // Toggle section collapse
+    const toggleSection = (section: keyof typeof collapsedSections) => {
+        setCollapsedSections(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }));
+    };
+
+    // Collapsible Section Header Component
+    const CollapsibleSectionHeader = ({ 
+        title, 
+        sectionKey, 
+        icon, 
+        badge 
+    }: { 
+        title: string; 
+        sectionKey: keyof typeof collapsedSections; 
+        icon?: React.ReactNode;
+        badge?: string;
+    }) => (
+        <button
+            onClick={() => toggleSection(sectionKey)}
+            className="w-full flex items-center justify-between p-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors duration-200 border-b border-slate-200 dark:border-slate-700"
+        >
+            <div className="flex items-center gap-3">
+                {icon}
+                <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200">{title}</h2>
+                {badge && (
+                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full">
+                        {badge}
+                    </span>
+                )}
+            </div>
+            <IconCaretDown 
+                className={`w-5 h-5 text-slate-600 dark:text-slate-400 transition-transform duration-200 ${
+                    collapsedSections[sectionKey] ? 'rotate-180' : ''
+                }`} 
+            />
+        </button>
+    );
 
     // Convert image URLs to ImageUploadGallery format
     const convertToImageList = (imageUrls: string[]) => {
@@ -173,7 +232,7 @@ const AssessmentDetails = () => {
                             <IconDownload className="w-4 h-4 mr-2" />
                             Export
                         </button> */}
-                        <button 
+                        {/* <button 
                             className="btn btn-info"
                             onClick={() => {
                                 if (assessment?.faas) {
@@ -185,7 +244,7 @@ const AssessmentDetails = () => {
                         >
                             <IconPrinter className="w-4 h-4 mr-2" />
                             Print
-                        </button>
+                        </button> */}
                         <button
                             onClick={() => setShowDebugModal(true)}
                             className="btn btn-warning"
@@ -198,62 +257,80 @@ const AssessmentDetails = () => {
                 </div>
             </div>
 
+            {/* FAAS PDF Listing Section */}
+            <FaasPdfListing
+                faasData={assessment.faas}
+                tdnNumber={assessment.tdArp}
+                ownerName={assessment.ownerName || ownerDetails.owner}
+                pin={assessment.pin || ownerDetails.pin}
+                userId={assessment.userId}
+            />
+
             {/* Owner Details Section */}
-            <div className="panel">
-                <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
-                    <h2 className="text-xl font-semibold">Owner Details</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div>
-                        <label className="font-medium text-slate-700 dark:text-slate-300">Owner Name</label>
-                        <p className="text-lg mt-1">{assessment.ownerName || ownerDetails.owner || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-slate-700 dark:text-slate-300">TDN/ARP No.</label>
-                        <p className="text-lg mt-1">{assessment.tdArp || ownerDetails.td || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-slate-700 dark:text-slate-300">PIN</label>
-                        <p className="text-lg mt-1">{assessment.pin || ownerDetails.pin || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-slate-700 dark:text-slate-300">Transaction Code</label>
-                        <p className="text-lg mt-1">{assessment.transactionCode || ownerDetails.transaction_code || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-slate-700 dark:text-slate-300">TIN</label>
-                        <p className="text-lg mt-1">{ownerDetails.tin || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-slate-700 dark:text-slate-300">Tel No.</label>
-                        <p className="text-lg mt-1">{ownerDetails.telNo || 'N/A'}</p>
-                    </div>
-                    <div className="md:col-span-2 lg:col-span-3">
-                        <label className="font-medium text-slate-700 dark:text-slate-300">Owner Address</label>
-                        <p className="text-lg mt-1">{ownerDetails.address || ownerDetails.ownerAddress || 'N/A'}</p>
-                    </div>
+            <div className="panel overflow-hidden">
+                <CollapsibleSectionHeader 
+                    title="Owner Details" 
+                    sectionKey="owner"
+                    icon={
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    }
+                    badge={assessment.ownerName ? "Complete" : "Incomplete"}
+                />
+                {!collapsedSections.owner && (
+                    <div className="p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
+                                <label className="text-xs font-semibold text-blue-800 dark:text-blue-300 uppercase tracking-wide">Owner Name</label>
+                                <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mt-1">{assessment.ownerName || ownerDetails.owner || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-3 rounded-lg border border-green-200 dark:border-green-700">
+                                <label className="text-xs font-semibold text-green-800 dark:text-green-300 uppercase tracking-wide">TDN/ARP No.</label>
+                                <p className="text-sm font-semibold text-green-900 dark:text-green-100 mt-1 font-mono">{assessment.tdArp || ownerDetails.td || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-3 rounded-lg border border-purple-200 dark:border-purple-700">
+                                <label className="text-xs font-semibold text-purple-800 dark:text-purple-300 uppercase tracking-wide">PIN</label>
+                                <p className="text-sm font-semibold text-purple-900 dark:text-purple-100 mt-1 font-mono">{assessment.pin || ownerDetails.pin || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 p-3 rounded-lg border border-amber-200 dark:border-amber-700">
+                                <label className="text-xs font-semibold text-amber-800 dark:text-amber-300 uppercase tracking-wide">Transaction Code</label>
+                                <p className="text-sm font-semibold text-amber-900 dark:text-amber-100 mt-1">{assessment.transactionCode || ownerDetails.transaction_code || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/20 dark:to-slate-700/20 p-3 rounded-lg border border-slate-200 dark:border-slate-600">
+                                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">TIN</label>
+                                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-1 font-mono">{ownerDetails.tin || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 p-3 rounded-lg border border-indigo-200 dark:border-indigo-700">
+                                <label className="text-xs font-semibold text-indigo-800 dark:text-indigo-300 uppercase tracking-wide">Tel No.</label>
+                                <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-100 mt-1">{ownerDetails.telNo || 'N/A'}</p>
+                            </div>
+                            <div className="md:col-span-2 lg:col-span-3 bg-gradient-to-r from-rose-50 to-rose-100 dark:from-rose-900/20 dark:to-rose-800/20 p-3 rounded-lg border border-rose-200 dark:border-rose-700">
+                                <label className="text-xs font-semibold text-rose-800 dark:text-rose-300 uppercase tracking-wide">Owner Address</label>
+                                <p className="text-sm font-semibold text-rose-900 dark:text-rose-100 mt-1 leading-relaxed">{ownerDetails.address || ownerDetails.ownerAddress || 'N/A'}</p>
+                            </div>
                     
                     {/* Administrator/Beneficiary Section */}
                     {ownerDetails.hasAdministratorBeneficiary && ownerDetails.administratorBeneficiary && (
                         <>
                             <div className="md:col-span-3 border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
-                                <h3 className="text-lg font-semibold mb-4">Administrator/Beneficial User</h3>
+                                <h3 className="text-sm font-semibold mb-4">Administrator/Beneficial User</h3>
                             </div>
-                            <div>
-                                <label className="font-medium text-slate-700 dark:text-slate-300">Name</label>
-                                <p className="text-lg mt-1">{ownerDetails.administratorBeneficiary.name || 'N/A'}</p>
+                            <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 p-3 rounded-lg border border-emerald-200 dark:border-emerald-700">
+                                <label className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wide">Name</label>
+                                <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100 mt-1">{ownerDetails.administratorBeneficiary.name || 'N/A'}</p>
                             </div>
-                            <div>
-                                <label className="font-medium text-slate-700 dark:text-slate-300">TIN</label>
-                                <p className="text-lg mt-1">{ownerDetails.administratorBeneficiary.tin || 'N/A'}</p>
+                            <div className="bg-gradient-to-r from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20 p-3 rounded-lg border border-teal-200 dark:border-teal-700">
+                                <label className="text-xs font-semibold text-teal-800 dark:text-teal-300 uppercase tracking-wide">TIN</label>
+                                <p className="text-sm font-semibold text-teal-900 dark:text-teal-100 mt-1 font-mono">{ownerDetails.administratorBeneficiary.tin || 'N/A'}</p>
                             </div>
-                            <div>
-                                <label className="font-medium text-slate-700 dark:text-slate-300">Tel No.</label>
-                                <p className="text-lg mt-1">{ownerDetails.administratorBeneficiary.telNo || 'N/A'}</p>
+                            <div className="bg-gradient-to-r from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/20 p-3 rounded-lg border border-cyan-200 dark:border-cyan-700">
+                                <label className="text-xs font-semibold text-cyan-800 dark:text-cyan-300 uppercase tracking-wide">Tel No.</label>
+                                <p className="text-sm font-semibold text-cyan-900 dark:text-cyan-100 mt-1">{ownerDetails.administratorBeneficiary.telNo || 'N/A'}</p>
                             </div>
-                            <div className="md:col-span-2 lg:col-span-3">
-                                <label className="font-medium text-slate-700 dark:text-slate-300">Address</label>
-                                <p className="text-lg mt-1">{ownerDetails.administratorBeneficiary.address || 'N/A'}</p>
+                            <div className="md:col-span-2 lg:col-span-3 bg-gradient-to-r from-sky-50 to-sky-100 dark:from-sky-900/20 dark:to-sky-800/20 p-3 rounded-lg border border-sky-200 dark:border-sky-700">
+                                <label className="text-xs font-semibold text-sky-800 dark:text-sky-300 uppercase tracking-wide">Address</label>
+                                <p className="text-sm font-semibold text-sky-900 dark:text-sky-100 mt-1 leading-relaxed">{ownerDetails.administratorBeneficiary.address || 'N/A'}</p>
                             </div>
                         </>
                     )}
@@ -287,39 +364,51 @@ const AssessmentDetails = () => {
                             />
                         </div>
                     )}
-                </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Building Location Section */}
-            <div className="panel">
-                <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
-                    <h2 className="text-xl font-semibold">Building Location</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div>
-                        <label className="font-medium text-slate-700 dark:text-slate-300">Street</label>
-                        <p className="text-lg mt-1">{buildingLocation.street || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-slate-700 dark:text-slate-300">Barangay</label>
-                        <p className="text-lg mt-1">{buildingLocation.barangay || assessment.barangay || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-slate-700 dark:text-slate-300">Municipality</label>
-                        <p className="text-lg mt-1">{buildingLocation.municipality || assessment.municipality || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-slate-700 dark:text-slate-300">Province</label>
-                        <p className="text-lg mt-1">{buildingLocation.province || assessment.province || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-slate-700 dark:text-slate-300">Latitude</label>
-                        <p className="text-lg mt-1">{buildingLocation.latitude || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-slate-700 dark:text-slate-300">Longitude</label>
-                        <p className="text-lg mt-1">{buildingLocation.longitude || 'N/A'}</p>
-                    </div>
+            <div className="panel overflow-hidden">
+                <CollapsibleSectionHeader 
+                    title="Building Location" 
+                    sectionKey="location"
+                    icon={
+                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    }
+                    badge={buildingLocation.latitude && buildingLocation.longitude ? "With Coordinates" : "Basic Info"}
+                />
+                {!collapsedSections.location && (
+                    <div className="p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 p-3 rounded-lg border border-emerald-200 dark:border-emerald-700">
+                                <label className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wide">Street</label>
+                                <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100 mt-1">{buildingLocation.street || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20 p-3 rounded-lg border border-teal-200 dark:border-teal-700">
+                                <label className="text-xs font-semibold text-teal-800 dark:text-teal-300 uppercase tracking-wide">Barangay</label>
+                                <p className="text-sm font-semibold text-teal-900 dark:text-teal-100 mt-1">{buildingLocation.barangay || assessment.barangay || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/20 p-3 rounded-lg border border-cyan-200 dark:border-cyan-700">
+                                <label className="text-xs font-semibold text-cyan-800 dark:text-cyan-300 uppercase tracking-wide">Municipality</label>
+                                <p className="text-sm font-semibold text-cyan-900 dark:text-cyan-100 mt-1">{buildingLocation.municipality || assessment.municipality || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-sky-50 to-sky-100 dark:from-sky-900/20 dark:to-sky-800/20 p-3 rounded-lg border border-sky-200 dark:border-sky-700">
+                                <label className="text-xs font-semibold text-sky-800 dark:text-sky-300 uppercase tracking-wide">Province</label>
+                                <p className="text-sm font-semibold text-sky-900 dark:text-sky-100 mt-1">{buildingLocation.province || assessment.province || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-lime-50 to-lime-100 dark:from-lime-900/20 dark:to-lime-800/20 p-3 rounded-lg border border-lime-200 dark:border-lime-700">
+                                <label className="text-xs font-semibold text-lime-800 dark:text-lime-300 uppercase tracking-wide">Latitude</label>
+                                <p className="text-sm font-semibold text-lime-900 dark:text-lime-100 mt-1 font-mono">{buildingLocation.latitude || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-700">
+                                <label className="text-xs font-semibold text-yellow-800 dark:text-yellow-300 uppercase tracking-wide">Longitude</label>
+                                <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-100 mt-1 font-mono">{buildingLocation.longitude || 'N/A'}</p>
+                            </div>
                     
                     {/* Google Maps Link */}
                     {buildingLocation.latitude && buildingLocation.longitude && (
@@ -383,73 +472,84 @@ const AssessmentDetails = () => {
                             />
                         </div>
                     )}
-                </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Land Reference Section */}
-            <div className="panel">
-                <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
-                    <h2 className="text-xl font-semibold">Land Reference</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Land Owner</label>
-                        <p className="text-lg mt-1">{landReference.owner || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Title Number</label>
-                        <p className="text-lg mt-1">{landReference.titleNumber || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Lot Number</label>
-                        <p className="text-lg mt-1">{landReference.lotNumber || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Block Number</label>
-                        <p className="text-lg mt-1">{landReference.blockNumber || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Survey Number</label>
-                        <p className="text-lg mt-1">{landReference.surveyNumber || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">TDN/ARP Number</label>
-                        <p className="text-lg mt-1">{landReference.tdnArpNumber || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Land Area</label>
-                        <p className="text-lg mt-1">{landReference.area ? `${landReference.area} sqm` : 'N/A'}</p>
-                    </div>
+            <div className="panel overflow-hidden">
+                <CollapsibleSectionHeader 
+                    title="Land Reference" 
+                    sectionKey="landRef"
+                    icon={
+                        <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    }
+                    badge={landReference.titleNumber ? "With Title" : "Basic Info"}
+                />
+                {!collapsedSections.landRef && (
+                    <div className="p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 p-3 rounded-lg border border-orange-200 dark:border-orange-700">
+                                <label className="text-xs font-semibold text-orange-800 dark:text-orange-300 uppercase tracking-wide">Land Owner</label>
+                                <p className="text-sm font-semibold text-orange-900 dark:text-orange-100 mt-1">{landReference.owner || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 p-3 rounded-lg border border-red-200 dark:border-red-700">
+                                <label className="text-xs font-semibold text-red-800 dark:text-red-300 uppercase tracking-wide">Title Number</label>
+                                <p className="text-sm font-semibold text-red-900 dark:text-red-100 mt-1 font-mono">{landReference.titleNumber || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/20 p-3 rounded-lg border border-pink-200 dark:border-pink-700">
+                                <label className="text-xs font-semibold text-pink-800 dark:text-pink-300 uppercase tracking-wide">Lot Number</label>
+                                <p className="text-sm font-semibold text-pink-900 dark:text-pink-100 mt-1 font-mono">{landReference.lotNumber || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-fuchsia-50 to-fuchsia-100 dark:from-fuchsia-900/20 dark:to-fuchsia-800/20 p-3 rounded-lg border border-fuchsia-200 dark:border-fuchsia-700">
+                                <label className="text-xs font-semibold text-fuchsia-800 dark:text-fuchsia-300 uppercase tracking-wide">Block Number</label>
+                                <p className="text-sm font-semibold text-fuchsia-900 dark:text-fuchsia-100 mt-1 font-mono">{landReference.blockNumber || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-violet-50 to-violet-100 dark:from-violet-900/20 dark:to-violet-800/20 p-3 rounded-lg border border-violet-200 dark:border-violet-700">
+                                <label className="text-xs font-semibold text-violet-800 dark:text-violet-300 uppercase tracking-wide">Survey Number</label>
+                                <p className="text-sm font-semibold text-violet-900 dark:text-violet-100 mt-1 font-mono">{landReference.surveyNumber || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-3 rounded-lg border border-purple-200 dark:border-purple-700">
+                                <label className="text-xs font-semibold text-purple-800 dark:text-purple-300 uppercase tracking-wide">TDN/ARP Number</label>
+                                <p className="text-sm font-semibold text-purple-900 dark:text-purple-100 mt-1 font-mono">{landReference.tdnArpNumber || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 p-3 rounded-lg border border-indigo-200 dark:border-indigo-700">
+                                <label className="text-xs font-semibold text-indigo-800 dark:text-indigo-300 uppercase tracking-wide">Land Area</label>
+                                <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-100 mt-1">{landReference.area ? `${landReference.area} sqm` : 'N/A'}</p>
+                            </div>
                     
                     {/* Superseded Assessment */}
                     {landReference.superseded_assessment && (
                         <>
                             <div className="md:col-span-3 border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
-                                <h3 className="text-lg font-semibold mb-4">Superseded Assessment</h3>
+                                <h3 className="text-sm font-semibold mb-4">Superseded Assessment</h3>
                             </div>
-                            <div>
-                                <label className="font-medium text-gray-700 dark:text-gray-300">Date of Entry</label>
-                                <p className="text-lg mt-1">{landReference.superseded_assessment.dateOfEntry || 'N/A'}</p>
+                            <div className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/20 dark:to-slate-700/20 p-3 rounded-lg border border-slate-200 dark:border-slate-600">
+                                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">Date of Entry</label>
+                                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-1">{landReference.superseded_assessment.dateOfEntry || 'N/A'}</p>
                             </div>
-                            <div>
-                                <label className="font-medium text-gray-700 dark:text-gray-300">Previous PIN</label>
-                                <p className="text-lg mt-1">{landReference.superseded_assessment.pin || 'N/A'}</p>
+                            <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/20 dark:to-gray-700/20 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                                <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Previous PIN</label>
+                                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-1 font-mono">{landReference.superseded_assessment.pin || 'N/A'}</p>
                             </div>
-                            <div>
-                                <label className="font-medium text-gray-700 dark:text-gray-300">Previous TDN/ARP</label>
-                                <p className="text-lg mt-1">{landReference.superseded_assessment.tdArpNo || 'N/A'}</p>
+                            <div className="bg-gradient-to-r from-zinc-50 to-zinc-100 dark:from-zinc-800/20 dark:to-zinc-700/20 p-3 rounded-lg border border-zinc-200 dark:border-zinc-600">
+                                <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wide">Previous TDN/ARP</label>
+                                <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mt-1 font-mono">{landReference.superseded_assessment.tdArpNo || 'N/A'}</p>
                             </div>
-                            <div>
-                                <label className="font-medium text-gray-700 dark:text-gray-300">Total Assessed Value</label>
-                                <p className="text-lg mt-1">{landReference.superseded_assessment.totalAssessedValue ? formatCurrency(landReference.superseded_assessment.totalAssessedValue) : 'N/A'}</p>
+                            <div className="bg-gradient-to-r from-stone-50 to-stone-100 dark:from-stone-800/20 dark:to-stone-700/20 p-3 rounded-lg border border-stone-200 dark:border-stone-600">
+                                <label className="text-xs font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wide">Total Assessed Value</label>
+                                <p className="text-sm font-semibold text-stone-800 dark:text-stone-200 mt-1">{landReference.superseded_assessment.totalAssessedValue ? formatCurrency(landReference.superseded_assessment.totalAssessedValue) : 'N/A'}</p>
                             </div>
-                            <div>
-                                <label className="font-medium text-gray-700 dark:text-gray-300">Previous Owner</label>
-                                <p className="text-lg mt-1">{landReference.superseded_assessment.previousOwner || 'N/A'}</p>
+                            <div className="bg-gradient-to-r from-neutral-50 to-neutral-100 dark:from-neutral-800/20 dark:to-neutral-700/20 p-3 rounded-lg border border-neutral-200 dark:border-neutral-600">
+                                <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">Previous Owner</label>
+                                <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 mt-1">{landReference.superseded_assessment.previousOwner || 'N/A'}</p>
                             </div>
-                            <div>
-                                <label className="font-medium text-gray-700 dark:text-gray-300">Effectivity Period</label>
-                                <p className="text-lg mt-1">{landReference.superseded_assessment.effectivityOfAssessment || 'N/A'}</p>
+                            <div className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 p-3 rounded-lg border border-amber-200 dark:border-amber-700">
+                                <label className="text-xs font-semibold text-amber-800 dark:text-amber-300 uppercase tracking-wide">Effectivity Period</label>
+                                <p className="text-sm font-semibold text-amber-900 dark:text-amber-100 mt-1">{landReference.superseded_assessment.effectivityOfAssessment || 'N/A'}</p>
                             </div>
                         </>
                     )}
@@ -461,63 +561,74 @@ const AssessmentDetails = () => {
                             <p className="text-sm mt-2 p-3 bg-slate-50 dark:bg-slate-800 rounded">{landReference.memoranda.memoranda}</p>
                         </div>
                     )}
-                </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* General Description Section */}
-            <div className="panel">
-                <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
-                    <h2 className="text-xl font-semibold">General Description</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Kind of Building</label>
-                        <p className="text-lg mt-1">{generalDescription.kindOfBuilding || generalDescription.kind_of_bldg || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Structural Type</label>
-                        <p className="text-lg mt-1">{generalDescription.structuralType || generalDescription.structural_type || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Number of Storeys</label>
-                        <p className="text-lg mt-1">{generalDescription.numberOfStoreys || generalDescription.no_of_storeys || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Total Floor Area</label>
-                        <p className="text-lg mt-1">{generalDescription.totalFloorArea || assessment.totalArea || generalDescription.total_floor_area || 'N/A'} sqm</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Unit Value</label>
-                        <p className="text-lg mt-1">{formatCurrency(generalDescription.unit_value || 0)}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Building Age</label>
-                        <p className="text-lg mt-1">{generalDescription.buildingAge || generalDescription.bldg_age || 'N/A'} years</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Building Permit No.</label>
-                        <p className="text-lg mt-1">{generalDescription.buildingPermitNo || generalDescription.building_permit_no || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Condominium CCT</label>
-                        <p className="text-lg mt-1">{generalDescription.condominiumCCT || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Date Constructed</label>
-                        <p className="text-lg mt-1">{generalDescription.dateConstructed ? new Date(generalDescription.dateConstructed).toLocaleDateString() : 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Date Occupied</label>
-                        <p className="text-lg mt-1">{generalDescription.dateOccupied ? new Date(generalDescription.dateOccupied).toLocaleDateString() : generalDescription.date_of_occupied || 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Completion Certificate Date</label>
-                        <p className="text-lg mt-1">{generalDescription.completionCertificateDate ? new Date(generalDescription.completionCertificateDate).toLocaleDateString() : 'N/A'}</p>
-                    </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Occupancy Certificate Date</label>
-                        <p className="text-lg mt-1">{generalDescription.occupancyCertificateDate ? new Date(generalDescription.occupancyCertificateDate).toLocaleDateString() : 'N/A'}</p>
-                    </div>
+            <div className="panel overflow-hidden">
+                <CollapsibleSectionHeader 
+                    title="General Description" 
+                    sectionKey="general"
+                    icon={
+                        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    }
+                    badge={generalDescription.kindOfBuilding || generalDescription.kind_of_bldg ? "Complete" : "Basic Info"}
+                />
+                {!collapsedSections.general && (
+                    <div className="p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
+                                <label className="text-xs font-semibold text-blue-800 dark:text-blue-300 uppercase tracking-wide">Kind of Building</label>
+                                <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mt-1">{generalDescription.kindOfBuilding || generalDescription.kind_of_bldg || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-3 rounded-lg border border-green-200 dark:border-green-700">
+                                <label className="text-xs font-semibold text-green-800 dark:text-green-300 uppercase tracking-wide">Structural Type</label>
+                                <p className="text-sm font-semibold text-green-900 dark:text-green-100 mt-1">{generalDescription.structuralType || generalDescription.structural_type || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-3 rounded-lg border border-purple-200 dark:border-purple-700">
+                                <label className="text-xs font-semibold text-purple-800 dark:text-purple-300 uppercase tracking-wide">Number of Storeys</label>
+                                <p className="text-sm font-semibold text-purple-900 dark:text-purple-100 mt-1">{generalDescription.numberOfStoreys || generalDescription.no_of_storeys || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 p-3 rounded-lg border border-amber-200 dark:border-amber-700">
+                                <label className="text-xs font-semibold text-amber-800 dark:text-amber-300 uppercase tracking-wide">Total Floor Area</label>
+                                <p className="text-sm font-semibold text-amber-900 dark:text-amber-100 mt-1">{generalDescription.totalFloorArea || assessment.totalArea || generalDescription.total_floor_area || 'N/A'} sqm</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 p-3 rounded-lg border border-emerald-200 dark:border-emerald-700">
+                                <label className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wide">Unit Value</label>
+                                <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100 mt-1">{formatCurrency(generalDescription.unit_value || 0)}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20 p-3 rounded-lg border border-teal-200 dark:border-teal-700">
+                                <label className="text-xs font-semibold text-teal-800 dark:text-teal-300 uppercase tracking-wide">Building Age</label>
+                                <p className="text-sm font-semibold text-teal-900 dark:text-teal-100 mt-1">{generalDescription.buildingAge || generalDescription.bldg_age || 'N/A'} years</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/20 p-3 rounded-lg border border-cyan-200 dark:border-cyan-700">
+                                <label className="text-xs font-semibold text-cyan-800 dark:text-cyan-300 uppercase tracking-wide">Building Permit No.</label>
+                                <p className="text-sm font-semibold text-cyan-900 dark:text-cyan-100 mt-1 font-mono">{generalDescription.buildingPermitNo || generalDescription.building_permit_no || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-sky-50 to-sky-100 dark:from-sky-900/20 dark:to-sky-800/20 p-3 rounded-lg border border-sky-200 dark:border-sky-700">
+                                <label className="text-xs font-semibold text-sky-800 dark:text-sky-300 uppercase tracking-wide">Condominium CCT</label>
+                                <p className="text-sm font-semibold text-sky-900 dark:text-sky-100 mt-1">{generalDescription.condominiumCCT || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-lime-50 to-lime-100 dark:from-lime-900/20 dark:to-lime-800/20 p-3 rounded-lg border border-lime-200 dark:border-lime-700">
+                                <label className="text-xs font-semibold text-lime-800 dark:text-lime-300 uppercase tracking-wide">Date Constructed</label>
+                                <p className="text-sm font-semibold text-lime-900 dark:text-lime-100 mt-1">{generalDescription.dateConstructed ? new Date(generalDescription.dateConstructed).toLocaleDateString() : 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-700">
+                                <label className="text-xs font-semibold text-yellow-800 dark:text-yellow-300 uppercase tracking-wide">Date Occupied</label>
+                                <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-100 mt-1">{generalDescription.dateOccupied ? new Date(generalDescription.dateOccupied).toLocaleDateString() : generalDescription.date_of_occupied || 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 p-3 rounded-lg border border-orange-200 dark:border-orange-700">
+                                <label className="text-xs font-semibold text-orange-800 dark:text-orange-300 uppercase tracking-wide">Completion Certificate Date</label>
+                                <p className="text-sm font-semibold text-orange-900 dark:text-orange-100 mt-1">{generalDescription.completionCertificateDate ? new Date(generalDescription.completionCertificateDate).toLocaleDateString() : 'N/A'}</p>
+                            </div>
+                            <div className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 p-3 rounded-lg border border-red-200 dark:border-red-700">
+                                <label className="text-xs font-semibold text-red-800 dark:text-red-300 uppercase tracking-wide">Occupancy Certificate Date</label>
+                                <p className="text-sm font-semibold text-red-900 dark:text-red-100 mt-1">{generalDescription.occupancyCertificateDate ? new Date(generalDescription.occupancyCertificateDate).toLocaleDateString() : 'N/A'}</p>
+                            </div>
                     
                     {/* Floor Areas */}
                     {generalDescription.floorAreas && generalDescription.floorAreas.length > 0 && (
@@ -548,23 +659,34 @@ const AssessmentDetails = () => {
                             />
                         </div>
                     )}
-                </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Structural Materials Section */}
-            <div className="panel">
-                <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
-                    <h2 className="text-xl font-semibold">Structural Materials</h2>
-                </div>
-                <div className="space-y-6">
+            <div className="panel overflow-hidden">
+                <CollapsibleSectionHeader 
+                    title="Structural Materials" 
+                    sectionKey="structural"
+                    icon={
+                        <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    }
+                    badge={structuralMaterials.foundation || structuralMaterials.columns ? "Materials Listed" : "Basic Info"}
+                />
+                {!collapsedSections.structural && (
+                    <div className="p-4">
+                        <div className="space-y-4">
                     {/* Foundation */}
                     {structuralMaterials.foundation && (
                         <div>
-                            <h3 className="font-semibold mb-2">Foundation</h3>
+                            <h3 className="text-sm font-semibold mb-2">Foundation</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                {structuralMaterials.foundation.reinforceConcrete && <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">Reinforce Concrete</span>}
-                                {structuralMaterials.foundation.plainConcrete && <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">Plain Concrete</span>}
-                                {structuralMaterials.foundation.others && <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">Others: {structuralMaterials.foundation.othersSpecify}</span>}
+                                {structuralMaterials.foundation.reinforceConcrete && <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Reinforce Concrete</span>}
+                                {structuralMaterials.foundation.plainConcrete && <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Plain Concrete</span>}
+                                {structuralMaterials.foundation.others && <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Others: {structuralMaterials.foundation.othersSpecify}</span>}
                             </div>
                         </div>
                     )}
@@ -572,12 +694,12 @@ const AssessmentDetails = () => {
                     {/* Columns */}
                     {structuralMaterials.columns && (
                         <div>
-                            <h3 className="font-semibold mb-2">Columns</h3>
+                            <h3 className="text-sm font-semibold mb-2">Columns</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                {structuralMaterials.columns.steel && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">Steel</span>}
-                                {structuralMaterials.columns.reinforceConcrete && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">Reinforce Concrete</span>}
-                                {structuralMaterials.columns.wood && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">Wood</span>}
-                                {structuralMaterials.columns.others && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">Others: {structuralMaterials.columns.othersSpecify}</span>}
+                                {structuralMaterials.columns.steel && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Steel</span>}
+                                {structuralMaterials.columns.reinforceConcrete && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Reinforce Concrete</span>}
+                                {structuralMaterials.columns.wood && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Wood</span>}
+                                {structuralMaterials.columns.others && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Others: {structuralMaterials.columns.othersSpecify}</span>}
                             </div>
                         </div>
                     )}
@@ -585,11 +707,11 @@ const AssessmentDetails = () => {
                     {/* Beams */}
                     {structuralMaterials.beams && (
                         <div>
-                            <h3 className="font-semibold mb-2">Beams</h3>
+                            <h3 className="text-sm font-semibold mb-2">Beams</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                {structuralMaterials.beams.steel && <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">Steel</span>}
-                                {structuralMaterials.beams.reinforceConcrete && <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">Reinforce Concrete</span>}
-                                {structuralMaterials.beams.others && <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">Others: {structuralMaterials.beams.othersSpecify}</span>}
+                                {structuralMaterials.beams.steel && <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Steel</span>}
+                                {structuralMaterials.beams.reinforceConcrete && <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Reinforce Concrete</span>}
+                                {structuralMaterials.beams.others && <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Others: {structuralMaterials.beams.othersSpecify}</span>}
                             </div>
                         </div>
                     )}
@@ -597,11 +719,11 @@ const AssessmentDetails = () => {
                     {/* Truss Framing */}
                     {structuralMaterials.trussFraming && (
                         <div>
-                            <h3 className="font-semibold mb-2">Truss Framing</h3>
+                            <h3 className="text-sm font-semibold mb-2">Truss Framing</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                {structuralMaterials.trussFraming.steel && <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm">Steel</span>}
-                                {structuralMaterials.trussFraming.wood && <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm">Wood</span>}
-                                {structuralMaterials.trussFraming.others && <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-sm">Others: {structuralMaterials.trussFraming.othersSpecify}</span>}
+                                {structuralMaterials.trussFraming.steel && <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">Steel</span>}
+                                {structuralMaterials.trussFraming.wood && <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">Wood</span>}
+                                {structuralMaterials.trussFraming.others && <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">Others: {structuralMaterials.trussFraming.othersSpecify}</span>}
                             </div>
                         </div>
                     )}
@@ -655,87 +777,111 @@ const AssessmentDetails = () => {
                             </div>
                         </div>
                     )}
-                </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Property Appraisal and Additional Items Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Property Appraisal */}
-                <div className="panel">
-                    <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
-                        <h2 className="text-xl font-semibold">Property Appraisal</h2>
+                <div className="panel overflow-hidden">
+                    <div className="border-b border-slate-200 dark:border-slate-700 pb-3 mb-4">
+                        <h2 className="text-lg font-semibold flex items-center gap-2">
+                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                            </svg>
+                            Property Appraisal
+                        </h2>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="font-medium text-gray-700 dark:text-gray-300">Area</label>
-                            <p className="text-lg mt-1">{propertyAppraisal.area || 'N/A'} sqm</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4">
+                        <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
+                            <label className="text-xs font-semibold text-blue-800 dark:text-blue-300 uppercase tracking-wide">Area</label>
+                            <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mt-1">{propertyAppraisal.area || 'N/A'} sqm</p>
                         </div>
-                        <div>
-                            <label className="font-medium text-gray-700 dark:text-gray-300">Unit Value</label>
-                            <p className="text-lg mt-1">{formatCurrency(propertyAppraisal.unit_value || 0)}</p>
+                        <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-3 rounded-lg border border-purple-200 dark:border-purple-700">
+                            <label className="text-xs font-semibold text-purple-800 dark:text-purple-300 uppercase tracking-wide">Unit Value</label>
+                            <p className="text-sm font-semibold text-purple-900 dark:text-purple-100 mt-1">{formatCurrency(propertyAppraisal.unit_value || 0)}</p>
                         </div>
-                        <div>
-                            <label className="font-medium text-gray-700 dark:text-gray-300">BUCC</label>
-                            <p className="text-lg mt-1">{propertyAppraisal.bucc || 'N/A'}</p>
+                        <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 p-3 rounded-lg border border-indigo-200 dark:border-indigo-700">
+                            <label className="text-xs font-semibold text-indigo-800 dark:text-indigo-300 uppercase tracking-wide">BUCC</label>
+                            <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-100 mt-1 font-mono">{propertyAppraisal.bucc || 'N/A'}</p>
                         </div>
-                        <div>
-                            <label className="font-medium text-gray-700 dark:text-gray-300">Base Market Value</label>
-                            <p className="text-lg font-bold text-green-600 mt-1">{formatCurrency(propertyAppraisal.baseMarketValue || 0)}</p>
+                        <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 p-3 rounded-lg border border-emerald-200 dark:border-emerald-700">
+                            <label className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wide">Base Market Value</label>
+                            <p className="text-sm font-bold text-emerald-900 dark:text-emerald-100 mt-1">{formatCurrency(propertyAppraisal.baseMarketValue || 0)}</p>
                         </div>
-                        <div>
-                            <label className="font-medium text-gray-700 dark:text-gray-300">Depreciation</label>
-                            <p className="text-lg mt-1">{propertyAppraisal.depreciation || 'N/A'}</p>
+                        <div className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 p-3 rounded-lg border border-amber-200 dark:border-amber-700">
+                            <label className="text-xs font-semibold text-amber-800 dark:text-amber-300 uppercase tracking-wide">Depreciation</label>
+                            <p className="text-sm font-semibold text-amber-900 dark:text-amber-100 mt-1">{propertyAppraisal.depreciation || 'N/A'}</p>
                         </div>
-                        <div>
-                            <label className="font-medium text-gray-700 dark:text-gray-300">Depreciation Cost</label>
-                            <p className="text-lg text-red-600 mt-1">-{formatCurrency(propertyAppraisal.depreciationCost || 0)}</p>
+                        <div className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 p-3 rounded-lg border border-red-200 dark:border-red-700">
+                            <label className="text-xs font-semibold text-red-800 dark:text-red-300 uppercase tracking-wide">Depreciation Cost</label>
+                            <p className="text-sm font-bold text-red-900 dark:text-red-100 mt-1">-{formatCurrency(propertyAppraisal.depreciationCost || 0)}</p>
                         </div>
-                        <div className="md:col-span-2">
-                            <label className="font-medium text-gray-700 dark:text-gray-300">Final Market Value</label>
-                            <p className="text-xl font-bold text-green-600 mt-1">{formatCurrency(propertyAppraisal.marketValue || 0)}</p>
+                        <div className="md:col-span-2 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4 rounded-lg border border-green-200 dark:border-green-700">
+                            <label className="text-xs font-semibold text-green-800 dark:text-green-300 uppercase tracking-wide">Final Market Value</label>
+                            <p className="text-lg font-bold text-green-900 dark:text-green-100 mt-1">{formatCurrency(propertyAppraisal.marketValue || 0)}</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Additional Items */}
                 {additionalItems && additionalItems.items && Array.isArray(additionalItems.items) && additionalItems.items.length > 0 && (
-                    <div className="panel">
-                        <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
-                            <h2 className="text-xl font-semibold">Additional Items</h2>
+                    <div className="panel overflow-hidden">
+                        <div className="border-b border-slate-200 dark:border-slate-700 pb-3 mb-4">
+                            <h2 className="text-lg font-semibold flex items-center gap-2">
+                                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Additional Items
+                            </h2>
                         </div>
-                        <div className="space-y-3">
+                        <div className="p-4 space-y-3">
                             {additionalItems.items.map((item: any, index: number) => (
-                                <div key={index} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded">
-                                    <div className="flex-1">
-                                        <p className="font-medium text-sm">{item.label}</p>
-                                        {item.description && (
-                                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{item.description}</p>
-                                        )}
-                                        <div className="flex gap-3 mt-1 text-xs text-gray-600 dark:text-gray-400">
-                                            <span>Qty: {item.quantity}</span>
-                                            {item.value && item.value.ratePerSqM && (
-                                                <span>Rate: {formatCurrency(item.value.ratePerSqM)}/sqm</span>
+                                <div key={index} className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/20 dark:to-slate-700/20 p-3 rounded-lg border border-slate-200 dark:border-slate-600">
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex-1">
+                                            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{item.label}</p>
+                                            {item.description && (
+                                                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{item.description}</p>
                                             )}
-                                            {item.value && item.value.percentage && (
-                                                <span>Rate: {(item.value.percentage * 100).toFixed(1)}%</span>
-                                            )}
+                                            <div className="flex gap-3 mt-2">
+                                                <span className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded text-xs font-medium">
+                                                    Qty: {item.quantity}
+                                                </span>
+                                                {item.value && item.value.ratePerSqM && (
+                                                    <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 rounded text-xs font-medium">
+                                                        Rate: {formatCurrency(item.value.ratePerSqM)}/sqm
+                                                    </span>
+                                                )}
+                                                {item.value && item.value.percentage && (
+                                                    <span className="px-2 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300 rounded text-xs font-medium">
+                                                        Rate: {(item.value.percentage * 100).toFixed(1)}%
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="font-bold">{formatCurrency(item.amount)}</p>
+                                        <div className="text-right ml-4">
+                                            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{formatCurrency(item.amount)}</p>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
                             
                             {/* Subtotal and Total */}
-                            <div className="border-t border-gray-300 dark:border-gray-600 pt-3 mt-4">
-                                <div className="flex justify-between items-center">
-                                    <p className="font-semibold">Subtotal:</p>
-                                    <p className="font-bold">{formatCurrency(additionalItems.subTotal || 0)}</p>
+                            <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-4 space-y-3">
+                                <div className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 p-3 rounded-lg border border-amber-200 dark:border-amber-700">
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-xs font-semibold text-amber-800 dark:text-amber-300 uppercase tracking-wide">Subtotal</label>
+                                        <p className="text-sm font-bold text-amber-900 dark:text-amber-100">{formatCurrency(additionalItems.subTotal || 0)}</p>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                                    <p className="font-bold text-lg">Total:</p>
-                                    <p className="font-bold text-lg text-primary">{formatCurrency(additionalItems.total || 0)}</p>
+                                <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 p-4 rounded-lg border border-emerald-200 dark:border-emerald-700">
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-sm font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wide">Total</label>
+                                        <p className="text-lg font-bold text-emerald-900 dark:text-emerald-100">{formatCurrency(additionalItems.total || 0)}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -744,50 +890,55 @@ const AssessmentDetails = () => {
             </div>
 
             {/* Property Assessment Section */}
-            <div className="panel">
-                <div className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-6">
-                    <h2 className="text-xl font-semibold">Property Assessment</h2>
+            <div className="panel overflow-hidden">
+                <div className="border-b border-slate-200 dark:border-slate-700 pb-3 mb-4">
+                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
+                        Property Assessment
+                    </h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Market Value</label>
-                        <p className="text-xl font-bold text-green-600 mt-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                    <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 p-4 rounded-lg border border-emerald-200 dark:border-emerald-700">
+                        <label className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wide">Market Value</label>
+                        <p className="text-lg font-bold text-emerald-900 dark:text-emerald-100 mt-1">
                             {formatCurrency(assessment.marketValueTotal || propertyAppraisal.market_value || 0)}
                         </p>
                     </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Assessment Value</label>
-                        <p className="text-xl font-bold text-blue-600 mt-1">
+                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                        <label className="text-xs font-semibold text-blue-800 dark:text-blue-300 uppercase tracking-wide">Assessment Value</label>
+                        <p className="text-lg font-bold text-blue-900 dark:text-blue-100 mt-1">
                             {formatCurrency(propertyAssessment.assessment_value || 0)}
                         </p>
                     </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Assessment Level</label>
-                        <p className="text-lg mt-1">{propertyAssessment.assessment_level || 'N/A'}%</p>
+                    <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-3 rounded-lg border border-purple-200 dark:border-purple-700">
+                        <label className="text-xs font-semibold text-purple-800 dark:text-purple-300 uppercase tracking-wide">Assessment Level</label>
+                        <p className="text-sm font-semibold text-purple-900 dark:text-purple-100 mt-1">{propertyAssessment.assessment_level || 'N/A'}%</p>
                     </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Building Category</label>
-                        <p className="text-lg mt-1">{propertyAssessment.building_category || 'N/A'}</p>
+                    <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 p-3 rounded-lg border border-indigo-200 dark:border-indigo-700">
+                        <label className="text-xs font-semibold text-indigo-800 dark:text-indigo-300 uppercase tracking-wide">Building Category</label>
+                        <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-100 mt-1">{propertyAssessment.building_category || 'N/A'}</p>
                     </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Taxability</label>
-                        <p className="text-lg mt-1">
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    <div className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 p-3 rounded-lg border border-amber-200 dark:border-amber-700">
+                        <label className="text-xs font-semibold text-amber-800 dark:text-amber-300 uppercase tracking-wide">Taxability</label>
+                        <div className="mt-1">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                 assessment.taxable 
                                     ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                                     : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                             }`}>
                                 {assessment.taxable ? 'Taxable' : 'Exempt'}
                             </span>
-                        </p>
+                        </div>
                     </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Effective Year</label>
-                        <p className="text-lg mt-1">{assessment.effYear || propertyAssessment.eff_year || 'N/A'}</p>
+                    <div className="bg-gradient-to-r from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20 p-3 rounded-lg border border-teal-200 dark:border-teal-700">
+                        <label className="text-xs font-semibold text-teal-800 dark:text-teal-300 uppercase tracking-wide">Effective Year</label>
+                        <p className="text-sm font-semibold text-teal-900 dark:text-teal-100 mt-1">{assessment.effYear || propertyAssessment.eff_year || 'N/A'}</p>
                     </div>
-                    <div>
-                        <label className="font-medium text-gray-700 dark:text-gray-300">Effective Quarter</label>
-                        <p className="text-lg mt-1">{assessment.effQuarter || propertyAssessment.eff_quarter || 'N/A'}</p>
+                    <div className="bg-gradient-to-r from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/20 p-3 rounded-lg border border-cyan-200 dark:border-cyan-700">
+                        <label className="text-xs font-semibold text-cyan-800 dark:text-cyan-300 uppercase tracking-wide">Effective Quarter</label>
+                        <p className="text-sm font-semibold text-cyan-900 dark:text-cyan-100 mt-1">{assessment.effQuarter || propertyAssessment.eff_quarter || 'N/A'}</p>
                     </div>
                 </div>
             </div>
