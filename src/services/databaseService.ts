@@ -758,8 +758,8 @@ class DatabaseService {
             return { successful: 0, failed: assessments.length, errors };
         }
         
-        const MEGA_BATCH_SIZE = 50; // Reduced for debugging
-        const NO_DELAY = 100; // Increased for debugging
+        const MEGA_BATCH_SIZE = 25; // Further reduced for stability
+        const NO_DELAY = 200; // Increased delay to prevent rate limiting
         
         // Process in mega batches with maximum concurrency
         for (let i = 0; i < assessments.length; i += MEGA_BATCH_SIZE) {
@@ -768,6 +768,14 @@ class DatabaseService {
             const totalBatches = Math.ceil(assessments.length / MEGA_BATCH_SIZE);
             
             console.log(`🚀 MEGA BATCH ${batchNumber}/${totalBatches} (${batch.length} records) - STARTING AT ${new Date().toISOString()}`);
+            console.log(`📊 Progress so far: ${successful} successful, ${failed} failed`);
+            console.log(`🔍 Batch records sample:`, batch.slice(0, 2).map(r => ({ tdn: r.tdn, municipality: r.municipality })));
+            
+            // Memory monitoring
+            if ((performance as any).memory) {
+                const memory = (performance as any).memory;
+                console.log(`💾 Memory: ${Math.round(memory.usedJSHeapSize / 1024 / 1024)}MB used, ${Math.round(memory.totalJSHeapSize / 1024 / 1024)}MB total`);
+            }
             
             // EMERGENCY: Add timeout wrapper to catch silent failures
             const batchPromise = new Promise<PromiseSettledResult<BatchImportResult>[]>(async (resolve, reject) => {

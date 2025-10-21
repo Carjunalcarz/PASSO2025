@@ -86,6 +86,9 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
         'mun_code': 'mun_code',
         'municipality_code': 'mun_code',
         'municipality': 'municipality',
+        'mun': 'municipality',
+        'city': 'municipality',
+        'town': 'municipality',
         'barangay_code': 'bcode',
         'bcode': 'bcode',
         'barangay': 'barangay',
@@ -124,7 +127,7 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
                 if (headerLower.includes('assess')) possibleMatches.push('ass_value', 'assessment_value');
                 if (headerLower.includes('tax')) possibleMatches.push('taxability', 'tax_beg_yr');
                 if (headerLower.includes('owner')) possibleMatches.push('owner_no', 'owner_number');
-                if (headerLower.includes('mun')) possibleMatches.push('mun_code', 'municipality_code', 'municipality');
+                if (headerLower.includes('mun')) possibleMatches.push('mun_code', 'municipality_code', 'municipality', 'mun', 'city', 'town');
                 if (headerLower.includes('bar')) possibleMatches.push('barangay', 'barangay_code', 'bcode');
                 if (headerLower.includes('class')) possibleMatches.push('classification', 'sub_class', 'subclass');
                 if (headerLower.includes('date')) possibleMatches.push('eff_date', 'effective_date');
@@ -244,12 +247,20 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
 
         // Detect delimiter from first line
         const delimiter = detectDelimiter(lines[0]);
+        const headers = parseCSVLine(lines[0], delimiter);
         
-        // Parse header row
-        const headers = parseCSVLine(lines[0], delimiter).map(h => h.toLowerCase().replace(/['"]/g, ''));
-        console.log('📋 Parsed CSV headers:', headers);
+        console.log('📋 Headers found:', headers);
+        console.log('📋 Headers count:', headers.length);
         
-        // Validate column mapping
+        // Debug municipality field mapping
+        const municipalityHeaders = headers.filter(h => 
+            h.toLowerCase().includes('mun') || 
+            h.toLowerCase().includes('city') || 
+            h.toLowerCase().includes('town') || 
+            h.toLowerCase() === 'municipality'
+        );
+        console.log('🏛️ Municipality-related headers found:', municipalityHeaders);
+        
         const validation = validateColumnMapping(headers);
         setColumnValidation(validation);
         
@@ -265,6 +276,12 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
                 console.log(`📝 Row ${i} raw data:`, lines[i]);
                 console.log(`📝 Row ${i} parsed values:`, values);
                 console.log(`📝 Row ${i} values count: ${values.length}, headers count: ${headers.length}`);
+                
+                // Show column alignment
+                console.log(`📝 Row ${i} column mapping:`);
+                headers.forEach((header, index) => {
+                    console.log(`   ${index}: "${header}" = "${values[index] || 'MISSING'}"`);
+                });
             }
 
             // Map CSV columns to AssessmentDocument properties
@@ -279,23 +296,52 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
                     }
                     
                     // Type conversion based on field
-                    if (['market_val', 'ass_value', 'area', 'unit_value'].includes(mappedField)) {
-                        if (value === '' || value === '-' || value.toLowerCase() === 'null') {
-                            // Handle empty values - set to 0 for required fields, undefined for optional
-                            if (['market_val', 'ass_value', 'area'].includes(mappedField)) {
-                                (rowData as any)[mappedField] = 0;
-                            }
+                    if (['market_val', 'ass_value', 'area', 'unit_value', 'ass_level', 'tax_beg_yr', 'owner_no'].includes(mappedField)) {
+                        if (value === '' || value === '-' || value === null || value === undefined || 
+                            value.toString().toLowerCase() === 'null' || value.toString().toLowerCase() === 'undefined' ||
+                            value.toString().trim() === '') {
+                            // Convert NULL/empty values to 0 for all numeric fields
+                            (rowData as any)[mappedField] = 0;
                         } else {
-                            const numValue = parseFloat(value.replace(/,/g, '')); // Remove commas
+                            const numValue = parseFloat(value.toString().replace(/,/g, '')); // Remove commas
                             if (!isNaN(numValue)) {
                                 (rowData as any)[mappedField] = numValue;
                             } else {
-                                errors.push(`Invalid number format for ${mappedField}: "${value}" (should be a number)`);
+                                // If can't parse as number, convert to 0
+                                (rowData as any)[mappedField] = 0;
                             }
                         }
                     } else if (['owner_no', 'mun_code', 'bcode', 'gr_code', 'ass_level', 'tax_beg_yr'].includes(mappedField)) {
                         // Keep these as strings but ensure they're not empty
                         (rowData as any)[mappedField] = value || '';
+                    } else if (mappedField === 'classification') {
+                        // Smart classification conversion
+                        const classValue = value.toString().toUpperCase();
+                        const classificationMap: { [key: string]: string } = {
+                            'R': 'RESIDENTIAL',
+                            'RESIDENTIAL': 'RESIDENTIAL',
+                            'A': 'AGRICULTURAL', 
+                            'AGRICULTURAL': 'AGRICULTURAL',
+                            'C': 'COMMERCIAL',
+                            'COMMERCIAL': 'COMMERCIAL',
+                            'I': 'INDUSTRIAL',
+                            'INDUSTRIAL': 'INDUSTRIAL',
+                            'S': 'SPECIAL',
+                            'SPECIAL': 'SPECIAL'
+                        };
+                        (rowData as any)[mappedField] = classificationMap[classValue] || value;
+                    } else if (mappedField === 'taxability') {
+                        // Smart taxability conversion
+                        const taxValue = value.toString().toLowerCase();
+                        const taxabilityMap: { [key: string]: string } = {
+                            '0': 'Exempt',
+                            '1': 'Taxable',
+                            'exempt': 'Exempt',
+                            'taxable': 'Taxable',
+                            'e': 'Exempt',
+                            't': 'Taxable'
+                        };
+                        (rowData as any)[mappedField] = taxabilityMap[taxValue] || value;
                     } else {
                         (rowData as any)[mappedField] = value || '';
                     }
@@ -356,7 +402,7 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
         // Force a small delay to ensure state update is processed
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        // Skip validation - import all records directly
+        // Add CSV validation after clicking import
 
         try {
             const reader = new FileReader();
@@ -364,8 +410,165 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
                 try {
                     const csvText = e.target?.result as string;
                     const parsedRows = parseCSV(csvText);
-                    // Import ALL rows - no validation filtering
-                    const allRows = parsedRows;
+                    
+                    // 🔍 CSV VALIDATION AFTER CLICKING IMPORT
+                    console.log('🔍 Starting CSV validation...');
+                    
+                    // 1. Check if CSV has data
+                    if (parsedRows.length === 0) {
+                        throw new Error('CSV file is empty or contains no valid data rows');
+                    }
+                    
+                    // 2. Validate required columns exist
+                    const requiredColumns = ['tdn', 'municipality'];
+                    const firstRow = parsedRows[0]?.data;
+                    const missingColumns = requiredColumns.filter(col => 
+                        !firstRow || (firstRow as any)[col] === undefined || (firstRow as any)[col] === ''
+                    );
+                    
+                    if (missingColumns.length > 0) {
+                        throw new Error(`Missing required columns: ${missingColumns.join(', ')}`);
+                    }
+                    
+                    // 3. Validate data quality
+                    const validationErrors: string[] = [];
+                    let validRows = 0;
+                    let invalidRows = 0;
+                    
+                    const validatedRows = parsedRows.map((row, index) => {
+                        const rowErrors: string[] = [];
+                        const data = row.data;
+                        
+                        // Check TDN format (should not be empty)
+                        if (!data.tdn || data.tdn.toString().trim() === '') {
+                            rowErrors.push(`Row ${index + 1}: TDN is required`);
+                        }
+                        
+                        // Check municipality (should not be empty)
+                        if (!data.municipality || data.municipality.toString().trim() === '') {
+                            // Debug: Log what fields we actually have for this row
+                            console.log(`🔍 Row ${index + 1} municipality debug:`, {
+                                municipality: data.municipality,
+                                mun_code: data.mun_code,
+                                allFields: Object.keys(data),
+                                municipalityType: typeof data.municipality,
+                                municipalityValue: JSON.stringify(data.municipality)
+                            });
+                            
+                            // Try to derive municipality from mun_code or provide a default
+                            if (data.mun_code && data.mun_code.toString().trim() !== '') {
+                                // If we have mun_code, we can use it as municipality for now
+                                data.municipality = data.mun_code.toString().trim();
+                                console.log(`✅ Row ${index + 1}: Used mun_code as municipality: ${data.municipality}`);
+                            } else {
+                                rowErrors.push(`Row ${index + 1}: Municipality is required (municipality: "${data.municipality}", mun_code: "${data.mun_code}")`);
+                            }
+                        }
+                        
+                        // Validate numeric fields (after null-to-zero conversion)
+                        const numericFields = ['market_val', 'ass_value', 'area', 'unit_value', 'ass_level', 'tax_beg_yr', 'owner_no'];
+                        numericFields.forEach(field => {
+                            const fieldValue = (data as any)[field];
+                            // Since we convert null/empty to 0, only check if it's a valid number
+                            if (fieldValue !== undefined && fieldValue !== '') {
+                                const numValue = Number(fieldValue);
+                                if (isNaN(numValue) || numValue < 0) {
+                                    rowErrors.push(`Row ${index + 1}: ${field} must be a valid positive number (got: ${fieldValue})`);
+                                }
+                            }
+                        });
+                        
+                        // Smart classification validation with auto-conversion
+                        if (data.classification) {
+                            const classValue = data.classification.toString().toUpperCase();
+                            const classificationMap: { [key: string]: string } = {
+                                'R': 'RESIDENTIAL',
+                                'RESIDENTIAL': 'RESIDENTIAL',
+                                'A': 'AGRICULTURAL', 
+                                'AGRICULTURAL': 'AGRICULTURAL',
+                                'C': 'COMMERCIAL',
+                                'COMMERCIAL': 'COMMERCIAL',
+                                'I': 'INDUSTRIAL',
+                                'INDUSTRIAL': 'INDUSTRIAL',
+                                'S': 'SPECIAL',
+                                'SPECIAL': 'SPECIAL'
+                            };
+                            
+                            if (!classificationMap[classValue]) {
+                                rowErrors.push(`Row ${index + 1}: Invalid classification '${data.classification}'. Use: R/RESIDENTIAL, A/AGRICULTURAL, C/COMMERCIAL, I/INDUSTRIAL, S/SPECIAL`);
+                            }
+                        }
+                        
+                        // Smart taxability validation with auto-conversion
+                        if (data.taxability !== undefined && data.taxability !== '') {
+                            const taxValue = data.taxability.toString().toLowerCase();
+                            const taxabilityMap: { [key: string]: string } = {
+                                '0': 'Exempt',
+                                '1': 'Taxable',
+                                'exempt': 'Exempt',
+                                'taxable': 'Taxable',
+                                'e': 'Exempt',
+                                't': 'Taxable'
+                            };
+                            
+                            if (!taxabilityMap[taxValue]) {
+                                rowErrors.push(`Row ${index + 1}: Invalid taxability '${data.taxability}'. Use: 0/Exempt, 1/Taxable, E/Exempt, T/Taxable`);
+                            }
+                        }
+                        
+                        if (rowErrors.length > 0) {
+                            invalidRows++;
+                            validationErrors.push(...rowErrors);
+                            return { ...row, isValid: false, errors: rowErrors };
+                        } else {
+                            validRows++;
+                            return { ...row, isValid: true, errors: [] };
+                        }
+                    });
+                    
+                    // 4. Show validation summary
+                    console.log(`📊 Validation Summary:`);
+                    console.log(`   ✅ Valid rows: ${validRows}`);
+                    console.log(`   ❌ Invalid rows: ${invalidRows}`);
+                    console.log(`   📝 Total errors: ${validationErrors.length}`);
+                    
+                    // 5. Handle validation results
+                    if (invalidRows > 0) {
+                        const errorSummary = validationErrors.slice(0, 10).join('\n'); // Show first 10 errors
+                        const moreErrors = validationErrors.length > 10 ? `\n... and ${validationErrors.length - 10} more errors` : '';
+                        
+                        const proceed = window.confirm(
+                            `⚠️ CSV Validation Found Issues:\n\n` +
+                            `✅ Valid rows: ${validRows}\n` +
+                            `❌ Invalid rows: ${invalidRows}\n\n` +
+                            `First few errors:\n${errorSummary}${moreErrors}\n\n` +
+                            `Do you want to proceed and import only the valid rows?`
+                        );
+                        
+                        if (!proceed) {
+                            setIsImporting(false);
+                            toast.warning('Import cancelled. Please fix the CSV errors and try again.');
+                            return;
+                        }
+                        
+                        // Filter to only valid rows
+                        const allRows = validatedRows.filter(row => row.isValid);
+                        console.log(`🔄 Proceeding with ${allRows.length} valid rows out of ${parsedRows.length} total rows`);
+                        
+                        if (allRows.length === 0) {
+                            throw new Error('No valid rows found after validation. Please fix the CSV data and try again.');
+                        }
+                        
+                        toast.info(`Importing ${allRows.length} valid rows. ${invalidRows} invalid rows will be skipped.`);
+                    } else {
+                        // All rows are valid
+                        const allRows = validatedRows;
+                        console.log(`✅ All ${allRows.length} rows passed validation`);
+                        toast.success(`CSV validation passed! All ${allRows.length} rows are valid.`);
+                    }
+                    
+                    // Use validated rows for import
+                    const allRows = validatedRows.filter(row => row.isValid);
 
                     setProgress(prev => ({ ...prev, total: allRows.length }));
                     console.log(`📊 Importing ${allRows.length} total records (no validation filtering)`);
