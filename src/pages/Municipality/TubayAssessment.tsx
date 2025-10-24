@@ -178,11 +178,11 @@ const TubayAssessment = () => {
 
     const fetchAssessments = async (): Promise<Assessment[]> => {
         try {
-            console.log('🔄 TubayAssessment: Fetching assessments from Appwrite...');
-            const assessments = await databaseService.getAssessments(PROPERTY_ASSESSMENTS_COLLECTION_ID);
-            // Filter for Tubay municipality
-            const tubayAssessments = assessments.filter(assessment =>
-                assessment.municipality?.toLowerCase() === 'tubay'
+            console.log('🔄 TubayAssessment: Fetching Tubay assessments with SERVER-SIDE filtering...');
+            // Use SERVER-SIDE filtering - much faster! Only fetches Tubay records
+            const tubayAssessments = await databaseService.getAssessmentsByMunicipalityName(
+                PROPERTY_ASSESSMENTS_COLLECTION_ID,
+                'TUBAY' // Server filters by municipality - only returns Tubay records!
             );
             console.log(`✅ TubayAssessment: Fetched ${tubayAssessments.length} Tubay assessments`);
             return tubayAssessments;

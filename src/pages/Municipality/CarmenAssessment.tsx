@@ -180,12 +180,11 @@ const CarmenAssessment = () => {
 
     const fetchAssessments = async (): Promise<Assessment[]> => {
         try {
-            console.log('🔄 CarmenAssessment: Fetching assessments from Appwrite...');
-            const assessments = await databaseService.getAssessments(PROPERTY_ASSESSMENTS_COLLECTION_ID);
-            
-            // Filter for Carmen municipality
-            const carmenAssessments = assessments.filter(assessment => 
-                assessment.municipality?.toLowerCase() === 'carmen'
+            console.log('🔄 CarmenAssessment: Fetching Carmen assessments with SERVER-SIDE filtering...');
+            // Use SERVER-SIDE filtering - much faster! Only fetches Carmen records
+            const carmenAssessments = await databaseService.getAssessmentsByMunicipalityName(
+                PROPERTY_ASSESSMENTS_COLLECTION_ID,
+                'CARMEN' // Server filters by municipality - only returns Carmen records!
             );
             
             console.log(`✅ CarmenAssessment: Fetched ${carmenAssessments.length} Carmen assessments`);

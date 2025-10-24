@@ -179,12 +179,16 @@ const MagallanesAssessment = () => {
 
     const fetchAssessments = async (): Promise<Assessment[]> => {
         try {
-            const assessments = await databaseService.getAssessments(PROPERTY_ASSESSMENTS_COLLECTION_ID);
-            const magallanesAssessments = assessments.filter(assessment => 
-                assessment.municipality?.toLowerCase() === 'magallanes'
+            console.log('🔄 MagallanesAssessment: Fetching Magallanes assessments with SERVER-SIDE filtering...');
+            // Use SERVER-SIDE filtering - much faster! Only fetches Magallanes records
+            const magallanesAssessments = await databaseService.getAssessmentsByMunicipalityName(
+                PROPERTY_ASSESSMENTS_COLLECTION_ID,
+                'MAGALLANES' // Server filters by municipality - only returns Magallanes records!
             );
+            console.log(`✅ MagallanesAssessment: Fetched ${magallanesAssessments.length} Magallanes assessments`);
             return magallanesAssessments;
         } catch (error) {
+            console.error('❌ MagallanesAssessment: Error fetching assessments:', error);
             throw error;
         }
     };

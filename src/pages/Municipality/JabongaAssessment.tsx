@@ -179,10 +179,11 @@ const JabongaAssessment = () => {
 
     const fetchAssessments = async (): Promise<Assessment[]> => {
         try {
-            console.log('🔄 JabongaAssessment: Fetching assessments from Appwrite...');
-            const assessments = await databaseService.getAssessments(PROPERTY_ASSESSMENTS_COLLECTION_ID);
-            const jabongaAssessments = assessments.filter(assessment => 
-                assessment.municipality?.toLowerCase() === 'jabonga'
+            console.log('🔄 JabongaAssessment: Fetching Jabonga assessments with SERVER-SIDE filtering...');
+            // Use SERVER-SIDE filtering - much faster! Only fetches Jabonga records
+            const jabongaAssessments = await databaseService.getAssessmentsByMunicipalityName(
+                PROPERTY_ASSESSMENTS_COLLECTION_ID,
+                'JABONGA' // Server filters by municipality - only returns Jabonga records!
             );
             console.log(`✅ JabongaAssessment: Fetched ${jabongaAssessments.length} Jabonga assessments`);
             return jabongaAssessments;

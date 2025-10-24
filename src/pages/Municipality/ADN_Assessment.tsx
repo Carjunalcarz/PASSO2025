@@ -189,10 +189,14 @@ const ADNAssessment = () => {
 
     const fetchAssessments = async (): Promise<Assessment[]> => {
         try {
-            const assessments = await databaseService.getAssessments(ADN_COLLECTION_ID, 300000);
+            console.log('🔄 ADN_Assessment: Fetching ALL assessments for analytics...');
+            // Load ALL records (133k+) for accurate analytics
+            // Uses automatic pagination in chunks of 5000
+            const assessments = await databaseService.getAssessments(ADN_COLLECTION_ID, 200000);
+            console.log(`✅ ADN_Assessment: Loaded ${assessments.length} assessments`);
             return assessments;
         } catch (error) {
-            console.error('Error fetching assessments from Appwrite:', error);
+            console.error('❌ ADN_Assessment: Error fetching assessments:', error);
             throw error;
         }
     };
@@ -201,7 +205,7 @@ const ADNAssessment = () => {
         queryKey: ['assessments', 'adn'],
         queryFn: fetchAssessments,
         refetchOnWindowFocus: false,
-        refetchOnMount: false,
+        refetchOnMount: true,  // ✅ Changed to true - will load data on page mount
         refetchOnReconnect: false,
         staleTime: Infinity,
     });
@@ -502,6 +506,20 @@ const ADNAssessment = () => {
                 </li>
             </ul>
 
+
+            {/* Loading Indicator for Large Dataset */}
+            {queryLoading && (
+                <div className="panel mb-6">
+                    <div className="flex items-center justify-center gap-3 p-6">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        <div className="text-lg">
+                            Loading all {rowData.length > 0 ? `${rowData.length.toLocaleString()}+` : ''} records for analytics...
+                            <span className="text-sm text-gray-500 block">This may take 15-20 seconds for large datasets</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Summary Cards */}
             <div className="overflow-x-auto scrollbar-hidden scrollbar-hover">
                 <div className="grid grid-flow-col auto-cols-[minmax(250px,1fr)] gap-4 mb-6 w-max min-w-full">
@@ -512,7 +530,9 @@ const ADNAssessment = () => {
                                 <img src="/mun_logo/pgan.webp" alt="ADN Logo" className="w-20 h-20 rounded-sm" />
                             </div>
                             <div className="flex flex-col items-end gap-1">
-                                <div className="text-3xl font-bold">{sums.recordCount.toLocaleString()}</div>
+                                <div className="text-3xl font-bold">
+                                    {queryLoading ? '...' : sums.recordCount.toLocaleString()}
+                                </div>
                                 <div className="text-blue-100">Total RPU Records</div>
                             </div>
                         </div>
