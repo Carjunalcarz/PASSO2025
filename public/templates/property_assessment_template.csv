@@ -1,4 +1,4 @@
-csv_id,tdn,pin,name,market_val,ass_value,area,unit_value,kind,ass_level,classification,sub_class,taxability,trans_cd,tax_beg_yr,eff_date,owner_no,mun_code,municipality,barangay_code,barangay,gr_code,gr
+csv_id,tdn,pin,name,market_val,ass_value,area,unit_value,kind,ass_level,classification,sub_class,taxability,trans_cd,tax_beg_yr,eff_date,owner_no,mun_code,municipality,bcode,barangay,gr_code,gr
 CSV001,001-001-001,001-001-001-001,JUAN DELA CRUZ,500000,100000,100,5000,LAND,20,RESIDENTIAL,RESIDENTIAL LOT,Taxable,NEW,2025,2025-01-01,12345,001,BUTUAN CITY,001,BARANGAY 1,001,GR 1
 CSV002,001-001-002,001-001-002-001,MARIA SANTOS,750000,150000,150,5000,LAND,20,RESIDENTIAL,RESIDENTIAL LOT,Taxable,NEW,2025,2025-01-01,12346,001,BUTUAN CITY,001,BARANGAY 1,001,GR 1
 CSV003,001-001-003,001-001-003-001,PEDRO GARCIA,300000,60000,80,3750,LAND,20,AGRICULTURAL,AGRICULTURAL LOT,Exempt,NEW,2025,2025-01-01,12347,001,BUTUAN CITY,002,BARANGAY 2,002,GR 2

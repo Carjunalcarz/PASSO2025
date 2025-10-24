@@ -502,6 +502,7 @@ const ADNAssessment = () => {
                 </li>
             </ul>
 
+
             {/* Summary Cards */}
             <div className="overflow-x-auto scrollbar-hidden scrollbar-hover">
                 <div className="grid grid-flow-col auto-cols-[minmax(250px,1fr)] gap-4 mb-6 w-max min-w-full">

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Modal } from '@mantine/core';
 import { toast } from 'react-toastify';
+import Papa from 'papaparse';
 import { databaseService, AssessmentDocument } from '../../../services/databaseService';
 import IconUpload from '../../../components/Icon/IconUpload';
 import IconX from '../../../components/Icon/IconX';
@@ -18,7 +19,17 @@ interface ImportProgress {
     processed: number;
     successful: number;
     failed: number;
+    skipped?: number;
     errors: string[];
+    jsonConverted?: number;
+}
+
+interface ImportResult {
+    successful: number;
+    failed: number;
+    skipped?: number;
+    errors: string[];
+    jsonConverted?: number;
 }
 
 interface ParsedRow {
@@ -44,22 +55,29 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
         processed: 0,
         successful: 0,
         failed: 0,
+        skipped: 0,
         errors: []
     });
     const [previewData, setPreviewData] = useState<ParsedRow[]>([]);
     const [showPreview, setShowPreview] = useState(false);
     const [columnValidation, setColumnValidation] = useState<ColumnValidation | null>(null);
-    const [importResult, setImportResult] = useState<{ successful: number; failed: number; errors: string[] } | null>(null);
+    const [importResult, setImportResult] = useState<{ successful: number; failed: number; skipped?: number; errors: string[] } | null>(null);
     const [showCompletionModal, setShowCompletionModal] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Required columns for a valid import
-    const requiredColumns = ['csv_id', 'tdn', 'pin', 'name', 'market_val', 'ass_value', 'area'];
+    // Required columns for a valid import (based on actual Appwrite schema)
+    // Made more flexible - only truly essential columns are required
+    const requiredColumns = ['tdn', 'pin', 'name'];
     
     // Expected CSV columns mapping
     const columnMapping = {
+        // Standard lowercase mappings
         'csv_id': 'csv_id',
         'tdn': 'tdn',
+        'td_no': 'tdn',
+        'tax_dec_no': 'tdn',
+        'tax_declaration_no': 'tdn',
+        'tax_declaration_number': 'tdn',
         'pin': 'pin', 
         'name': 'name',
         'market_val': 'market_val',
@@ -93,7 +111,42 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
         'bcode': 'bcode',
         'barangay': 'barangay',
         'gr_code': 'gr_code',
-        'gr': 'gr'
+        'gr': 'gr',
+        
+        // UPPERCASE mappings for your format
+        'CSV_ID': 'csv_id',
+        'TDN': 'tdn',
+        'TD_NO': 'tdn',
+        'TAX_DEC_NO': 'tdn',
+        'TAX_DECLARATION_NO': 'tdn',
+        'TAX_DECLARATION_NUMBER': 'tdn',
+        'PIN': 'pin',
+        'NAME': 'name',
+        'Market_val': 'market_val',
+        'MARKET_VAL': 'market_val',
+        'Ass_value': 'ass_value',
+        'ASS_VALUE': 'ass_value',
+        'Area': 'area',
+        'AREA': 'area',
+        'UNIT_VALUE': 'unit_value',
+        'KIND': 'kind',
+        'ASS_LEVEL': 'ass_level',
+        'Classification': 'classification',
+        'CLASSIFICATION': 'classification',
+        'Sub_class': 'sub_class',
+        'SUB_CLASS': 'sub_class',
+        'Taxability': 'taxability',
+        'TAXABILITY': 'taxability',
+        'TRANS_CD': 'trans_cd',
+        'TAX_BEG_YR': 'tax_beg_yr',
+        'EFF_DATE': 'eff_date',
+        'OWNER_NO': 'owner_no',
+        'MUN_CODE': 'mun_code',
+        'MUNICIPALITY': 'municipality',
+        'BCODE': 'bcode',
+        'BARANGAY': 'barangay',
+        'GR_CODE': 'gr_code',
+        'GR': 'gr'
     };
 
     // Function to validate column mapping and provide suggestions
@@ -178,188 +231,141 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
         return validation;
     };
 
-    // Proper CSV parsing function that handles quoted fields, commas, and different delimiters
-    const parseCSVLine = (line: string, delimiter: string = ','): string[] => {
-        const result: string[] = [];
-        let current = '';
-        let inQuotes = false;
-        let quoteChar = '';
+    // Enhanced CSV to JSON parsing using PapaParse library
+    const parseCSVToJSON = (csvText: string): ParsedRow[] => {
+        console.log('🔄 Starting CSV to JSON conversion using PapaParse...');
         
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            const nextChar = line[i + 1];
-            
-            if (!inQuotes) {
-                if (char === '"' || char === "'") {
-                    inQuotes = true;
-                    quoteChar = char;
-                } else if (char === delimiter) {
-                    result.push(current.trim());
-                    current = '';
-                } else {
-                    current += char;
-                }
-            } else {
-                if (char === quoteChar) {
-                    if (nextChar === quoteChar) {
-                        // Escaped quote
-                        current += char;
-                        i++; // Skip next quote
-                    } else {
-                        // End of quoted field
-                        inQuotes = false;
-                        quoteChar = '';
-                    }
-                } else {
-                    current += char;
-                }
+        // Use PapaParse to convert CSV to JSON with proper typing
+        const parseResult = Papa.parse<Record<string, string>>(csvText, {
+            header: true, // First row contains headers
+            skipEmptyLines: true, // Skip empty lines
+            dynamicTyping: false, // Keep all values as strings initially for custom type conversion
+            transformHeader: (header: string) => {
+                // Trim whitespace from headers
+                return header.trim();
             }
-        }
-        
-        // Add the last field
-        result.push(current.trim());
-        return result;
-    };
+        });
 
-    // Detect CSV delimiter
-    const detectDelimiter = (line: string): string => {
-        const delimiters = [',', ';', '\t', '|'];
-        let maxCount = 0;
-        let bestDelimiter = ',';
-        
-        for (const delimiter of delimiters) {
-            const count = (line.match(new RegExp(`\\${delimiter}`, 'g')) || []).length;
-            if (count > maxCount) {
-                maxCount = count;
-                bestDelimiter = delimiter;
-            }
-        }
-        
-        console.log(`🔍 Detected CSV delimiter: "${bestDelimiter}" (found ${maxCount} occurrences)`);
-        return bestDelimiter;
-    };
-
-    const parseCSV = (csvText: string): ParsedRow[] => {
-        const lines = csvText.split('\n').filter(line => line.trim());
-        if (lines.length < 2) {
-            throw new Error('CSV file must contain at least a header row and one data row');
+        if (parseResult.errors && parseResult.errors.length > 0) {
+            console.warn('⚠️ PapaParse encountered errors:', parseResult.errors);
+            parseResult.errors.forEach((error: Papa.ParseError) => {
+                console.warn(`   Row ${error.row}: ${error.message}`);
+            });
         }
 
-        // Detect delimiter from first line
-        const delimiter = detectDelimiter(lines[0]);
-        const headers = parseCSVLine(lines[0], delimiter);
+        console.log(`✅ PapaParse successfully parsed ${parseResult.data.length} rows`);
+        console.log('📋 Headers detected:', parseResult.meta.fields);
         
-        console.log('📋 Headers found:', headers);
-        console.log('📋 Headers count:', headers.length);
-        
-        // Debug municipality field mapping
-        const municipalityHeaders = headers.filter(h => 
-            h.toLowerCase().includes('mun') || 
-            h.toLowerCase().includes('city') || 
-            h.toLowerCase().includes('town') || 
-            h.toLowerCase() === 'municipality'
-        );
-        console.log('🏛️ Municipality-related headers found:', municipalityHeaders);
-        
+        // Validate column mapping
+        const headers = (parseResult.meta.fields || []) as string[];
         const validation = validateColumnMapping(headers);
         setColumnValidation(validation);
         
         const rows: ParsedRow[] = [];
-
-        for (let i = 1; i < lines.length; i++) {
-            const values = parseCSVLine(lines[i], delimiter);
+        
+        // Convert each JSON row to AssessmentDocument format
+        parseResult.data.forEach((jsonRow: Record<string, string>, index: number) => {
             const rowData: Partial<AssessmentDocument> = {};
-            const errors: string[] = [];
             
             // Log first few rows for debugging
-            if (i <= 3) {
-                console.log(`📝 Row ${i} raw data:`, lines[i]);
-                console.log(`📝 Row ${i} parsed values:`, values);
-                console.log(`📝 Row ${i} values count: ${values.length}, headers count: ${headers.length}`);
-                
-                // Show column alignment
-                console.log(`📝 Row ${i} column mapping:`);
-                headers.forEach((header, index) => {
-                    console.log(`   ${index}: "${header}" = "${values[index] || 'MISSING'}"`);
-                });
+            if (index < 3) {
+                console.log(`📝 Row ${index + 1} JSON data:`, jsonRow);
             }
-
-            // Map CSV columns to AssessmentDocument properties
-            headers.forEach((header, index) => {
+            
+            // Map JSON fields to AssessmentDocument properties
+            headers.forEach((header: string) => {
                 const mappedField = columnMapping[header as keyof typeof columnMapping];
-                if (mappedField && index < values.length) {
-                    const value = values[index];
+                if (mappedField && jsonRow[header] !== undefined) {
+                    const value = jsonRow[header];
                     
                     // Log field mapping for first row
-                    if (i === 1) {
+                    if (index === 0) {
                         console.log(`🔗 Mapping: "${header}" → "${mappedField}" = "${value}"`);
                     }
                     
                     // Type conversion based on field
-                    if (['market_val', 'ass_value', 'area', 'unit_value', 'ass_level', 'tax_beg_yr', 'owner_no'].includes(mappedField)) {
+                    if (['market_val', 'ass_value', 'area', 'unit_value'].includes(mappedField)) {
                         if (value === '' || value === '-' || value === null || value === undefined || 
                             value.toString().toLowerCase() === 'null' || value.toString().toLowerCase() === 'undefined' ||
                             value.toString().trim() === '') {
-                            // Convert NULL/empty values to 0 for all numeric fields
                             (rowData as any)[mappedField] = 0;
                         } else {
-                            const numValue = parseFloat(value.toString().replace(/,/g, '')); // Remove commas
-                            if (!isNaN(numValue)) {
-                                (rowData as any)[mappedField] = numValue;
-                            } else {
-                                // If can't parse as number, convert to 0
-                                (rowData as any)[mappedField] = 0;
-                            }
+                            // Extract numeric value from strings like "72.8 sqm", "₱294,694", etc.
+                            const cleanValue = value.toString()
+                                .replace(/[₱$,]/g, '') // Remove currency symbols and commas
+                                .replace(/[^\d.-]/g, ''); // Keep only digits, decimal point, and minus sign
+                            const numValue = parseFloat(cleanValue);
+                            (rowData as any)[mappedField] = isNaN(numValue) ? 0 : numValue;
                         }
                     } else if (['owner_no', 'mun_code', 'bcode', 'gr_code', 'ass_level', 'tax_beg_yr'].includes(mappedField)) {
-                        // Keep these as strings but ensure they're not empty
                         (rowData as any)[mappedField] = value || '';
                     } else if (mappedField === 'classification') {
-                        // Smart classification conversion
-                        const classValue = value.toString().toUpperCase();
-                        const classificationMap: { [key: string]: string } = {
-                            'R': 'RESIDENTIAL',
-                            'RESIDENTIAL': 'RESIDENTIAL',
-                            'A': 'AGRICULTURAL', 
-                            'AGRICULTURAL': 'AGRICULTURAL',
-                            'C': 'COMMERCIAL',
-                            'COMMERCIAL': 'COMMERCIAL',
-                            'I': 'INDUSTRIAL',
-                            'INDUSTRIAL': 'INDUSTRIAL',
-                            'S': 'SPECIAL',
-                            'SPECIAL': 'SPECIAL'
-                        };
-                        (rowData as any)[mappedField] = classificationMap[classValue] || value;
+                        (rowData as any)[mappedField] = value || '';
                     } else if (mappedField === 'taxability') {
-                        // Smart taxability conversion
-                        const taxValue = value.toString().toLowerCase();
+                        const taxValue = value.toString().toLowerCase().trim();
                         const taxabilityMap: { [key: string]: string } = {
                             '0': 'Exempt',
                             '1': 'Taxable',
                             'exempt': 'Exempt',
                             'taxable': 'Taxable',
                             'e': 'Exempt',
-                            't': 'Taxable'
+                            't': 'Taxable',
+                            'false': 'Exempt',
+                            'true': 'Taxable'
                         };
-                        (rowData as any)[mappedField] = taxabilityMap[taxValue] || value;
+                        (rowData as any)[mappedField] = taxabilityMap[taxValue] || (taxValue === '0' ? 'Exempt' : 'Taxable');
+                    } else if (mappedField === 'eff_date') {
+                        if (value && value.toString().trim() !== '') {
+                            const dateStr = value.toString().trim();
+                            if (dateStr.includes('/')) {
+                                const parts = dateStr.split('/');
+                                if (parts.length === 3) {
+                                    const month = parts[0].padStart(2, '0');
+                                    const day = parts[1].padStart(2, '0');
+                                    let year = parts[2];
+                                    if (year.length === 2) {
+                                        const currentYear = new Date().getFullYear();
+                                        const currentCentury = Math.floor(currentYear / 100) * 100;
+                                        year = String((parseInt(year) <= 50 ? currentCentury + 100 : currentCentury) + parseInt(year));
+                                    }
+                                    (rowData as any)[mappedField] = `${year}-${month}-${day}`;
+                                } else {
+                                    (rowData as any)[mappedField] = value;
+                                }
+                            } else {
+                                (rowData as any)[mappedField] = value;
+                            }
+                        } else {
+                            (rowData as any)[mappedField] = '';
+                        }
                     } else {
-                        (rowData as any)[mappedField] = value || '';
+                        if (mappedField === 'municipality') {
+                            let cleanValue = value;
+                            if (!cleanValue || cleanValue.toString().toLowerCase() === 'undefined' || 
+                                cleanValue.toString().toLowerCase() === 'null' || cleanValue.toString().trim() === '') {
+                                cleanValue = '';
+                            }
+                            (rowData as any)[mappedField] = cleanValue;
+                        } else {
+                            (rowData as any)[mappedField] = value || '';
+                        }
                     }
                 }
             });
-
-            // Skip validation - import all data as-is
-
+            
             rows.push({
                 data: rowData,
-                rowNumber: i + 1,
-                isValid: true, // All rows are valid since we skip validation
-                errors: [] // No errors since we skip validation
+                rowNumber: index + 1,
+                isValid: true,
+                errors: []
             });
-        }
-
+        });
+        
+        console.log(`✅ CSV to JSON conversion complete: ${rows.length} records ready`);
         return rows;
     };
+
+    // Note: parseCSV function removed - using PapaParse exclusively via parseCSVToJSON()
 
     const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = event.target.files?.[0];
@@ -372,14 +378,14 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
 
         setFile(selectedFile);
 
-        // Read and preview the file
+        // Read and preview the file using PapaParse
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
                 const csvText = e.target?.result as string;
-                console.log('📄 CSV file loaded, parsing...');
-                const parsed = parseCSV(csvText);
-                console.log(`📊 Parsed ${parsed.length} records from CSV`);
+                console.log('📄 CSV file loaded, converting CSV to JSON using PapaParse...');
+                const parsed = parseCSVToJSON(csvText);
+                console.log(`📊 Converted ${parsed.length} CSV records to JSON format`);
                 setPreviewData(parsed); // Show all rows - no limit
                 setShowPreview(true);
             } catch (error) {
@@ -396,7 +402,7 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
 
         console.log('🚀 Starting import process...');
         setIsImporting(true);
-        setProgress({ total: 0, processed: 0, successful: 0, failed: 0, errors: [] });
+        setProgress({ total: 0, processed: 0, successful: 0, failed: 0, skipped: 0, errors: [] });
         console.log('✅ Import state set to true, progress modal should show');
         
         // Force a small delay to ensure state update is processed
@@ -409,218 +415,25 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
             reader.onload = async (e) => {
                 try {
                     const csvText = e.target?.result as string;
-                    const parsedRows = parseCSV(csvText);
                     
-                    // 🔍 CSV VALIDATION AFTER CLICKING IMPORT
-                    console.log('🔍 Starting CSV validation...');
+                    // SIMPLE: CSV → JSON → Save
+                    console.log('📄 Step 1: Converting CSV to JSON...');
+                    const parsedRows = parseCSVToJSON(csvText);
                     
-                    // 1. Check if CSV has data
                     if (parsedRows.length === 0) {
-                        throw new Error('CSV file is empty or contains no valid data rows');
+                        throw new Error('CSV file is empty');
                     }
                     
-                    // 2. Validate required columns exist
-                    const requiredColumns = ['tdn', 'municipality'];
-                    const firstRow = parsedRows[0]?.data;
-                    const missingColumns = requiredColumns.filter(col => 
-                        !firstRow || (firstRow as any)[col] === undefined || (firstRow as any)[col] === ''
-                    );
+                    console.log(`✅ Converted ${parsedRows.length} rows to JSON`);
+                    toast.success(`Ready to import ${parsedRows.length} records`);
                     
-                    if (missingColumns.length > 0) {
-                        throw new Error(`Missing required columns: ${missingColumns.join(', ')}`);
-                    }
+                    setProgress(prev => ({ ...prev, total: parsedRows.length }));
                     
-                    // 3. Validate data quality
-                    const validationErrors: string[] = [];
-                    let validRows = 0;
-                    let invalidRows = 0;
+                    // HYPER-FAST: Just take the data from CSV and save it with maximum speed
+                    const assessmentsToImport = parsedRows.map(row => row.data) as Omit<AssessmentDocument, '$id' | '$createdAt' | '$updatedAt'>[];
                     
-                    const validatedRows = parsedRows.map((row, index) => {
-                        const rowErrors: string[] = [];
-                        const data = row.data;
-                        
-                        // Check TDN format (should not be empty)
-                        if (!data.tdn || data.tdn.toString().trim() === '') {
-                            rowErrors.push(`Row ${index + 1}: TDN is required`);
-                        }
-                        
-                        // Check municipality (should not be empty)
-                        if (!data.municipality || data.municipality.toString().trim() === '') {
-                            // Debug: Log what fields we actually have for this row
-                            console.log(`🔍 Row ${index + 1} municipality debug:`, {
-                                municipality: data.municipality,
-                                mun_code: data.mun_code,
-                                allFields: Object.keys(data),
-                                municipalityType: typeof data.municipality,
-                                municipalityValue: JSON.stringify(data.municipality)
-                            });
-                            
-                            // Try to derive municipality from mun_code or provide a default
-                            if (data.mun_code && data.mun_code.toString().trim() !== '') {
-                                // If we have mun_code, we can use it as municipality for now
-                                data.municipality = data.mun_code.toString().trim();
-                                console.log(`✅ Row ${index + 1}: Used mun_code as municipality: ${data.municipality}`);
-                            } else {
-                                rowErrors.push(`Row ${index + 1}: Municipality is required (municipality: "${data.municipality}", mun_code: "${data.mun_code}")`);
-                            }
-                        }
-                        
-                        // Validate numeric fields (after null-to-zero conversion)
-                        const numericFields = ['market_val', 'ass_value', 'area', 'unit_value', 'ass_level', 'tax_beg_yr', 'owner_no'];
-                        numericFields.forEach(field => {
-                            const fieldValue = (data as any)[field];
-                            // Since we convert null/empty to 0, only check if it's a valid number
-                            if (fieldValue !== undefined && fieldValue !== '') {
-                                const numValue = Number(fieldValue);
-                                if (isNaN(numValue) || numValue < 0) {
-                                    rowErrors.push(`Row ${index + 1}: ${field} must be a valid positive number (got: ${fieldValue})`);
-                                }
-                            }
-                        });
-                        
-                        // Smart classification validation with auto-conversion
-                        if (data.classification) {
-                            const classValue = data.classification.toString().toUpperCase();
-                            const classificationMap: { [key: string]: string } = {
-                                'R': 'RESIDENTIAL',
-                                'RESIDENTIAL': 'RESIDENTIAL',
-                                'A': 'AGRICULTURAL', 
-                                'AGRICULTURAL': 'AGRICULTURAL',
-                                'C': 'COMMERCIAL',
-                                'COMMERCIAL': 'COMMERCIAL',
-                                'I': 'INDUSTRIAL',
-                                'INDUSTRIAL': 'INDUSTRIAL',
-                                'S': 'SPECIAL',
-                                'SPECIAL': 'SPECIAL'
-                            };
-                            
-                            if (!classificationMap[classValue]) {
-                                rowErrors.push(`Row ${index + 1}: Invalid classification '${data.classification}'. Use: R/RESIDENTIAL, A/AGRICULTURAL, C/COMMERCIAL, I/INDUSTRIAL, S/SPECIAL`);
-                            }
-                        }
-                        
-                        // Smart taxability validation with auto-conversion
-                        if (data.taxability !== undefined && data.taxability !== '') {
-                            const taxValue = data.taxability.toString().toLowerCase();
-                            const taxabilityMap: { [key: string]: string } = {
-                                '0': 'Exempt',
-                                '1': 'Taxable',
-                                'exempt': 'Exempt',
-                                'taxable': 'Taxable',
-                                'e': 'Exempt',
-                                't': 'Taxable'
-                            };
-                            
-                            if (!taxabilityMap[taxValue]) {
-                                rowErrors.push(`Row ${index + 1}: Invalid taxability '${data.taxability}'. Use: 0/Exempt, 1/Taxable, E/Exempt, T/Taxable`);
-                            }
-                        }
-                        
-                        if (rowErrors.length > 0) {
-                            invalidRows++;
-                            validationErrors.push(...rowErrors);
-                            return { ...row, isValid: false, errors: rowErrors };
-                        } else {
-                            validRows++;
-                            return { ...row, isValid: true, errors: [] };
-                        }
-                    });
-                    
-                    // 4. Show validation summary
-                    console.log(`📊 Validation Summary:`);
-                    console.log(`   ✅ Valid rows: ${validRows}`);
-                    console.log(`   ❌ Invalid rows: ${invalidRows}`);
-                    console.log(`   📝 Total errors: ${validationErrors.length}`);
-                    
-                    // 5. Handle validation results
-                    if (invalidRows > 0) {
-                        const errorSummary = validationErrors.slice(0, 10).join('\n'); // Show first 10 errors
-                        const moreErrors = validationErrors.length > 10 ? `\n... and ${validationErrors.length - 10} more errors` : '';
-                        
-                        const proceed = window.confirm(
-                            `⚠️ CSV Validation Found Issues:\n\n` +
-                            `✅ Valid rows: ${validRows}\n` +
-                            `❌ Invalid rows: ${invalidRows}\n\n` +
-                            `First few errors:\n${errorSummary}${moreErrors}\n\n` +
-                            `Do you want to proceed and import only the valid rows?`
-                        );
-                        
-                        if (!proceed) {
-                            setIsImporting(false);
-                            toast.warning('Import cancelled. Please fix the CSV errors and try again.');
-                            return;
-                        }
-                        
-                        // Filter to only valid rows
-                        const allRows = validatedRows.filter(row => row.isValid);
-                        console.log(`🔄 Proceeding with ${allRows.length} valid rows out of ${parsedRows.length} total rows`);
-                        
-                        if (allRows.length === 0) {
-                            throw new Error('No valid rows found after validation. Please fix the CSV data and try again.');
-                        }
-                        
-                        toast.info(`Importing ${allRows.length} valid rows. ${invalidRows} invalid rows will be skipped.`);
-                    } else {
-                        // All rows are valid
-                        const allRows = validatedRows;
-                        console.log(`✅ All ${allRows.length} rows passed validation`);
-                        toast.success(`CSV validation passed! All ${allRows.length} rows are valid.`);
-                    }
-                    
-                    // Use validated rows for import
-                    const allRows = validatedRows.filter(row => row.isValid);
-
-                    setProgress(prev => ({ ...prev, total: allRows.length }));
-                    console.log(`📊 Importing ${allRows.length} total records (no validation filtering)`);
-
-                    // Prepare data for bulk import - use all rows without validation
-                    const assessmentsToImport = allRows.map(row => {
-                        const data = row.data;
-                        
-                        // Create a filtered object with all expected fields
-                        const filteredData: any = {
-                            csv_id: data.csv_id,
-                            tdn: data.tdn,
-                            pin: data.pin,
-                            name: data.name,
-                            market_val: data.market_val,
-                            ass_value: data.ass_value,
-                            area: data.area,
-                            unit_value: data.unit_value,
-                            kind: data.kind,
-                            ass_level: data.ass_level,
-                            classification: data.classification,
-                            sub_class: data.sub_class,
-                            taxability: data.taxability,
-                            trans_cd: data.trans_cd,
-                            tax_beg_yr: data.tax_beg_yr,
-                            eff_date: data.eff_date,
-                            owner_no: data.owner_no,
-                            mun_code: data.mun_code,
-                            municipality: data.municipality,
-                            bcode: data.bcode,
-                            barangay: data.barangay,
-                            gr_code: data.gr_code,
-                            gr: data.gr
-                        };
-                        
-                        // Remove undefined fields
-                        Object.keys(filteredData).forEach(key => {
-                            if (filteredData[key] === undefined || filteredData[key] === '') {
-                                delete filteredData[key];
-                            }
-                        });
-                        
-                        return filteredData;
-                    });
-
-                    // Log the data being imported for debugging
-                    console.log('🔍 CSV Import: Sample data being imported:', assessmentsToImport.slice(0, 2));
-                    console.log('🚀 Starting bulk import without validation checks...');
-                    
-                    // Use ULTRA-FAST import method for maximum speed
-                    console.log('🚀 Using ULTRA-FAST import mode for maximum speed...');
-                    const result = await databaseService.ultraFastBulkImport(
+                    console.log('⚡ Step 2: Saving to database (HYPER-FAST MODE - 100 records per batch)...');
+                    const result = await databaseService.hyperFastImport(
                         collectionId,
                         assessmentsToImport,
                         (progress) => {
@@ -670,7 +483,7 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
         setImportResult(null);
         setShowCompletionModal(false);
         setIsImporting(false);
-        setProgress({ total: 0, processed: 0, successful: 0, failed: 0, errors: [] });
+        setProgress({ total: 0, processed: 0, successful: 0, failed: 0, skipped: 0, errors: [] });
         onClose();
     };
 
@@ -682,11 +495,11 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
             'municipality', 'bcode', 'barangay', 'gr_code', 'gr'
         ];
         
-        // Sample data rows with csv_id and bcode
+        // Sample data rows with municipality-based CSV_ID prefixes
         const sampleRows = [
-            ['1', '001-001-001', '001-001-001-001', 'JUAN DELA CRUZ', '500000', '100000', '100', '5000', 'LAND', '20', 'RESIDENTIAL', 'RESIDENTIAL LOT', 'Taxable', 'NEW', '2025', '2025-01-01', '12345', '001', 'BUTUAN CITY', '001', 'BARANGAY 1', '001', 'GR 1'],
-            ['2', '001-001-002', '001-001-002-001', 'MARIA SANTOS', '750000', '150000', '150', '5000', 'LAND', '20', 'RESIDENTIAL', 'RESIDENTIAL LOT', 'Taxable', 'NEW', '2025', '2025-01-01', '12346', '001', 'BUTUAN CITY', '001', 'BARANGAY 1', '001', 'GR 1'],
-            ['3', '001-001-003', '001-001-003-001', 'PEDRO GARCIA', '300000', '60000', '80', '3750', 'LAND', '20', 'AGRICULTURAL', 'AGRICULTURAL LOT', 'Exempt', 'NEW', '2025', '2025-01-01', '12347', '001', 'BUTUAN CITY', '002', 'BARANGAY 2', '002', 'GR 2'],
+            ['TUBAY_1', '001-001-001', '001-001-001-001', 'JUAN DELA CRUZ', '500000', '100000', '100', '5000', 'LAND', '20', 'RESIDENTIAL', 'RESIDENTIAL LOT', 'Taxable', 'NEW', '2025', '2025-01-01', '12345', '001', 'TUBAY', '001', 'BARANGAY 1', '001', 'GR 1'],
+            ['TUBAY_2', '001-001-002', '001-001-002-001', 'MARIA SANTOS', '750000', '150000', '150', '5000', 'LAND', '20', 'RESIDENTIAL', 'RESIDENTIAL LOT', 'Taxable', 'NEW', '2025', '2025-01-01', '12346', '001', 'TUBAY', '001', 'BARANGAY 1', '001', 'GR 1'],
+            ['BUTUAN_CITY_3', '001-001-003', '001-001-003-001', 'PEDRO GARCIA', '300000', '60000', '80', '3750', 'LAND', '20', 'AGRICULTURAL', 'AGRICULTURAL LOT', 'Exempt', 'NEW', '2025', '2025-01-01', '12347', '001', 'BUTUAN CITY', '002', 'BARANGAY 2', '002', 'GR 2'],
             ['4', '001-002-001', '001-002-001-001', 'ANNA REYES', '1200000', '240000', '200', '6000', 'BUILDING', '20', 'COMMERCIAL', 'OFFICE BUILDING', 'Taxable', 'NEW', '2025', '2025-01-01', '12348', '001', 'BUTUAN CITY', '003', 'BARANGAY 3', '003', 'GR 3'],
             ['5', '001-002-002', '001-002-002-001', 'CARLOS LOPEZ', '850000', '170000', '120', '7083', 'BUILDING', '20', 'RESIDENTIAL', 'SINGLE FAMILY DWELLING', 'Taxable', 'UPDATE', '2025', '2025-01-01', '12349', '001', 'BUTUAN CITY', '003', 'BARANGAY 3', '003', 'GR 3'],
             ['6', '001-003-001', '001-003-001-001', 'ROSA MARTINEZ', '2500000', '500000', '500', '5000', 'LAND', '20', 'INDUSTRIAL', 'INDUSTRIAL LOT', 'Taxable', 'NEW', '2025', '2025-01-01', '12350', '001', 'BUTUAN CITY', '004', 'BARANGAY 4', '004', 'GR 4'],
@@ -757,13 +570,21 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
                         </h3>
 
                         {/* Results Summary */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-3 gap-4">
                             <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                                 <div className="text-3xl font-bold text-green-600 dark:text-green-400">
                                     {importResult.successful}
                                 </div>
                                 <div className="text-sm text-green-600 dark:text-green-400 font-medium">
-                                    Records Imported
+                                    Imported
+                                </div>
+                            </div>
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
+                                <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                                    {importResult.skipped || 0}
+                                </div>
+                                <div className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
+                                    Skipped
                                 </div>
                             </div>
                             <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
@@ -771,7 +592,7 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
                                     {importResult.failed}
                                 </div>
                                 <div className="text-sm text-red-600 dark:text-red-400 font-medium">
-                                    Records Failed
+                                    Failed
                                 </div>
                             </div>
                         </div>
@@ -901,9 +722,17 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
                         </div>
 
                         {/* Progress Stats */}
-                        <div className="grid grid-cols-3 gap-4 text-center">
+                        <div className="grid grid-cols-4 gap-3 text-center">
+                            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
+                                <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                                    {progress.jsonConverted || 0}
+                                </div>
+                                <div className="text-xs text-purple-600 dark:text-purple-400 font-medium">
+                                    JSON Converted
+                                </div>
+                            </div>
                             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-                                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
                                     {progress.processed}
                                 </div>
                                 <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
@@ -911,15 +740,23 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
                                 </div>
                             </div>
                             <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-                                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                                <div className="text-xl font-bold text-green-600 dark:text-green-400">
                                     {progress.successful}
                                 </div>
                                 <div className="text-xs text-green-600 dark:text-green-400 font-medium">
                                     Success
                                 </div>
                             </div>
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3">
+                                <div className="text-xl font-bold text-yellow-600 dark:text-yellow-400">
+                                    {progress.skipped || 0}
+                                </div>
+                                <div className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">
+                                    Skipped
+                                </div>
+                            </div>
                             <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
-                                <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                                <div className="text-xl font-bold text-red-600 dark:text-red-400">
                                     {progress.failed}
                                 </div>
                                 <div className="text-xs text-red-600 dark:text-red-400 font-medium">
@@ -936,25 +773,33 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-3 dark:bg-gray-700 overflow-hidden">
                                 <div className="relative h-full">
-                                    {/* Success portion */}
+                                    {/* Success portion (green) */}
                                     <div 
                                         className="absolute left-0 top-0 h-full bg-green-500 transition-all duration-300"
                                         style={{ width: `${progress.total > 0 ? (progress.successful / progress.total) * 100 : 0}%` }}
                                     ></div>
-                                    {/* Failed portion */}
+                                    {/* Skipped portion (yellow) */}
+                                    <div 
+                                        className="absolute top-0 h-full bg-yellow-500 transition-all duration-300"
+                                        style={{ 
+                                            left: `${progress.total > 0 ? (progress.successful / progress.total) * 100 : 0}%`,
+                                            width: `${progress.total > 0 ? ((progress.skipped || 0) / progress.total) * 100 : 0}%`
+                                        }}
+                                    ></div>
+                                    {/* Failed portion (red) */}
                                     <div 
                                         className="absolute top-0 h-full bg-red-500 transition-all duration-300"
                                         style={{ 
-                                            left: `${progress.total > 0 ? (progress.successful / progress.total) * 100 : 0}%`,
+                                            left: `${progress.total > 0 ? ((progress.successful + (progress.skipped || 0)) / progress.total) * 100 : 0}%`,
                                             width: `${progress.total > 0 ? (progress.failed / progress.total) * 100 : 0}%`
                                         }}
                                     ></div>
-                                    {/* Processing portion */}
+                                    {/* Processing portion (blue) */}
                                     <div 
                                         className="absolute top-0 h-full bg-blue-500 transition-all duration-300"
                                         style={{ 
-                                            left: `${progress.total > 0 ? ((progress.successful + progress.failed) / progress.total) * 100 : 0}%`,
-                                            width: `${progress.total > 0 ? ((progress.processed - progress.successful - progress.failed) / progress.total) * 100 : 0}%`
+                                            left: `${progress.total > 0 ? ((progress.successful + (progress.skipped || 0) + progress.failed) / progress.total) * 100 : 0}%`,
+                                            width: `${progress.total > 0 ? ((progress.processed - progress.successful - (progress.skipped || 0) - progress.failed) / progress.total) * 100 : 0}%`
                                         }}
                                     ></div>
                                 </div>
@@ -1031,22 +876,135 @@ const CSVImport: React.FC<CSVImportProps> = ({ isOpen, onClose, onImportComplete
                     </button>
                 </div>
 
-                {/* Simple File Info */}
+                {/* File Info and Preview */}
                 {file && (
-                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-800 rounded-lg flex items-center justify-center">
-                                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h4 className="font-medium text-blue-900 dark:text-blue-100">{file.name}</h4>
-                                <p className="text-sm text-blue-700 dark:text-blue-300">
-                                    Ready to import {previewData.length} records
-                                </p>
+                    <div className="space-y-4">
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-800 rounded-lg flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 className="font-medium text-blue-900 dark:text-blue-100">{file.name}</h4>
+                                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                                        Ready to import {previewData.length} records
+                                    </p>
+                                </div>
                             </div>
                         </div>
+
+                        {/* CSV Data Preview - First 10 Rows */}
+                        {previewData.length > 0 && (
+                            <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className="font-medium text-gray-900 dark:text-white">
+                                        CSV Data Preview (First 10 rows)
+                                    </h4>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                        Total: {previewData.length} rows
+                                    </span>
+                                </div>
+                                
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full text-xs">
+                                        <thead>
+                                            <tr className="border-b border-gray-200 dark:border-gray-600">
+                                                <th className="text-left py-2 px-2 font-medium text-gray-700 dark:text-gray-300">#</th>
+                                                <th className="text-left py-2 px-2 font-medium text-gray-700 dark:text-gray-300">TDN</th>
+                                                <th className="text-left py-2 px-2 font-medium text-gray-700 dark:text-gray-300">PIN</th>
+                                                <th className="text-left py-2 px-2 font-medium text-gray-700 dark:text-gray-300">Name</th>
+                                                <th className="text-left py-2 px-2 font-medium text-gray-700 dark:text-gray-300">Municipality</th>
+                                                <th className="text-left py-2 px-2 font-medium text-gray-700 dark:text-gray-300">Market Val</th>
+                                                <th className="text-left py-2 px-2 font-medium text-gray-700 dark:text-gray-300">Ass Val</th>
+                                                <th className="text-left py-2 px-2 font-medium text-gray-700 dark:text-gray-300">Area</th>
+                                                <th className="text-left py-2 px-2 font-medium text-gray-700 dark:text-gray-300">Classification</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {previewData.slice(0, 10).map((row, index) => (
+                                                <tr key={index} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                                    <td className="py-2 px-2 text-gray-600 dark:text-gray-400">{index + 1}</td>
+                                                    <td className="py-2 px-2 text-gray-900 dark:text-white font-mono">
+                                                        {row.data.tdn || <span className="text-red-500">Missing</span>}
+                                                    </td>
+                                                    <td className="py-2 px-2 text-gray-900 dark:text-white font-mono">
+                                                        {row.data.pin || <span className="text-red-500">Missing</span>}
+                                                    </td>
+                                                    <td className="py-2 px-2 text-gray-900 dark:text-white max-w-32 truncate">
+                                                        {row.data.name || <span className="text-red-500">Missing</span>}
+                                                    </td>
+                                                    <td className="py-2 px-2 text-gray-900 dark:text-white">
+                                                        {row.data.municipality || <span className="text-yellow-500">Unknown</span>}
+                                                    </td>
+                                                    <td className="py-2 px-2 text-gray-900 dark:text-white text-right">
+                                                        {row.data.market_val ? `₱${row.data.market_val.toLocaleString()}` : '₱0'}
+                                                    </td>
+                                                    <td className="py-2 px-2 text-gray-900 dark:text-white text-right">
+                                                        {row.data.ass_value ? `₱${row.data.ass_value.toLocaleString()}` : '₱0'}
+                                                    </td>
+                                                    <td className="py-2 px-2 text-gray-900 dark:text-white text-right">
+                                                        {row.data.area ? `${row.data.area.toLocaleString()} sqm` : '0 sqm'}
+                                                    </td>
+                                                    <td className="py-2 px-2 text-gray-900 dark:text-white">
+                                                        {row.data.classification || <span className="text-gray-400">-</span>}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                {previewData.length > 10 && (
+                                    <div className="mt-3 text-center">
+                                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                                            ... and {previewData.length - 10} more rows
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* Column Validation Summary */}
+                                {columnValidation && (
+                                    <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                                            <div className="bg-green-50 dark:bg-green-900/20 rounded p-2">
+                                                <div className="font-medium text-green-700 dark:text-green-300">
+                                                    ✅ Mapped Columns ({columnValidation.mappedColumns.length})
+                                                </div>
+                                                <div className="text-green-600 dark:text-green-400 mt-1">
+                                                    {columnValidation.mappedColumns.slice(0, 3).join(', ')}
+                                                    {columnValidation.mappedColumns.length > 3 && '...'}
+                                                </div>
+                                            </div>
+                                            
+                                            {columnValidation.missingRequiredColumns.length > 0 && (
+                                                <div className="bg-red-50 dark:bg-red-900/20 rounded p-2">
+                                                    <div className="font-medium text-red-700 dark:text-red-300">
+                                                        ❌ Missing Required ({columnValidation.missingRequiredColumns.length})
+                                                    </div>
+                                                    <div className="text-red-600 dark:text-red-400 mt-1">
+                                                        {columnValidation.missingRequiredColumns.join(', ')}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
+                                            {columnValidation.unmappedColumns.length > 0 && (
+                                                <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded p-2">
+                                                    <div className="font-medium text-yellow-700 dark:text-yellow-300">
+                                                        ⚠️ Unmapped Columns ({columnValidation.unmappedColumns.length})
+                                                    </div>
+                                                    <div className="text-yellow-600 dark:text-yellow-400 mt-1">
+                                                        {columnValidation.unmappedColumns.slice(0, 2).join(', ')}
+                                                        {columnValidation.unmappedColumns.length > 2 && '...'}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
 
