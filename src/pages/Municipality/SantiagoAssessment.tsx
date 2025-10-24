@@ -179,12 +179,16 @@ const SantiagoAssessment = () => {
 
     const fetchAssessments = async (): Promise<Assessment[]> => {
         try {
-            const assessments = await databaseService.getAssessments(PROPERTY_ASSESSMENTS_COLLECTION_ID);
-            const santiagoAssessments = assessments.filter(assessment => 
-                assessment.municipality?.toLowerCase() === 'santiago'
+            console.log('🔄 SantiagoAssessment: Fetching Santiago assessments with SERVER-SIDE filtering...');
+            // Use SERVER-SIDE filtering - much faster! Only fetches Santiago records
+            const santiagoAssessments = await databaseService.getAssessmentsByMunicipalityName(
+                PROPERTY_ASSESSMENTS_COLLECTION_ID,
+                'SANTIAGO' // Server filters by municipality - only returns Santiago records!
             );
+            console.log(`✅ SantiagoAssessment: Fetched ${santiagoAssessments.length} Santiago assessments`);
             return santiagoAssessments;
         } catch (error) {
+            console.error('❌ SantiagoAssessment: Error fetching assessments:', error);
             throw error;
         }
     };

@@ -179,12 +179,16 @@ const NasipitAssessment = () => {
 
     const fetchAssessments = async (): Promise<Assessment[]> => {
         try {
-            const assessments = await databaseService.getAssessments(PROPERTY_ASSESSMENTS_COLLECTION_ID);
-            const nasipitAssessments = assessments.filter(assessment => 
-                assessment.municipality?.toLowerCase() === 'nasipit'
+            console.log('🔄 NasipitAssessment: Fetching Nasipit assessments with SERVER-SIDE filtering...');
+            // Use SERVER-SIDE filtering - much faster! Only fetches Nasipit records
+            const nasipitAssessments = await databaseService.getAssessmentsByMunicipalityName(
+                PROPERTY_ASSESSMENTS_COLLECTION_ID,
+                'NASIPIT' // Server filters by municipality - only returns Nasipit records!
             );
+            console.log(`✅ NasipitAssessment: Fetched ${nasipitAssessments.length} Nasipit assessments`);
             return nasipitAssessments;
         } catch (error) {
+            console.error('❌ NasipitAssessment: Error fetching assessments:', error);
             throw error;
         }
     };

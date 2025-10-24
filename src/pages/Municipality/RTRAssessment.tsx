@@ -183,15 +183,14 @@ const RTRAssessment = () => {
             throw new Error('User not authenticated');
         }
 
-        console.log(' RTRAssessment: Fetching RTR municipality assessments from Appwrite...');
-        const assessments = await databaseService.getAssessments(PROPERTY_ASSESSMENTS_COLLECTION_ID);
-        
-        // Filter by RTR municipality
-        const rtrAssessments = assessments.filter(assessment => 
-            assessment.municipality?.toLowerCase() === 'rtr'
+        console.log('🔄 RTRAssessment: Fetching RTR assessments with SERVER-SIDE filtering...');
+        // Use SERVER-SIDE filtering - much faster! Only fetches RTR records
+        const rtrAssessments = await databaseService.getAssessmentsByMunicipalityName(
+            PROPERTY_ASSESSMENTS_COLLECTION_ID,
+            'RTR' // Server filters by municipality - only returns RTR records!
         );
         
-        console.log(' RTRAssessment: Fetched RTR assessments:', rtrAssessments.length);
+        console.log(`✅ RTRAssessment: Fetched ${rtrAssessments.length} RTR assessments`);
         return rtrAssessments;
     };
 
@@ -200,7 +199,7 @@ const RTRAssessment = () => {
         queryFn: fetchAssessments,
         enabled: !!user, // Only run query if user is authenticated
         refetchOnWindowFocus: false,
-        refetchOnMount: false,
+        refetchOnMount: true,  // ✅ Changed to true - will load data on page mount
         refetchOnReconnect: false,
         staleTime: Infinity,
     });

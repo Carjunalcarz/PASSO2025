@@ -119,14 +119,22 @@ class DatabaseService {
         }
     }
 
-    // Get all assessments from a collection
-    async getAssessments(collectionId: string, limit: number = 100000): Promise<AssessmentDocument[]> {
+    // Get all assessments from a collection (PAGINATED for large datasets)
+    async getAssessments(collectionId: string, limit: number = 5000): Promise<AssessmentDocument[]> {
         try {
+            console.log(`📊 Fetching assessments with limit: ${limit}`);
+            
+            // For large datasets (>10k records), use pagination
+            if (limit > 10000) {
+                console.warn(`⚠️ Limit ${limit} is too high! Using paginated fetch instead.`);
+                return await this.getAssessmentsPaginated(collectionId, limit);
+            }
+            
             const response = await databases.listDocuments(
                 this.databaseId,
                 collectionId,
                 [
-                    Query.limit(limit),
+                    Query.limit(Math.min(limit, 5000)), // Appwrite max is 5000
                     Query.orderAsc('tdn')
                 ]
             );
@@ -145,6 +153,7 @@ class DatabaseService {
                 return assessment;
             });
 
+            console.log(`✅ Fetched ${assessments.length} assessments`);
             return assessments;
         } catch (error: any) {
             console.error('❌ DatabaseService: Error fetching assessments:', error);
@@ -154,6 +163,67 @@ class DatabaseService {
                 code: error.code,
                 type: error.type
             });
+            throw error;
+        }
+    }
+
+    // Get assessments with pagination (for large datasets >10k records)
+    async getAssessmentsPaginated(collectionId: string, totalLimit: number = 500000): Promise<AssessmentDocument[]> {
+        try {
+            console.log(`📊 Starting paginated fetch for up to ${totalLimit} records...`);
+            
+            const allAssessments: AssessmentDocument[] = [];
+            const pageSize = 5000; // Appwrite's maximum limit per request
+            let offset = 0;
+            let hasMore = true;
+            let pageNumber = 1;
+
+            while (hasMore && allAssessments.length < totalLimit) {
+                console.log(`📄 Fetching page ${pageNumber} (offset: ${offset})...`);
+                
+                const response = await databases.listDocuments(
+                    this.databaseId,
+                    collectionId,
+                    [
+                        Query.limit(pageSize),
+                        Query.offset(offset),
+                        Query.orderAsc('tdn')
+                    ]
+                );
+
+                const pageAssessments = response.documents.map((doc: Models.Document) => {
+                    const assessment = doc as unknown as AssessmentDocument;
+                    
+                    // Transform taxability
+                    if (assessment.taxability === "1") {
+                        assessment.taxability = "Taxable";
+                    } else if (assessment.taxability === "0") {
+                        assessment.taxability = "Exempt";
+                    }
+                    
+                    return assessment;
+                });
+
+                allAssessments.push(...pageAssessments);
+                console.log(`✅ Page ${pageNumber}: Fetched ${pageAssessments.length} records (Total: ${allAssessments.length})`);
+
+                // Check if there are more records
+                hasMore = pageAssessments.length === pageSize;
+                offset += pageSize;
+                pageNumber++;
+
+                // Prevent infinite loop (500k records = 100 pages max)
+                if (pageNumber > 100) {
+                    console.warn(`⚠️ Reached maximum page limit (100 pages = 500k records). Stopping pagination.`);
+                    console.warn(`⚠️ Current total: ${allAssessments.length} records`);
+                    break;
+                }
+            }
+
+            console.log(`✅ Paginated fetch complete: ${allAssessments.length} total records`);
+            return allAssessments;
+        } catch (error: any) {
+            console.error('❌ DatabaseService: Error in paginated fetch:', error);
             throw error;
         }
     }
@@ -497,7 +567,7 @@ class DatabaseService {
         }
     }
 
-    // Get assessments by municipality
+    // Get assessments by municipality CODE (old method)
     async getAssessmentsByMunicipality(collectionId: string, municipalityCode: string): Promise<AssessmentDocument[]> {
         try {
             const response = await databases.listDocuments(
@@ -512,6 +582,172 @@ class DatabaseService {
             return response.documents as unknown as AssessmentDocument[];
         } catch (error) {
             console.error('Error fetching assessments by municipality:', error);
+            throw error;
+        }
+    }
+
+    // Get assessments by municipality NAME with pagination (SERVER-SIDE FILTERING)
+    async getAssessmentsByMunicipalityName(
+        collectionId: string, 
+        municipalityName: string,
+        limit: number = 200000
+    ): Promise<AssessmentDocument[]> {
+        try {
+            console.log(`🔍 Fetching assessments for municipality: ${municipalityName}...`);
+            
+            // For large datasets, use pagination with server-side filtering
+            if (limit > 10000) {
+                return await this.getAssessmentsByMunicipalityPaginated(collectionId, municipalityName, limit);
+            }
+            
+            // Try different variations for Las Nieves
+            let queries: any[] = [];
+            if (municipalityName.toUpperCase().includes('LAS NIEVES')) {
+                // Try multiple variations for Las Nieves
+                queries = [
+                    Query.equal('municipality', 'LAS NIEVES'),
+                    Query.equal('municipality', 'LASNIEVES'),
+                    Query.equal('municipality', 'Las Nieves'),
+                    Query.equal('municipality', 'Lasnieves'),
+                ];
+            } else {
+                queries = [Query.equal('municipality', municipalityName)];
+            }
+            
+            // Try each query variation
+            let allAssessments: AssessmentDocument[] = [];
+            for (const query of queries) {
+                try {
+                    const response = await databases.listDocuments(
+                        this.databaseId,
+                        collectionId,
+                        [
+                            query,
+                            Query.limit(Math.min(limit, 5000)),
+                            Query.orderAsc('tdn')
+                        ]
+                    );
+
+                    const assessments = response.documents.map((doc: Models.Document) => {
+                        const assessment = doc as unknown as AssessmentDocument;
+                        
+                        // Transform taxability
+                        if (assessment.taxability === "1") {
+                            assessment.taxability = "Taxable";
+                        } else if (assessment.taxability === "0") {
+                            assessment.taxability = "Exempt";
+                        }
+                        
+                        return assessment;
+                    });
+
+                    if (assessments.length > 0) {
+                        console.log(`✅ Fetched ${assessments.length} assessments for ${municipalityName} using query: ${JSON.stringify(query)}`);
+                        return assessments;
+                    }
+                } catch (err) {
+                    // Continue to next variation
+                    continue;
+                }
+            }
+
+            console.log(`✅ Fetched ${allAssessments.length} assessments for ${municipalityName}`);
+            return allAssessments;
+        } catch (error: any) {
+            console.error(`❌ Error fetching assessments for ${municipalityName}:`, error);
+            throw error;
+        }
+    }
+
+    // Get assessments by municipality NAME with pagination (for large datasets)
+    async getAssessmentsByMunicipalityPaginated(
+        collectionId: string,
+        municipalityName: string,
+        totalLimit: number = 200000
+    ): Promise<AssessmentDocument[]> {
+        try {
+            console.log(`📊 Starting paginated fetch for ${municipalityName} (up to ${totalLimit} records)...`);
+            
+            // Determine the actual municipality name to use in queries
+            let actualMunicipalityName = municipalityName;
+            
+            // For Las Nieves, try to find which variation exists in the database
+            if (municipalityName.toUpperCase().includes('LAS NIEVES')) {
+                const variations = ['LAS NIEVES', 'LASNIEVES', 'Las Nieves', 'Lasnieves'];
+                for (const variation of variations) {
+                    try {
+                        const testResponse = await databases.listDocuments(
+                            this.databaseId,
+                            collectionId,
+                            [
+                                Query.equal('municipality', variation),
+                                Query.limit(1)
+                            ]
+                        );
+                        if (testResponse.documents.length > 0) {
+                            actualMunicipalityName = variation;
+                            console.log(`✅ Found Las Nieves records using: "${variation}"`);
+                            break;
+                        }
+                    } catch (err) {
+                        continue;
+                    }
+                }
+            }
+            
+            const allAssessments: AssessmentDocument[] = [];
+            const pageSize = 5000; // Appwrite's maximum limit per request
+            let offset = 0;
+            let hasMore = true;
+            let pageNumber = 1;
+
+            while (hasMore && allAssessments.length < totalLimit) {
+                console.log(`📄 Fetching page ${pageNumber} for ${municipalityName} (offset: ${offset})...`);
+                
+                const response = await databases.listDocuments(
+                    this.databaseId,
+                    collectionId,
+                    [
+                        Query.equal('municipality', actualMunicipalityName), // SERVER-SIDE FILTER!
+                        Query.limit(pageSize),
+                        Query.offset(offset),
+                        Query.orderAsc('tdn')
+                    ]
+                );
+
+                const pageAssessments = response.documents.map((doc: Models.Document) => {
+                    const assessment = doc as unknown as AssessmentDocument;
+                    
+                    // Transform taxability
+                    if (assessment.taxability === "1") {
+                        assessment.taxability = "Taxable";
+                    } else if (assessment.taxability === "0") {
+                        assessment.taxability = "Exempt";
+                    }
+                    
+                    return assessment;
+                });
+
+                allAssessments.push(...pageAssessments);
+                console.log(`✅ Page ${pageNumber}: Fetched ${pageAssessments.length} records (Total: ${allAssessments.length})`);
+
+                // Check if there are more records
+                hasMore = pageAssessments.length === pageSize;
+                offset += pageSize;
+                pageNumber++;
+
+                // Prevent infinite loop
+                if (pageNumber > 100) {
+                    console.warn(`⚠️ Reached maximum page limit (100 pages). Stopping pagination.`);
+                    console.warn(`⚠️ Current total for ${municipalityName}: ${allAssessments.length} records`);
+                    break;
+                }
+            }
+
+            console.log(`✅ Paginated fetch complete for ${municipalityName}: ${allAssessments.length} total records`);
+            return allAssessments;
+        } catch (error: any) {
+            console.error(`❌ Error in paginated fetch for ${municipalityName}:`, error);
             throw error;
         }
     }
@@ -2390,7 +2626,7 @@ class DatabaseService {
         return { successful, failed, skipped, errors, jsonConverted };
     }
 
-    // HYPER-FAST IMPORT - Maximum speed with massive parallel processing
+    // HYPER-FAST IMPORT - Maximum speed with massive parallel processing + DEBUG MODE
     async hyperFastImport(
         collectionId: string, 
         assessments: Omit<AssessmentDocument, '$id' | '$createdAt' | '$updatedAt'>[],
@@ -2401,67 +2637,188 @@ class DatabaseService {
         const errors: string[] = [];
         
         console.log(`⚡ HYPER-FAST MODE: Processing ${assessments.length} records with MAXIMUM SPEED`);
+        console.log(`🔍 DEBUG MODE ENABLED - Tracking all batch operations`);
         
-        const HYPER_BATCH_SIZE = 100; // Process 100 records simultaneously
-        const BATCH_DELAY = 0; // NO DELAY for maximum speed
+        const HYPER_BATCH_SIZE = 25; // Process 25 records simultaneously (safer for stability)
+        const BATCH_DELAY = 100; // 100ms delay to prevent overwhelming server
+        const BATCH_TIMEOUT = 120000; // 2 minute timeout per batch
+        
+        const startTime = Date.now();
         
         // Process in massive parallel batches
         for (let i = 0; i < assessments.length; i += HYPER_BATCH_SIZE) {
             const batch = assessments.slice(i, i + HYPER_BATCH_SIZE);
             const batchNumber = Math.floor(i / HYPER_BATCH_SIZE) + 1;
             const totalBatches = Math.ceil(assessments.length / HYPER_BATCH_SIZE);
+            const batchStartTime = Date.now();
             
-            console.log(`⚡ BATCH ${batchNumber}/${totalBatches} - Processing ${batch.length} records in parallel`);
+            console.log(`\n🚀 ========== BATCH ${batchNumber}/${totalBatches} START ==========`);
+            console.log(`📊 Batch Info:`);
+            console.log(`   - Records in batch: ${batch.length}`);
+            console.log(`   - Start index: ${i}`);
+            console.log(`   - End index: ${i + batch.length - 1}`);
+            console.log(`   - Time: ${new Date().toISOString()}`);
+            console.log(`   - Progress: ${successful} successful, ${failed} failed so far`);
             
-            // Fire all requests simultaneously
-            const batchPromises = batch.map(async (assessment) => {
-                try {
-                    const result = await databases.createDocument(
-                        this.databaseId,
-                        collectionId,
-                        ID.unique(),
-                        assessment
-                    );
-                    return { success: true, id: result.$id };
-                } catch (error: any) {
-                    return { success: false, error: error.message };
-                }
-            });
-            
-            // Wait for all to complete
-            const results = await Promise.allSettled(batchPromises);
-            
-            // Count results
-            results.forEach((result) => {
-                if (result.status === 'fulfilled' && result.value.success) {
-                    successful++;
-                } else {
-                    failed++;
-                    if (result.status === 'fulfilled') {
-                        errors.push(result.value.error || 'Unknown error');
+            try {
+                // Wrap batch processing with timeout
+                const batchPromise = Promise.race([
+                    // Actual batch processing
+                    (async () => {
+                        console.log(`⚡ Firing ${batch.length} parallel requests...`);
+                        
+                        // Fire all requests simultaneously with individual tracking
+                        const batchPromises = batch.map(async (assessment, idx) => {
+                            const recordIndex = i + idx;
+                            const recordId = assessment.csv_id || assessment.tdn || `record-${recordIndex}`;
+                            
+                            try {
+                                console.log(`   🔄 [${recordIndex}] Starting: ${recordId}`);
+                                const result = await databases.createDocument(
+                                    this.databaseId,
+                                    collectionId,
+                                    ID.unique(),
+                                    assessment
+                                );
+                                console.log(`   ✅ [${recordIndex}] Success: ${recordId} -> ${result.$id}`);
+                                return { success: true, id: result.$id, recordId, index: recordIndex };
+                            } catch (error: any) {
+                                console.error(`   ❌ [${recordIndex}] Failed: ${recordId}`, {
+                                    code: error.code,
+                                    type: error.type,
+                                    message: error.message,
+                                    status: error.response?.status
+                                });
+                                return { 
+                                    success: false, 
+                                    error: error.message, 
+                                    recordId, 
+                                    index: recordIndex,
+                                    errorCode: error.code,
+                                    errorType: error.type
+                                };
+                            }
+                        });
+                        
+                        console.log(`⏳ Waiting for ${batchPromises.length} promises to settle...`);
+                        const results = await Promise.allSettled(batchPromises);
+                        console.log(`✅ All ${results.length} promises settled`);
+                        
+                        return results;
+                    })(),
+                    
+                    // Timeout handler
+                    new Promise<never>((_, reject) => {
+                        setTimeout(() => {
+                            reject(new Error(`BATCH ${batchNumber} TIMEOUT after ${BATCH_TIMEOUT}ms`));
+                        }, BATCH_TIMEOUT);
+                    })
+                ]);
+                
+                const results = await batchPromise;
+                
+                console.log(`📊 Processing ${results.length} results...`);
+                
+                // Count results with detailed logging
+                let batchSuccess = 0;
+                let batchFailed = 0;
+                
+                results.forEach((result, idx) => {
+                    if (result.status === 'fulfilled' && result.value.success) {
+                        successful++;
+                        batchSuccess++;
                     } else {
-                        errors.push(result.reason?.message || 'Promise rejected');
+                        failed++;
+                        batchFailed++;
+                        
+                        if (result.status === 'fulfilled') {
+                            const errorMsg = `[${result.value.index}] ${result.value.recordId}: ${result.value.error}`;
+                            errors.push(errorMsg);
+                            console.error(`   ❌ Error: ${errorMsg}`);
+                        } else {
+                            const errorMsg = `[${i + idx}] Promise rejected: ${result.reason?.message}`;
+                            errors.push(errorMsg);
+                            console.error(`   ❌ Rejection: ${errorMsg}`);
+                        }
                     }
-                }
-            });
-            
-            // Update progress
-            if (onProgress) {
-                onProgress({
-                    processed: Math.min(i + HYPER_BATCH_SIZE, assessments.length),
-                    successful,
-                    failed,
-                    errors
                 });
+                
+                const batchDuration = Date.now() - batchStartTime;
+                const totalDuration = Date.now() - startTime;
+                
+                console.log(`✅ ========== BATCH ${batchNumber}/${totalBatches} COMPLETE ==========`);
+                console.log(`📊 Batch Results:`);
+                console.log(`   ✅ Successful: ${batchSuccess}`);
+                console.log(`   ❌ Failed: ${batchFailed}`);
+                console.log(`   ⏱️ Duration: ${batchDuration}ms`);
+                console.log(`   📈 Total Progress: ${successful}/${assessments.length} (${Math.round(successful/assessments.length*100)}%)`);
+                console.log(`   ⏱️ Total Time: ${Math.round(totalDuration/1000)}s`);
+                console.log(`   🚀 Speed: ${Math.round(successful/(totalDuration/1000))} records/sec`);
+                
+                // Update progress
+                if (onProgress) {
+                    onProgress({
+                        processed: Math.min(i + HYPER_BATCH_SIZE, assessments.length),
+                        successful,
+                        failed,
+                        errors
+                    });
+                }
+                
+                // Check for critical errors
+                if (batchFailed === batch.length) {
+                    console.error(`🚨 CRITICAL: Entire batch ${batchNumber} failed! Stopping import.`);
+                    console.error(`🚨 Last 5 errors:`, errors.slice(-5));
+                    throw new Error(`Batch ${batchNumber} completely failed - stopping import`);
+                }
+                
+                // Memory check
+                if ((performance as any).memory) {
+                    const memory = (performance as any).memory;
+                    console.log(`💾 Memory: ${Math.round(memory.usedJSHeapSize / 1024 / 1024)}MB / ${Math.round(memory.totalJSHeapSize / 1024 / 1024)}MB`);
+                }
+                
+            } catch (error: any) {
+                console.error(`\n🚨 ========== BATCH ${batchNumber} ERROR ==========`);
+                console.error(`❌ Error Type: ${error.name}`);
+                console.error(`❌ Error Message: ${error.message}`);
+                console.error(`❌ Stack:`, error.stack);
+                console.error(`📊 Progress when error occurred: ${successful} successful, ${failed} failed`);
+                
+                // Log the error but continue or stop based on error type
+                if (error.message.includes('TIMEOUT')) {
+                    console.error(`⏰ Batch timed out - this batch may still be processing in background`);
+                    errors.push(`Batch ${batchNumber} timeout - may have partial success`);
+                } else {
+                    console.error(`🛑 Fatal error - stopping import`);
+                    throw error; // Re-throw to stop import
+                }
             }
             
             // Minimal delay only if needed
             if (BATCH_DELAY > 0 && i + HYPER_BATCH_SIZE < assessments.length) {
+                console.log(`⏳ Waiting ${BATCH_DELAY}ms before next batch...`);
                 await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
             }
         }
         
-        console.log(`⚡ HYPER-FAST import completed: ${successful} successful, ${failed} failed`);
+        const totalDuration = Date.now() - startTime;
+        console.log(`\n⚡ ========== IMPORT COMPLETE ==========`);
+        console.log(`📊 Final Results:`);
+        console.log(`   ✅ Successful: ${successful}`);
+        console.log(`   ❌ Failed: ${failed}`);
+        console.log(`   📊 Total: ${assessments.length}`);
+        console.log(`   ⏱️ Total Time: ${Math.round(totalDuration/1000)}s`);
+        console.log(`   🚀 Average Speed: ${Math.round(successful/(totalDuration/1000))} records/sec`);
+        console.log(`   📋 Error Count: ${errors.length}`);
+        
+        if (errors.length > 0) {
+            console.log(`\n❌ First 10 errors:`);
+            errors.slice(0, 10).forEach((err, idx) => {
+                console.error(`   ${idx + 1}. ${err}`);
+            });
+        }
+        
         return { successful, failed, errors };
     }
 
@@ -2528,6 +2885,493 @@ class DatabaseService {
         console.log(`   📊 Total: ${assessments.length}`);
         
         return { successful, failed, errors };
+    }
+
+    // DEBUG: Get detailed status of property assessment table
+    async debugTableStatus(collectionId: string): Promise<void> {
+        console.log(`\n🔍 ========== TABLE STATUS DEBUG ==========`);
+        console.log(`📊 Collection ID: ${collectionId}`);
+        console.log(`🗄️ Database ID: ${this.databaseId}`);
+        console.log(`⏰ Timestamp: ${new Date().toISOString()}\n`);
+
+        try {
+            // 1. Get total count
+            console.log(`📊 Fetching total record count...`);
+            const totalCount = await this.getTotalCount(collectionId);
+            console.log(`✅ Total Records: ${totalCount.toLocaleString()}\n`);
+
+            // 2. Get sample records
+            console.log(`📄 Fetching sample records (first 10)...`);
+            const sampleRecords = await databases.listDocuments(
+                this.databaseId,
+                collectionId,
+                [Query.limit(10)]
+            );
+            console.log(`✅ Retrieved ${sampleRecords.documents.length} sample records\n`);
+
+            // 3. Analyze sample data
+            if (sampleRecords.documents.length > 0) {
+                const firstRecord = sampleRecords.documents[0] as any;
+                console.log(`📋 Sample Record Structure:`);
+                console.log(`   - Document ID: ${firstRecord.$id}`);
+                console.log(`   - TDN: ${firstRecord.tdn || 'N/A'}`);
+                console.log(`   - PIN: ${firstRecord.pin || 'N/A'}`);
+                console.log(`   - Name: ${firstRecord.name || 'N/A'}`);
+                console.log(`   - Municipality: ${firstRecord.municipality || 'N/A'}`);
+                console.log(`   - Market Value: ${firstRecord.market_val || 0}`);
+                console.log(`   - Created: ${firstRecord.$createdAt || 'N/A'}`);
+                console.log(`   - Updated: ${firstRecord.$updatedAt || 'N/A'}\n`);
+
+                console.log(`🔑 Available Fields:`);
+                const fields = Object.keys(firstRecord).filter(key => !key.startsWith('$'));
+                fields.forEach(field => {
+                    const value = firstRecord[field];
+                    const type = typeof value;
+                    console.log(`   - ${field}: ${type} = ${value !== null && value !== undefined ? String(value).substring(0, 50) : 'null'}`);
+                });
+                console.log('');
+            }
+
+            // 4. Get municipality breakdown
+            console.log(`🏘️ Fetching municipality breakdown...`);
+            const municipalities = new Map<string, number>();
+            let offset = 0;
+            const batchSize = 100;
+            
+            while (offset < Math.min(totalCount, 1000)) { // Limit to first 1000 for speed
+                const batch = await databases.listDocuments(
+                    this.databaseId,
+                    collectionId,
+                    [
+                        Query.limit(batchSize),
+                        Query.offset(offset)
+                    ]
+                );
+
+                batch.documents.forEach((doc: any) => {
+                    const mun = doc.municipality || 'Unknown';
+                    municipalities.set(mun, (municipalities.get(mun) || 0) + 1);
+                });
+
+                offset += batchSize;
+                if (batch.documents.length < batchSize) break;
+            }
+
+            console.log(`📊 Municipality Distribution (from ${Math.min(totalCount, 1000)} records):`);
+            const sortedMuns = Array.from(municipalities.entries())
+                .sort((a, b) => b[1] - a[1]);
+            sortedMuns.forEach(([mun, count]) => {
+                console.log(`   - ${mun}: ${count.toLocaleString()} records`);
+            });
+            console.log('');
+
+            // 5. Check for duplicates (sample check)
+            console.log(`🔍 Checking for duplicate TDNs (sample of 1000 records)...`);
+            const tdnMap = new Map<string, number>();
+            offset = 0;
+            
+            while (offset < Math.min(totalCount, 1000)) {
+                const batch = await databases.listDocuments(
+                    this.databaseId,
+                    collectionId,
+                    [
+                        Query.limit(batchSize),
+                        Query.offset(offset)
+                    ]
+                );
+
+                batch.documents.forEach((doc: any) => {
+                    if (doc.tdn) {
+                        tdnMap.set(doc.tdn, (tdnMap.get(doc.tdn) || 0) + 1);
+                    }
+                });
+
+                offset += batchSize;
+                if (batch.documents.length < batchSize) break;
+            }
+
+            const duplicates = Array.from(tdnMap.entries())
+                .filter(([_, count]) => count > 1)
+                .sort((a, b) => b[1] - a[1]);
+
+            if (duplicates.length > 0) {
+                console.log(`⚠️ Found ${duplicates.length} duplicate TDNs (top 10):`);
+                duplicates.slice(0, 10).forEach(([tdn, count]) => {
+                    console.log(`   - TDN "${tdn}": ${count} occurrences`);
+                });
+            } else {
+                console.log(`✅ No duplicate TDNs found in sample`);
+            }
+            console.log('');
+
+            // 6. Data quality check
+            console.log(`🔍 Data Quality Check (sample of 100 records)...`);
+            const qualityCheck = await databases.listDocuments(
+                this.databaseId,
+                collectionId,
+                [Query.limit(100)]
+            );
+
+            let missingTDN = 0;
+            let missingPIN = 0;
+            let missingName = 0;
+            let missingMunicipality = 0;
+            let zeroMarketValue = 0;
+
+            qualityCheck.documents.forEach((doc: any) => {
+                if (!doc.tdn) missingTDN++;
+                if (!doc.pin) missingPIN++;
+                if (!doc.name) missingName++;
+                if (!doc.municipality) missingMunicipality++;
+                if (!doc.market_val || doc.market_val === 0) zeroMarketValue++;
+            });
+
+            console.log(`📊 Data Quality (from 100 records):`);
+            console.log(`   - Missing TDN: ${missingTDN}%`);
+            console.log(`   - Missing PIN: ${missingPIN}%`);
+            console.log(`   - Missing Name: ${missingName}%`);
+            console.log(`   - Missing Municipality: ${missingMunicipality}%`);
+            console.log(`   - Zero Market Value: ${zeroMarketValue}%`);
+            console.log('');
+
+            // 7. Recent records
+            console.log(`📅 Most Recent Records (last 5):`);
+            const recentRecords = await databases.listDocuments(
+                this.databaseId,
+                collectionId,
+                [
+                    Query.limit(5),
+                    Query.orderDesc('$createdAt')
+                ]
+            );
+
+            recentRecords.documents.forEach((doc: any, idx) => {
+                console.log(`   ${idx + 1}. ID: ${doc.$id}`);
+                console.log(`      TDN: ${doc.tdn || 'N/A'}`);
+                console.log(`      Municipality: ${doc.municipality || 'N/A'}`);
+                console.log(`      Created: ${doc.$createdAt}`);
+            });
+            console.log('');
+
+            // 8. Summary
+            console.log(`✅ ========== SUMMARY ==========`);
+            console.log(`📊 Total Records: ${totalCount.toLocaleString()}`);
+            console.log(`🏘️ Municipalities: ${municipalities.size}`);
+            console.log(`⚠️ Duplicate TDNs: ${duplicates.length} (in sample)`);
+            console.log(`📅 Last Import: ${recentRecords.documents[0]?.$createdAt || 'N/A'}`);
+            console.log(`✅ Table Status: ${totalCount > 0 ? 'ACTIVE' : 'EMPTY'}`);
+            console.log(`🔍 ========== DEBUG COMPLETE ==========\n`);
+
+        } catch (error: any) {
+            console.error(`\n❌ ========== DEBUG ERROR ==========`);
+            console.error(`❌ Error Type: ${error.name}`);
+            console.error(`❌ Error Message: ${error.message}`);
+            console.error(`❌ Error Code: ${error.code}`);
+            console.error(`❌ Error Type: ${error.type}`);
+            
+            if (error.code === 404) {
+                console.error(`\n💡 Collection not found. Possible issues:`);
+                console.error(`   - Collection ID "${collectionId}" doesn't exist`);
+                console.error(`   - Database ID "${this.databaseId}" is incorrect`);
+                console.error(`   - Collection was deleted`);
+            } else if (error.code === 401) {
+                console.error(`\n💡 Authentication error. Check:`);
+                console.error(`   - Appwrite session is valid`);
+                console.error(`   - User has read permissions`);
+            } else if (error.message.includes('Network')) {
+                console.error(`\n💡 Network error. Check:`);
+                console.error(`   - Appwrite server is running`);
+                console.error(`   - Network connection is stable`);
+            }
+            
+            console.error(`🔍 ========== DEBUG FAILED ==========\n`);
+            throw error;
+        }
+    }
+
+    // Quick status check (minimal output)
+    async quickTableStatus(collectionId: string): Promise<{ total: number; municipalities: number; lastImport: string }> {
+        try {
+            const totalCount = await this.getTotalCount(collectionId);
+            
+            const municipalities = new Set<string>();
+            const batch = await databases.listDocuments(
+                this.databaseId,
+                collectionId,
+                [Query.limit(100)]
+            );
+
+            batch.documents.forEach((doc: any) => {
+                if (doc.municipality) municipalities.add(doc.municipality);
+            });
+
+            const recent = await databases.listDocuments(
+                this.databaseId,
+                collectionId,
+                [Query.limit(1), Query.orderDesc('$createdAt')]
+            );
+
+            const lastImport = recent.documents[0]?.$createdAt || 'Never';
+
+            console.log(`📊 Quick Status: ${totalCount.toLocaleString()} records, ${municipalities.size} municipalities, Last: ${lastImport}`);
+
+            return {
+                total: totalCount,
+                municipalities: municipalities.size,
+                lastImport
+            };
+        } catch (error: any) {
+            console.error(`❌ Quick status failed:`, error.message);
+            throw error;
+        }
+    }
+
+    // DIAGNOSTIC: Why can't I get data from property assessment table?
+    async diagnoseDataRetrievalIssue(collectionId: string): Promise<void> {
+        console.log(`\n🔍 ========== DATA RETRIEVAL DIAGNOSTIC ==========`);
+        console.log(`📊 Collection ID: ${collectionId}`);
+        console.log(`🗄️ Database ID: ${this.databaseId}`);
+        console.log(`⏰ Timestamp: ${new Date().toISOString()}\n`);
+
+        const issues: string[] = [];
+        const warnings: string[] = [];
+
+        try {
+            // Test 1: Check Appwrite connection
+            console.log(`🔌 TEST 1: Checking Appwrite connection...`);
+            try {
+                const testResponse = await databases.listDocuments(
+                    this.databaseId,
+                    collectionId,
+                    [Query.limit(1)]
+                );
+                console.log(`✅ Appwrite connection successful`);
+                console.log(`   Response status: OK`);
+                console.log(`   Database ID: ${this.databaseId}`);
+                console.log(`   Collection ID: ${collectionId}\n`);
+            } catch (error: any) {
+                console.error(`❌ Appwrite connection FAILED!`);
+                console.error(`   Error: ${error.message}`);
+                console.error(`   Code: ${error.code}`);
+                console.error(`   Type: ${error.type}\n`);
+                
+                if (error.code === 404) {
+                    issues.push(`Collection "${collectionId}" does not exist`);
+                    console.error(`💡 SOLUTION: Run setup script to create collection`);
+                    console.error(`   Command: node scripts/setup-admin.js\n`);
+                } else if (error.code === 401) {
+                    issues.push(`Authentication failed - not logged in`);
+                    console.error(`💡 SOLUTION: Login to the application first\n`);
+                } else if (error.message.includes('Network')) {
+                    issues.push(`Network error - cannot reach Appwrite server`);
+                    console.error(`💡 SOLUTION: Check if Appwrite is running`);
+                    console.error(`   Command: docker ps | grep appwrite\n`);
+                }
+                throw error;
+            }
+
+            // Test 2: Check total count
+            console.log(`📊 TEST 2: Checking total record count...`);
+            try {
+                const totalCount = await this.getTotalCount(collectionId);
+                console.log(`✅ Total records: ${totalCount.toLocaleString()}`);
+                
+                if (totalCount === 0) {
+                    issues.push(`Table is EMPTY - no records found`);
+                    console.warn(`⚠️ WARNING: Table has 0 records!`);
+                    console.warn(`💡 SOLUTION: Import CSV data first\n`);
+                } else {
+                    console.log(`   Status: Table has data\n`);
+                }
+            } catch (error: any) {
+                console.error(`❌ Failed to get count: ${error.message}\n`);
+                issues.push(`Cannot get record count: ${error.message}`);
+            }
+
+            // Test 3: Try to fetch sample records
+            console.log(`📄 TEST 3: Attempting to fetch sample records...`);
+            try {
+                const sampleRecords = await databases.listDocuments(
+                    this.databaseId,
+                    collectionId,
+                    [Query.limit(5)]
+                );
+                
+                console.log(`✅ Successfully fetched ${sampleRecords.documents.length} records`);
+                
+                if (sampleRecords.documents.length > 0) {
+                    const firstRecord = sampleRecords.documents[0] as any;
+                    console.log(`   Sample record ID: ${firstRecord.$id}`);
+                    console.log(`   TDN: ${firstRecord.tdn || 'N/A'}`);
+                    console.log(`   Municipality: ${firstRecord.municipality || 'N/A'}`);
+                    console.log(`   Created: ${firstRecord.$createdAt}\n`);
+                } else {
+                    warnings.push(`Query successful but returned 0 records`);
+                    console.warn(`⚠️ Query worked but no records returned\n`);
+                }
+            } catch (error: any) {
+                console.error(`❌ Failed to fetch records: ${error.message}`);
+                console.error(`   Code: ${error.code}`);
+                console.error(`   Type: ${error.type}\n`);
+                issues.push(`Cannot fetch records: ${error.message}`);
+            }
+
+            // Test 4: Check permissions
+            console.log(`🔐 TEST 4: Checking permissions...`);
+            try {
+                // Try to read with current permissions
+                const permTest = await databases.listDocuments(
+                    this.databaseId,
+                    collectionId,
+                    [Query.limit(1)]
+                );
+                console.log(`✅ Read permission: OK`);
+                console.log(`   User can read from collection\n`);
+            } catch (error: any) {
+                if (error.code === 401 || error.code === 403) {
+                    console.error(`❌ Permission denied!`);
+                    issues.push(`User does not have read permission`);
+                    console.error(`💡 SOLUTION: Check collection permissions in Appwrite Console`);
+                    console.error(`   Should have: read("any") or read("users")\n`);
+                } else {
+                    console.error(`❌ Permission check failed: ${error.message}\n`);
+                }
+            }
+
+            // Test 5: Check database configuration
+            console.log(`⚙️ TEST 5: Checking configuration...`);
+            console.log(`   Database ID: ${this.databaseId}`);
+            console.log(`   Collection ID: ${collectionId}`);
+            console.log(`   Appwrite Endpoint: ${appwriteConfig.endpoint}`);
+            console.log(`   Project ID: ${appwriteConfig.projectId}\n`);
+
+            // Test 6: Check for common query issues
+            console.log(`🔍 TEST 6: Testing different query methods...`);
+            try {
+                // Test without any queries
+                const noQuery = await databases.listDocuments(
+                    this.databaseId,
+                    collectionId
+                );
+                console.log(`✅ No-query fetch: ${noQuery.documents.length} records`);
+
+                // Test with limit
+                const withLimit = await databases.listDocuments(
+                    this.databaseId,
+                    collectionId,
+                    [Query.limit(10)]
+                );
+                console.log(`✅ With limit query: ${withLimit.documents.length} records`);
+
+                // Test with offset
+                const withOffset = await databases.listDocuments(
+                    this.databaseId,
+                    collectionId,
+                    [Query.limit(5), Query.offset(0)]
+                );
+                console.log(`✅ With offset query: ${withOffset.documents.length} records\n`);
+            } catch (error: any) {
+                console.error(`❌ Query test failed: ${error.message}\n`);
+                issues.push(`Query execution error: ${error.message}`);
+            }
+
+            // Test 7: Check browser/network
+            console.log(`🌐 TEST 7: Checking browser environment...`);
+            if (typeof window !== 'undefined') {
+                console.log(`✅ Running in browser`);
+                console.log(`   User Agent: ${navigator.userAgent.substring(0, 50)}...`);
+                console.log(`   Online: ${navigator.onLine ? 'Yes' : 'No'}`);
+                
+                if (!navigator.onLine) {
+                    issues.push(`Browser is offline`);
+                    console.error(`❌ Browser is OFFLINE!\n`);
+                } else {
+                    console.log(`   Network: Connected\n`);
+                }
+            }
+
+            // Test 8: Check session/authentication
+            console.log(`👤 TEST 8: Checking authentication...`);
+            try {
+                const { account } = await import('../lib/appwrite');
+                const user = await account.get();
+                console.log(`✅ User authenticated`);
+                console.log(`   User ID: ${user.$id}`);
+                console.log(`   Email: ${user.email || 'N/A'}`);
+                console.log(`   Name: ${user.name || 'N/A'}\n`);
+            } catch (error: any) {
+                console.error(`❌ Not authenticated or session expired`);
+                issues.push(`User not logged in or session expired`);
+                console.error(`💡 SOLUTION: Login to the application\n`);
+            }
+
+            // Summary
+            console.log(`\n📋 ========== DIAGNOSTIC SUMMARY ==========\n`);
+            
+            if (issues.length === 0 && warnings.length === 0) {
+                console.log(`✅ NO ISSUES FOUND!`);
+                console.log(`   Everything appears to be working correctly.`);
+                console.log(`   If you still can't see data, check your UI component.\n`);
+            } else {
+                if (issues.length > 0) {
+                    console.error(`❌ CRITICAL ISSUES FOUND (${issues.length}):\n`);
+                    issues.forEach((issue, idx) => {
+                        console.error(`   ${idx + 1}. ${issue}`);
+                    });
+                    console.error('');
+                }
+                
+                if (warnings.length > 0) {
+                    console.warn(`⚠️ WARNINGS (${warnings.length}):\n`);
+                    warnings.forEach((warning, idx) => {
+                        console.warn(`   ${idx + 1}. ${warning}`);
+                    });
+                    console.warn('');
+                }
+            }
+
+            // Recommendations
+            console.log(`💡 RECOMMENDED ACTIONS:\n`);
+            
+            if (issues.some(i => i.includes('does not exist'))) {
+                console.log(`   1. Create collection: node scripts/setup-admin.js`);
+            }
+            if (issues.some(i => i.includes('EMPTY'))) {
+                console.log(`   1. Import CSV data through the UI`);
+            }
+            if (issues.some(i => i.includes('not logged in'))) {
+                console.log(`   1. Login to the application`);
+            }
+            if (issues.some(i => i.includes('Network'))) {
+                console.log(`   1. Check Appwrite server: docker ps | grep appwrite`);
+                console.log(`   2. Restart Appwrite: docker restart appwrite`);
+            }
+            if (issues.some(i => i.includes('permission'))) {
+                console.log(`   1. Check collection permissions in Appwrite Console`);
+                console.log(`   2. Should have: read("any") or read("users")`);
+            }
+            
+            if (issues.length === 0) {
+                console.log(`   ✅ No action needed - system is working!`);
+            }
+            
+            console.log(`\n🔍 ========== DIAGNOSTIC COMPLETE ==========\n`);
+
+        } catch (error: any) {
+            console.error(`\n❌ ========== DIAGNOSTIC FAILED ==========`);
+            console.error(`Fatal error during diagnostic: ${error.message}`);
+            console.error(`Error code: ${error.code}`);
+            console.error(`Error type: ${error.type}`);
+            console.error(`\n💡 This usually means:`);
+            console.error(`   - Appwrite server is not running`);
+            console.error(`   - Collection does not exist`);
+            console.error(`   - Network connection issue`);
+            console.error(`\n🔧 Try these commands:`);
+            console.error(`   1. docker ps | grep appwrite`);
+            console.error(`   2. docker restart appwrite`);
+            console.error(`   3. node scripts/setup-admin.js`);
+            console.error(`\n🔍 ========== DIAGNOSTIC FAILED ==========\n`);
+        }
     }
 }
 

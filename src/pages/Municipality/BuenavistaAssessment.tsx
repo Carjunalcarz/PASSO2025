@@ -181,12 +181,11 @@ const BuenavistaAssessment = () => {
 
     const fetchAssessments = async (): Promise<Assessment[]> => {
         try {
-            console.log('🔄 BuenavistaAssessment: Fetching assessments from Appwrite...');
-            const assessments = await databaseService.getAssessments(PROPERTY_ASSESSMENTS_COLLECTION_ID);
-            
-            // Filter for Buenavista municipality
-            const buenavistaAssessments = assessments.filter(assessment => 
-                assessment.municipality?.toLowerCase() === 'buenavista'
+            console.log('🔄 BuenavistaAssessment: Fetching Buenavista assessments with SERVER-SIDE filtering...');
+            // Use SERVER-SIDE filtering - much faster! Only fetches Buenavista records
+            const buenavistaAssessments = await databaseService.getAssessmentsByMunicipalityName(
+                PROPERTY_ASSESSMENTS_COLLECTION_ID,
+                'BUENAVISTA' // Server filters by municipality - only returns Buenavista records!
             );
             
             console.log(`✅ BuenavistaAssessment: Fetched ${buenavistaAssessments.length} Buenavista assessments`);
@@ -198,14 +197,12 @@ const BuenavistaAssessment = () => {
     };
 
     const { data: rowData = [], isLoading: queryLoading, refetch } = useQuery<Assessment[]>({
-
         queryKey: ['assessments', 'Buenavista'],
         queryFn: fetchAssessments,
         refetchOnWindowFocus: false,
-        refetchOnMount: false,
+        refetchOnMount: true,  // ✅ Changed to true - will load data on page mount
         refetchOnReconnect: false,
         staleTime: Infinity,
-
     });
 
     // const filteredData = rowData.filter((item: Assessment) => {

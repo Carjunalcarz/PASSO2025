@@ -179,12 +179,16 @@ const KitcharaoAssessment = () => {
 
     const fetchAssessments = async (): Promise<Assessment[]> => {
         try {
-            const assessments = await databaseService.getAssessments(PROPERTY_ASSESSMENTS_COLLECTION_ID);
-            const kitcharaoAssessments = assessments.filter(assessment => 
-                assessment.municipality?.toLowerCase() === 'kitcharao'
+            console.log('🔄 KitcharaoAssessment: Fetching Kitcharao assessments with SERVER-SIDE filtering...');
+            // Use SERVER-SIDE filtering - much faster! Only fetches Kitcharao records
+            const kitcharaoAssessments = await databaseService.getAssessmentsByMunicipalityName(
+                PROPERTY_ASSESSMENTS_COLLECTION_ID,
+                'KITCHARAO' // Server filters by municipality - only returns Kitcharao records!
             );
+            console.log(`✅ KitcharaoAssessment: Fetched ${kitcharaoAssessments.length} Kitcharao assessments`);
             return kitcharaoAssessments;
         } catch (error) {
+            console.error('❌ KitcharaoAssessment: Error fetching assessments:', error);
             throw error;
         }
     };
