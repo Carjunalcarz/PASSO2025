@@ -173,7 +173,7 @@ class DatabaseService {
             console.log(`📊 Starting paginated fetch for up to ${totalLimit} records...`);
             
             const allAssessments: AssessmentDocument[] = [];
-            const pageSize = 5000; // Appwrite's maximum limit per request
+            const pageSize = 10000; // Increased page size for faster fetching (10k per page)
             let offset = 0;
             let hasMore = true;
             let pageNumber = 1;
@@ -212,9 +212,9 @@ class DatabaseService {
                 offset += pageSize;
                 pageNumber++;
 
-                // Prevent infinite loop (500k records = 100 pages max)
+                // Prevent infinite loop (1M records = 100 pages max with 10k page size)
                 if (pageNumber > 100) {
-                    console.warn(`⚠️ Reached maximum page limit (100 pages = 500k records). Stopping pagination.`);
+                    console.warn(`⚠️ Reached maximum page limit (100 pages = 1M records). Stopping pagination.`);
                     console.warn(`⚠️ Current total: ${allAssessments.length} records`);
                     break;
                 }
@@ -696,7 +696,7 @@ class DatabaseService {
             }
             
             const allAssessments: AssessmentDocument[] = [];
-            const pageSize = 5000; // Appwrite's maximum limit per request
+            const pageSize = 10000; // Increased page size for faster fetching (10k per page)
             let offset = 0;
             let hasMore = true;
             let pageNumber = 1;
@@ -736,9 +736,9 @@ class DatabaseService {
                 offset += pageSize;
                 pageNumber++;
 
-                // Prevent infinite loop
+                // Prevent infinite loop (100 pages = 1M records with 10k page size)
                 if (pageNumber > 100) {
-                    console.warn(`⚠️ Reached maximum page limit (100 pages). Stopping pagination.`);
+                    console.warn(`⚠️ Reached maximum page limit (100 pages = 1M records). Stopping pagination.`);
                     console.warn(`⚠️ Current total for ${municipalityName}: ${allAssessments.length} records`);
                     break;
                 }
@@ -1805,37 +1805,73 @@ class DatabaseService {
         exemptArea: number;
     }> {
         try {
-            console.log('📊 DatabaseService: Fetching analytics data...');
+            console.log('📊 DatabaseService: Fetching analytics data with pagination...');
             
-            const response = await databases.listDocuments(
-                this.databaseId,
-                collectionId,
-                [Query.limit(100000)] // Get all documents for accurate analytics
-            );
+            // Use pagination to fetch ALL records (handles large datasets)
+            const documents = await this.getAssessmentsPaginated(collectionId, 500000);
+            
+            console.log(`📊 Total documents fetched for analytics: ${documents.length}`);
+            
+            // Group records by TDN to count unique RPUs (same TDN = 1 RPU)
+            const tdnGroups = new Map<string, AssessmentDocument[]>();
+            documents.forEach(doc => {
+                const tdn = doc.tdn || 'NO_TDN';
+                if (!tdnGroups.has(tdn)) {
+                    tdnGroups.set(tdn, []);
+                }
+                tdnGroups.get(tdn)!.push(doc);
+            });
 
-            const documents = response.documents as unknown as AssessmentDocument[];
+            console.log(`📊 Unique TDNs (RPUs): ${tdnGroups.size}`);
             
-            // Separate taxable and exempt records
-            const taxableRecords = documents.filter(doc => 
-                doc.taxability === 'Taxable' || doc.taxability === '1'
-            );
-            const exemptRecords = documents.filter(doc => 
-                doc.taxability === 'Exempt' || doc.taxability === '0'
-            );
+            // Count unique TDNs by taxability (use first record of each TDN group)
+            let taxableRpuCount = 0;
+            let exemptRpuCount = 0;
+            let taxableMarketValue = 0;
+            let exemptMarketValue = 0;
+            let taxableAssessmentValue = 0;
+            let exemptAssessmentValue = 0;
+            let taxableArea = 0;
+            let exemptArea = 0;
+
+            tdnGroups.forEach((records, tdn) => {
+                // Use the first record to determine taxability for this TDN
+                const firstRecord = records[0];
+                const isTaxable = firstRecord.taxability === 'Taxable' || firstRecord.taxability === '1';
+                
+                if (isTaxable) {
+                    taxableRpuCount++;
+                    // Sum values from all records with this TDN
+                    records.forEach(doc => {
+                        taxableMarketValue += doc.market_val || 0;
+                        taxableAssessmentValue += doc.ass_value || 0;
+                        taxableArea += doc.area || 0;
+                    });
+                } else {
+                    exemptRpuCount++;
+                    // Sum values from all records with this TDN
+                    records.forEach(doc => {
+                        exemptMarketValue += doc.market_val || 0;
+                        exemptAssessmentValue += doc.ass_value || 0;
+                        exemptArea += doc.area || 0;
+                    });
+                }
+            });
 
             const analytics = {
-                totalRpus: documents.length,
-                taxableCount: taxableRecords.length,
-                exemptCount: exemptRecords.length,
-                taxableMarketValue: taxableRecords.reduce((sum, doc) => sum + (doc.market_val || 0), 0),
-                exemptMarketValue: exemptRecords.reduce((sum, doc) => sum + (doc.market_val || 0), 0),
-                taxableAssessmentValue: taxableRecords.reduce((sum, doc) => sum + (doc.ass_value || 0), 0),
-                exemptAssessmentValue: exemptRecords.reduce((sum, doc) => sum + (doc.ass_value || 0), 0),
-                taxableArea: taxableRecords.reduce((sum, doc) => sum + (doc.area || 0), 0),
-                exemptArea: exemptRecords.reduce((sum, doc) => sum + (doc.area || 0), 0)
+                totalRpus: tdnGroups.size, // Count unique TDNs
+                taxableCount: taxableRpuCount,
+                exemptCount: exemptRpuCount,
+                taxableMarketValue,
+                exemptMarketValue,
+                taxableAssessmentValue,
+                exemptAssessmentValue,
+                taxableArea,
+                exemptArea
             };
 
             console.log('✅ DatabaseService: Analytics data fetched successfully:', analytics);
+            console.log(`📊 Total records: ${documents.length}, Unique RPUs (TDNs): ${tdnGroups.size}`);
             return analytics;
         } catch (error) {
             console.error('❌ DatabaseService: Error fetching analytics:', error);
@@ -1906,40 +1942,105 @@ class DatabaseService {
         exemptArea: number;
     }> {
         try {
-            console.log(`📊 DatabaseService: Fetching analytics for municipality: ${municipality}`);
+            console.log(`📊 DatabaseService: Fetching analytics for municipality: ${municipality} with pagination...`);
             
-            // Get all documents for the specific municipality
-            const response = await databases.listDocuments(
-                this.databaseId,
-                collectionId,
-                [
-                    Query.equal('municipality', municipality),
-                    Query.limit(100000) // Get all documents for this municipality
-                ]
-            );
+            // Get all documents for the specific municipality using pagination
+            const allDocuments: AssessmentDocument[] = [];
+            const pageSize = 10000; // Increased page size for faster fetching (10k per page)
+            let offset = 0;
+            let hasMore = true;
+            let pageNumber = 1;
 
-            const documents = response.documents as unknown as AssessmentDocument[];
+            while (hasMore) {
+                console.log(`📄 Fetching page ${pageNumber} for ${municipality} (offset: ${offset})...`);
+                
+                const response = await databases.listDocuments(
+                    this.databaseId,
+                    collectionId,
+                    [
+                        Query.equal('municipality', municipality),
+                        Query.limit(pageSize),
+                        Query.offset(offset)
+                    ]
+                );
+
+                const pageDocuments = response.documents as unknown as AssessmentDocument[];
+                allDocuments.push(...pageDocuments);
+                
+                console.log(`✅ Page ${pageNumber}: Fetched ${pageDocuments.length} records (Total: ${allDocuments.length})`);
+
+                hasMore = pageDocuments.length === pageSize;
+                offset += pageSize;
+                pageNumber++;
+
+                // Safety limit: 100 pages = 1M records with 10k page size
+                if (pageNumber > 100) {
+                    console.warn(`⚠️ Reached maximum page limit for ${municipality} (100 pages = 1M records)`);
+                    break;
+                }
+            }
+
+            console.log(`📊 Total documents fetched for ${municipality}: ${allDocuments.length}`);
             
-            // Separate taxable and exempt records
-            const taxableRecords = documents.filter(doc => 
-                doc.taxability === 'Taxable' || doc.taxability === '1'
-            );
-            const exemptRecords = documents.filter(doc => 
-                doc.taxability === 'Exempt' || doc.taxability === '0'
-            );
+            // Group records by TDN to count unique RPUs (same TDN = 1 RPU)
+            const tdnGroups = new Map<string, AssessmentDocument[]>();
+            allDocuments.forEach(doc => {
+                const tdn = doc.tdn || 'NO_TDN';
+                if (!tdnGroups.has(tdn)) {
+                    tdnGroups.set(tdn, []);
+                }
+                tdnGroups.get(tdn)!.push(doc);
+            });
+
+            console.log(`📊 Unique TDNs (RPUs) for ${municipality}: ${tdnGroups.size}`);
+            
+            // Count unique TDNs by taxability (use first record of each TDN group)
+            let taxableRpuCount = 0;
+            let exemptRpuCount = 0;
+            let taxableMarketValue = 0;
+            let exemptMarketValue = 0;
+            let taxableAssessmentValue = 0;
+            let exemptAssessmentValue = 0;
+            let taxableArea = 0;
+            let exemptArea = 0;
+
+            tdnGroups.forEach((records, tdn) => {
+                // Use the first record to determine taxability for this TDN
+                const firstRecord = records[0];
+                const isTaxable = firstRecord.taxability === 'Taxable' || firstRecord.taxability === '1';
+                
+                if (isTaxable) {
+                    taxableRpuCount++;
+                    // Sum values from all records with this TDN
+                    records.forEach(doc => {
+                        taxableMarketValue += doc.market_val || 0;
+                        taxableAssessmentValue += doc.ass_value || 0;
+                        taxableArea += doc.area || 0;
+                    });
+                } else {
+                    exemptRpuCount++;
+                    // Sum values from all records with this TDN
+                    records.forEach(doc => {
+                        exemptMarketValue += doc.market_val || 0;
+                        exemptAssessmentValue += doc.ass_value || 0;
+                        exemptArea += doc.area || 0;
+                    });
+                }
+            });
 
             const analytics = {
-                taxableCount: taxableRecords.length,
-                exemptCount: exemptRecords.length,
-                taxableMarketValue: taxableRecords.reduce((sum, doc) => sum + (doc.market_val || 0), 0),
-                exemptMarketValue: exemptRecords.reduce((sum, doc) => sum + (doc.market_val || 0), 0),
-                taxableAssessmentValue: taxableRecords.reduce((sum, doc) => sum + (doc.ass_value || 0), 0),
-                exemptAssessmentValue: exemptRecords.reduce((sum, doc) => sum + (doc.ass_value || 0), 0),
-                taxableArea: taxableRecords.reduce((sum, doc) => sum + (doc.area || 0), 0),
-                exemptArea: exemptRecords.reduce((sum, doc) => sum + (doc.area || 0), 0)
+                taxableCount: taxableRpuCount,
+                exemptCount: exemptRpuCount,
+                taxableMarketValue,
+                exemptMarketValue,
+                taxableAssessmentValue,
+                exemptAssessmentValue,
+                taxableArea,
+                exemptArea
             };
 
             console.log(`✅ DatabaseService: Municipality analytics fetched for ${municipality}:`, analytics);
+            console.log(`📊 Total records: ${allDocuments.length}, Unique RPUs (TDNs): ${tdnGroups.size}`);
             return analytics;
         } catch (error) {
             console.error(`❌ DatabaseService: Error fetching municipality analytics for ${municipality}:`, error);

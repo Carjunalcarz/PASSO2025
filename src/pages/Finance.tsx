@@ -61,12 +61,34 @@ const Finance = () => {
 
     // Show loading state
     if (isLoading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mb-4"></div>
+                <h3 className="text-xl font-semibold mb-2">Loading Analytics Data</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-center max-w-md">
+                    Fetching all records with pagination for accurate analytics...
+                    <br />
+                    This may take 15-30 seconds for large datasets (50k+ records)
+                </p>
+            </div>
+        );
     }
 
     // Show error state
     if (isError) {
-        return <div>Error loading data</div>;
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen">
+                <div className="text-red-500 mb-4">
+                    <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Error Loading Analytics Data</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-center max-w-md">
+                    Failed to fetch analytics data. Please try refreshing the page.
+                </p>
+            </div>
+        );
     }
 
     // Destructure analytics data safely with defaults
@@ -253,9 +275,6 @@ const Finance = () => {
                     <div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-6 md:mb-5">
                             <div className="panel">
-                                <MunicipalityPanel municipality="" logo="pgan.webp" />
-                            </div>
-                            <div className="panel">
                                 <MunicipalityPanel municipality="BUENAVISTA" logo="buenavista.png" />
                             </div>
                             <div className="panel">
@@ -271,7 +290,7 @@ const Finance = () => {
                                 <MunicipalityPanel municipality="MAGALLANES" logo="magallanes.png" />
                             </div>
                             <div className="panel">
-                                <MunicipalityPanel municipality="LAS NIEVES" logo="las-nieves.png" />
+                                <MunicipalityPanel municipality="LASNIEVES" logo="las-nieves.png" />
                             </div>
                             <div className="panel">
                                 <MunicipalityPanel municipality="NASIPIT" logo="nasipit.png" />
