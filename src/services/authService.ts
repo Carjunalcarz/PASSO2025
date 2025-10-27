@@ -72,8 +72,24 @@ class AuthService {
                 expire: session.expire
             });
             
-            // Add delay to ensure cookies are set
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Create JWT for cross-origin authentication
+            console.log('🔑 AuthService: Creating JWT for cross-origin auth...');
+            try {
+                const jwt = await account.createJWT();
+                console.log('✅ AuthService: JWT created successfully');
+                
+                // Store JWT in localStorage for cross-origin requests
+                localStorage.setItem('appwrite_session', jwt.jwt);
+                console.log('💾 AuthService: JWT stored in localStorage');
+                
+                // Update client with JWT
+                const { client } = await import('../lib/appwrite');
+                client.setJWT(jwt.jwt);
+                console.log('🔧 AuthService: Client updated with JWT');
+            } catch (jwtError: any) {
+                console.error('❌ AuthService: JWT creation failed:', jwtError);
+                console.warn('⚠️ Falling back to cookie-based auth (may not work cross-origin)');
+            }
             
             // Verify session by getting user data
             console.log('🔍 AuthService: Verifying session...');
@@ -87,9 +103,7 @@ class AuthService {
                 });
             } catch (verifyError: any) {
                 console.error('❌ AuthService: Session verification failed:', verifyError);
-                console.error('❌ This likely means cookies are not being saved/sent');
-                console.error('❌ Check DevTools → Application → Cookies');
-                // Continue anyway - the session was created
+                console.error('❌ This likely means authentication is not working');
             }
             
             return session;
@@ -166,8 +180,13 @@ class AuthService {
     async logout(): Promise<void> {
         try {
             await account.deleteSessions();
+            // Clear stored JWT
+            localStorage.removeItem('appwrite_session');
+            console.log('✅ AuthService: JWT cleared from localStorage');
         } catch (error) {
             console.error('Logout error:', error);
+            // Clear JWT anyway
+            localStorage.removeItem('appwrite_session');
             throw error;
         }
     }
