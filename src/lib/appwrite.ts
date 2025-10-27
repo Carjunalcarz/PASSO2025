@@ -84,10 +84,14 @@ export const client = new Client()
     .setEndpoint(appwriteConfig.endpoint)
     .setProject(appwriteConfig.projectId);
 
-// Enable credentials for cross-origin requests
-// This is needed when frontend and backend are on different domains
+// For cross-origin requests, try to restore session from localStorage
 if (typeof window !== 'undefined') {
-    console.log('🔧 Configuring client for cross-origin cookies...');
+    console.log('🔧 Checking for stored session...');
+    const storedSession = localStorage.getItem('appwrite_session');
+    if (storedSession) {
+        console.log('📦 Found stored session, setting JWT...');
+        client.setJWT(storedSession);
+    }
 }
 
 console.log('✅ Appwrite client initialized with:', {
