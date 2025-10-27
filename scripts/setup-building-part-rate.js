@@ -291,8 +291,6 @@ class BuildingTablesSetup {
         // Create attributes
         console.log('\n📝 Creating attributes...');
         
-        await this.createStringAttribute(collectionId, 'building_part_rate_id', 500, true);
-        await this.delay(300);
         
         await this.createFloatAttribute(collectionId, 'unit_value', false, 0);
         await this.delay(300);
@@ -306,8 +304,7 @@ class BuildingTablesSetup {
         // Create indexes
         console.log('\n📇 Creating indexes...');
         
-        await this.createIndex(collectionId, 'rate_id_unique', 'unique', ['building_part_rate_id']);
-        await this.delay(500);
+ 
         
         await this.createIndex(collectionId, 'building_parts_fk_index', 'key', ['building_parts_id']);
         await this.delay(500);
@@ -349,7 +346,6 @@ class BuildingTablesSetup {
             console.log('   - Indexes: name_index, building_components_fk_index, status_index');
             console.log('');
             console.log('✅ building_part_rates:');
-            console.log('   - Attributes: building_part_rate_id (PK), unit_value, status, building_parts_id (FK)');
             console.log('   - Indexes: rate_id_unique, building_parts_fk_index, status_index');
             console.log('');
             console.log('🔗 Relationships:');
