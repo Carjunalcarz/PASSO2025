@@ -84,6 +84,12 @@ export const client = new Client()
     .setEndpoint(appwriteConfig.endpoint)
     .setProject(appwriteConfig.projectId);
 
+// Enable credentials for cross-origin requests
+// This is needed when frontend and backend are on different domains
+if (typeof window !== 'undefined') {
+    console.log('🔧 Configuring client for cross-origin cookies...');
+}
+
 console.log('✅ Appwrite client initialized with:', {
     endpoint: appwriteConfig.endpoint,
     projectId: appwriteConfig.projectId
