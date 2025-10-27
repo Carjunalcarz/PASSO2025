@@ -121,6 +121,7 @@ import UpdateAssessment from '../pages/Assessment/UpdateAssessment';
 import BuildingAssessment from '../pages/Assessment/BuildingAssessment';
 import AssessmentDetails from '../pages/Assessment/AssessmentDetails';
 import UnitValue from '../pages/Municipality/unit_value';
+import DashboardSettings from '../pages/setup/DashboardSettings';
 const routes = [
     // dashboard
     {
@@ -162,11 +163,12 @@ const routes = [
         ),
     },
     // crypto page
+
     {
-        path: '/crypto',
+        path: '/dashboard-settings',
         element: (
             <ProtectedRoute>
-                <Crypto />
+                <DashboardSettings />
             </ProtectedRoute>
         ),
     },

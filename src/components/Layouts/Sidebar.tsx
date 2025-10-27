@@ -36,7 +36,23 @@ import IconMunicipality from '../Icon/IconMunicipality';
 import IconAssessment from '../Icon/IconAssessment';
 import IconBuilding from '../Icon/IconBuilding';
 import IconLogout from '../Icon/IconLogout';
+import IconSettings from '../Icon/IconSettings';
 import { useAuth } from '../../contexts/AuthContext';
+
+// Municipality configuration
+const MUNICIPALITIES = [
+    { name: 'Province', path: '/assessment/adn', logo: '/mun_logo/pgan.webp', key: 'province agusan del norte' },
+    { name: 'Buenavista', path: '/assessment/buenavista', logo: '/mun_logo/buenavista.png', key: 'buenavista' },
+    { name: 'Carmen', path: '/assessment/carmen', logo: '/mun_logo/carmen.png', key: 'carmen' },
+    { name: 'Jabonga', path: '/assessment/jabonga', logo: '/mun_logo/jabonga.png', key: 'jabonga' },
+    { name: 'Kitcharao', path: '/assessment/kitcharao', logo: '/mun_logo/kitcharao.png', key: 'kitcharao' },
+    { name: 'Lasnieves', path: '/assessment/lasnieves', logo: '/mun_logo/las-nieves.png', key: 'lasnieves' },
+    { name: 'Magallanes', path: '/assessment/magallanes', logo: '/mun_logo/magallanes.png', key: 'magallanes' },
+    { name: 'Nasipit', path: '/assessment/nasipit', logo: '/mun_logo/nasipit.png', key: 'nasipit' },
+    { name: 'RTR', path: '/assessment/remedios_t_romualdez', logo: '/mun_logo/rtr.png', key: 'remedios_t_romualdez' },
+    { name: 'Santiago', path: '/assessment/santiago', logo: '/mun_logo/santiago.png', key: 'santiago' },
+    { name: 'Tubay', path: '/assessment/tubay', logo: '/mun_logo/tubay.png', key: 'tubay' },
+];
 
 const Sidebar = () => {
     const [currentMenu, setCurrentMenu] = useState<string>('');
@@ -47,6 +63,13 @@ const Sidebar = () => {
     const dispatch = useDispatch();
     const { t } = useTranslation();
     const { user, logout } = useAuth();
+    
+    // Filter municipalities based on user's municipality
+    const userMunicipality = (user?.prefs as any)?.municipality?.toLowerCase();
+    const filteredMunicipalities = !userMunicipality || userMunicipality === 'province agusan del norte'
+        ? MUNICIPALITIES // Show all if no municipality set (admin) or if province level
+        : MUNICIPALITIES.filter(mun => mun.key.toLowerCase() === userMunicipality); // Show only user's municipality
+    
     const toggleMenu = (value: string) => {
         setCurrentMenu((oldValue) => {
             return oldValue === value ? '' : value;
@@ -155,108 +178,21 @@ const Sidebar = () => {
 
                                 <AnimateHeight duration={300} height={currentMenu === 'Municipality' ? 'auto' : 0}>
                                     <div className="sub-menu text-slate-500 px-4 ml-4">
-                                        <div className="py-2">
-                                            <NavLink to="/assessment/adn" className={({ isActive }) =>
-                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-primary font-bold' : ''
-                                                }`
-                                            }>
-                                                <img src="/mun_logo/pgan.webp" alt="PGAN Logo" className="w-5 h-5" />
-                                                {t('Agusan del Norte')}
-                                            </NavLink>
-                                        </div>
-                                        <div className="py-2">
-                                            <NavLink to="/assessment/buenavista" className={({ isActive }) =>
-                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-primary font-bold' : ''
-                                                }`
-                                            }>
-                                                <img src="/mun_logo/buenavista.png" alt="Buenavista Logo" className="w-5 h-5" />
-                                                {t('Buenavista')}
-                                            </NavLink>
-                                        </div>
-                                        <div className="py-2">
-                                            <NavLink
-                                                to="/assessment/carmen"
-                                                className={({ isActive }) =>
-                                                    `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-primary font-bold' : ''
-                                                    }`
-                                                }
-                                            >
-                                                <img src="/mun_logo/carmen.png" alt="Carmen Logo" className="w-5 h-5" />
-                                                {t('Carmen')}
-                                            </NavLink>
-                                        </div>
-                                        <div className="py-2">
-                                            <NavLink to="/assessment/jabonga" className={({ isActive }) =>
-                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-primary font-bold' : ''
-                                                }`
-                                            }>
-                                                <img src="/mun_logo/jabonga.png" alt="Jabonga Logo" className="w-5 h-5" />
-                                                {t('Jabonga')}
-                                            </NavLink>
-                                        </div>
-                                        <div className="py-2">
-                                            <NavLink to="/assessment/kitcharao" className={({ isActive }) =>
-                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-primary font-bold' : ''
-                                                }`
-                                            }>
-                                                <img src="/mun_logo/kitcharao.png" alt="Kitcharao Logo" className="w-5 h-5" />
-                                                {t('Kitcharao')}
-                                            </NavLink>
-                                        </div>
-                                        <div className="py-2">
-                                            <NavLink to="/assessment/lasnieves" className={({ isActive }) =>
-                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-primary font-bold' : ''
-                                                }`
-                                            }>
-                                                <img src="/mun_logo/las-nieves.png" alt="Lasnieves Logo" className="w-5 h-5" />
-                                                {t('Lasnieves')}
-                                            </NavLink>
-                                        </div>
-                                        <div className="py-2">
-                                            <NavLink to="/assessment/magallanes" className={({ isActive }) =>
-                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-primary font-bold' : ''
-                                                }`
-                                            }>
-                                                <img src="/mun_logo/magallanes.png" alt="Magallanes Logo" className="w-5 h-5" />
-                                                {t('Magallanes')}
-                                            </NavLink>
-                                        </div>
-                                        <div className="py-2">
-                                            <NavLink to="/assessment/nasipit" className={({ isActive }) =>
-                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-primary font-bold' : ''
-                                                }`
-                                            }>
-                                                <img src="/mun_logo/nasipit.png" alt="Nasipit Logo" className="w-5 h-5" />
-                                                {t('Nasipit')}
-                                            </NavLink>
-                                        </div>
-                                        <div className="py-2">
-                                            <NavLink to="/assessment/remedios_t_romualdez" className={({ isActive }) =>
-                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-primary font-bold' : ''
-                                                }`
-                                            }>
-                                                <img src="/mun_logo/rtr.png" alt="RTR Logo" className="w-5 h-5" />
-                                                {t('RTR')}
-                                            </NavLink>
-                                        </div>
-                                        <div className="py-2">
-                                            <NavLink to="/assessment/santiago" className={({ isActive }) =>
-                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-primary font-bold' : ''
-                                                }`
-                                            }>
-                                                <img src="/mun_logo/santiago.png" alt="Santiago Logo" className="w-5 h-5" />
-                                                {t('Santiago')}
-                                            </NavLink>
-                                        </div>
-                                        <div className="py-2">
-                                            <NavLink to="/assessment/tubay" className={({ isActive }) =>
-                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-primary font-bold' : ''
-                                                }`
-                                            }>
-                                                <img src="/mun_logo/tubay.png" alt="Tubay Logo" className="w-5 h-5" />
-                                                {t('Tubay')}
-                                            </NavLink>
-                                        </div>
+                                        {filteredMunicipalities.map((municipality) => (
+                                            <div key={municipality.key} className="py-2">
+                                                <NavLink 
+                                                    to={municipality.path} 
+                                                    className={({ isActive }) =>
+                                                        `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${
+                                                            isActive ? 'bg-slate-100 dark:bg-slate-800 text-primary font-bold' : ''
+                                                        }`
+                                                    }
+                                                >
+                                                    <img src={municipality.logo} alt={`${municipality.name} Logo`} className="w-5 h-5" />
+                                                    {t(municipality.name)}
+                                                </NavLink>
+                                            </div>
+                                        ))}
                                     </div>
                                 </AnimateHeight>
                             </li>
@@ -305,9 +241,32 @@ const Sidebar = () => {
                                     </div>
                                 </AnimateHeight>
                             </li>
+                            <li className="menu nav-item">
+                                <button type="button" className={`${currentMenu === 'setup' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('setup')}>
+                                    <div className="flex items-center">
+                                        <IconSettings
+                                            className="group-hover:!text-primary shrink-0" />
+                                        <span className="ltr:pl-3 rtl:pr-3 text-gray-900 dark:text-slate-400 dark:group-hover:text-slate-200">{t('Setup')}</span>
+                                    </div>
+
+                                    <div className={currentMenu !== 'setup' ? 'rtl:rotate-90 -rotate-90' : ''}>
+                                        <IconCaretDown />
+                                    </div>
+                                </button>
+
+                                <AnimateHeight duration={300} height={currentMenu === 'setup' ? 'auto' : 0}>
+                                    <ul className="sub-menu text-gray-500">
+                                        <li>
+                                            <NavLink to="/dashboard-settings">{t('Dashboard Settings')}</NavLink>
+                                        </li>
+                                    </ul>
+                                </AnimateHeight>
+                            </li>
+                            
 
                             </ul>
                         </PerfectScrollbar>
+                        
                     </div>
 
                     {/* Sidebar Footer with User Info and Logout */}

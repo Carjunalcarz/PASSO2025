@@ -19,23 +19,59 @@ import * as yup from 'yup';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '../../contexts/AuthContext';
 
+// Municipalities list
+const MUNICIPALITIES = [
+    'Province Agusan del Norte',
+    'Buenavista',
+    'Carmen',
+    'Jabonga',
+    'Kitcharao',
+    'Las Nieves',
+    'Magallanes',
+    'Nasipit',
+    'Remedios T. Romualdez',
+    'Santiago',
+    'Tubay',
+];
+
+// Municipal roles
+const MUNICIPAL_ROLES = [
+    { value: 'admin', label: 'Administrator' },
+    { value: 'assessor', label: 'Municipal Assessor' },
+    { value: 'encoder', label: 'Data Encoder' },
+    { value: 'viewer', label: 'Viewer' },
+];
+
+// Provincial roles
+const PROVINCIAL_ROLES = [
+    { value: 'provincial_assessor', label: 'Provincial Assessor' },
+    { value: 'provincial_encoder', label: 'Provincial Encoder' },
+    { value: 'provincial_record', label: 'Provincial Record' },
+    { value: 'provincial_inspector', label: 'Provincial Inspector' },
+];
+
 // Form Schema
 const registerSchema = yup.object().shape({
     name: yup.string().required('Name is required'),
     email: yup.string().email('Invalid email').required('Email is required'),
     password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+    municipality: yup.string().required('Municipality is required'),
+    role: yup.string().required('Role is required'),
 });
 
 type RegisterFormInputs = {
     name: string;
     email: string;
     password: string;
+    municipality: string;
+    role: string;
 };
 
 const RegisterBoxed = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [registerError, setRegisterError] = useState<string>('');
+    const [selectedMunicipality, setSelectedMunicipality] = useState<string>('');
     const { user, loading, register: registerUser, isAuthenticated } = useAuth();
 
     useEffect(() => {
@@ -65,7 +101,7 @@ const RegisterBoxed = () => {
     // Registration mutation
     const registerMutation = useMutation({
         mutationFn: async (data: RegisterFormInputs) => {
-            await registerUser(data.email, data.password, data.name);
+            await registerUser(data.email, data.password, data.name, data.municipality, data.role);
         },
         onSuccess: () => {
             console.log("✅ Appwrite Registration Success");
@@ -82,9 +118,28 @@ const RegisterBoxed = () => {
         register,
         handleSubmit,
         formState: { errors },
+        watch,
+        setValue,
     } = useForm<RegisterFormInputs>({
         resolver: yupResolver(registerSchema),
     });
+
+    // Watch municipality changes
+    const watchMunicipality = watch('municipality');
+
+    // Update selected municipality and reset role when municipality changes
+    useEffect(() => {
+        if (watchMunicipality !== selectedMunicipality) {
+            setSelectedMunicipality(watchMunicipality);
+            // Reset role when municipality changes
+            setValue('role', '');
+        }
+    }, [watchMunicipality, selectedMunicipality, setValue]);
+
+    // Determine which roles to show based on selected municipality
+    const availableRoles = selectedMunicipality === 'Province Agusan del Norte' 
+        ? PROVINCIAL_ROLES 
+        : MUNICIPAL_ROLES;
 
     const submitForm = (data: RegisterFormInputs) => {
         setRegisterError('');
@@ -222,6 +277,59 @@ const RegisterBoxed = () => {
                                         </span>
                                     </div>
                                     {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
+                                </div>
+                                <div>
+                                    <label htmlFor="Municipality">Municipality</label>
+                                    <div className="relative text-white-dark">
+                                        <select
+                                            {...register('municipality')}
+                                            id="Municipality"
+                                            className="form-select ps-10 placeholder:text-white-dark"
+                                            disabled={registerMutation.isPending}
+                                        >
+                                            <option value="">Select Municipality</option>
+                                            {MUNICIPALITIES.map((mun) => (
+                                                <option key={mun} value={mun}>
+                                                    {mun}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <span className="absolute start-4 top-1/2 -translate-y-1/2">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    {errors.municipality && <p className="text-red-500 text-sm mt-1">{errors.municipality.message}</p>}
+                                </div>
+                                <div>
+                                    <label htmlFor="Role">Role</label>
+                                    <div className="relative text-white-dark">
+                                        <select
+                                            {...register('role')}
+                                            id="Role"
+                                            className="form-select ps-10 placeholder:text-white-dark"
+                                            disabled={registerMutation.isPending || !selectedMunicipality}
+                                        >
+                                            <option value="">
+                                                {selectedMunicipality ? 'Select Role' : 'Select Municipality First'}
+                                            </option>
+                                            {availableRoles.map((role) => (
+                                                <option key={role.value} value={role.value}>
+                                                    {role.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <span className="absolute start-4 top-1/2 -translate-y-1/2">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5"/>
+                                                <path d="M4 20C4 16.6863 7.58172 14 12 14C16.4183 14 20 16.6863 20 20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    {errors.role && <p className="text-red-500 text-sm mt-1">{errors.role.message}</p>}
                                 </div>
                                 <div>
                                     <label className="flex cursor-pointer items-center">
