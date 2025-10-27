@@ -6,7 +6,7 @@ interface AuthContextType {
     user: Models.User<Models.Preferences> | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<void>;
-    register: (email: string, password: string, name: string) => Promise<void>;
+    register: (email: string, password: string, name: string, municipality?: string, role?: string) => Promise<void>;
     logout: () => Promise<void>;
     isAuthenticated: boolean;
 }
@@ -90,10 +90,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     };
 
-    const register = async (email: string, password: string, name: string) => {
+    const register = async (email: string, password: string, name: string, municipality?: string, role?: string) => {
         try {
             console.log('📝 AuthContext: Registering...');
-            const newUser = await authService.createAccount({ email, password, name });
+            const newUser = await authService.createAccount({ email, password, name, municipality, role });
             setUser(newUser);
             console.log('✅ AuthContext: Registration successful');
         } catch (error) {

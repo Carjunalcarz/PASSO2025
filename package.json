@@ -10,7 +10,8 @@
         "lint": "eslint . --ext .ts,.tsx",
         "lint:fix": "eslint . --ext .ts,.tsx --fix",
         "format": "prettier --write \"src/**/*.{ts,tsx,css,scss}\"",
-        "setup": "node scripts/setup-admin.js"
+        "setup": "node scripts/setup-admin.js",
+        "setup:building-part-rate": "node scripts/setup-building-part-rate.js"
     },
     "dependencies": {
         "@emotion/react": "^11.10.6",

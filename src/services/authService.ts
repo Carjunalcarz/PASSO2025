@@ -10,16 +10,30 @@ export interface RegisterCredentials {
     email: string;
     password: string;
     name: string;
+    municipality?: string;
+    role?: string;
 }
 
 class AuthService {
     // Create a new account
-    async createAccount({ email, password, name }: RegisterCredentials): Promise<Models.User<Models.Preferences>> {
+    async createAccount({ email, password, name, municipality, role }: RegisterCredentials): Promise<Models.User<Models.Preferences>> {
         try {
             const newAccount = await account.create(ID.unique(), email, password, name);
             if (newAccount) {
-                // Login and then return user info
+                // Login to create session
                 await account.createEmailPasswordSession(email, password);
+                
+                // Update user preferences with municipality and role
+                if (municipality || role) {
+                    const preferences: Record<string, any> = {};
+                    if (municipality) preferences.municipality = municipality;
+                    if (role) preferences.role = role;
+                    
+                    // Update user preferences
+                    await account.updatePrefs(preferences);
+                    console.log('✅ User preferences updated:', preferences);
+                }
+                
                 return await account.get();
             }
             return newAccount;
