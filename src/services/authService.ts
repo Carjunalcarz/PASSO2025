@@ -72,6 +72,15 @@ class AuthService {
                 expire: session.expire
             });
             
+            // Verify session by getting user data
+            const userData = await account.get();
+            console.log('✅ AuthService: Verified user data:', {
+                userId: userData.$id,
+                email: userData.email,
+                emailVerification: userData.emailVerification,
+                status: userData.status
+            });
+            
             return session;
         } catch (error: any) {
             console.error('❌ AuthService: Login failed:', error);
