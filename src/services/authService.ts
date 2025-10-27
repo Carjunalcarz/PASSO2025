@@ -50,16 +50,6 @@ class AuthService {
             console.log('🔐 AuthService: Using endpoint:', appwriteConfig.endpoint);
             console.log('🔐 AuthService: Using project ID:', appwriteConfig.projectId);
             
-            // Test connectivity before attempting login
-            console.log('🌐 AuthService: Testing connectivity before login...');
-            try {
-                const testResponse = await fetch(`${appwriteConfig.endpoint}/health`);
-                console.log('🌐 AuthService: Connectivity test result:', testResponse.status);
-            } catch (connectError) {
-                console.error('🔴 AuthService: Connectivity test failed:', connectError);
-                throw new Error(`Cannot connect to Appwrite server at ${appwriteConfig.endpoint}. Please check if the server is running.`);
-            }
-            
             const startTime = Date.now();
             const session = await account.createEmailPasswordSession(email, password);
             const endTime = Date.now();
