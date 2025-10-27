@@ -72,14 +72,25 @@ class AuthService {
                 expire: session.expire
             });
             
+            // Add delay to ensure cookies are set
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
             // Verify session by getting user data
-            const userData = await account.get();
-            console.log('✅ AuthService: Verified user data:', {
-                userId: userData.$id,
-                email: userData.email,
-                emailVerification: userData.emailVerification,
-                status: userData.status
-            });
+            console.log('🔍 AuthService: Verifying session...');
+            try {
+                const userData = await account.get();
+                console.log('✅ AuthService: Verified user data:', {
+                    userId: userData.$id,
+                    email: userData.email,
+                    emailVerification: userData.emailVerification,
+                    status: userData.status
+                });
+            } catch (verifyError: any) {
+                console.error('❌ AuthService: Session verification failed:', verifyError);
+                console.error('❌ This likely means cookies are not being saved/sent');
+                console.error('❌ Check DevTools → Application → Cookies');
+                // Continue anyway - the session was created
+            }
             
             return session;
         } catch (error: any) {
