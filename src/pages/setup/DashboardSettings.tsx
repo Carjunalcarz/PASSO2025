@@ -3,7 +3,7 @@ import { Disclosure } from '@headlessui/react';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import 'quill/dist/quill.snow.css';
 import Dropdown from '../../components/Dropdown';
 import Swal from 'sweetalert2';
 import PerfectScrollbar from 'react-perfect-scrollbar';

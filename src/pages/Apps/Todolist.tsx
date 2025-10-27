@@ -3,7 +3,7 @@ import PerfectScrollbar from 'react-perfect-scrollbar';
 import Swal from 'sweetalert2';
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import 'quill/dist/quill.snow.css';
 import Dropdown from '../../components/Dropdown';
 import { useDispatch, useSelector } from 'react-redux';
 import { IRootState } from '../../store';

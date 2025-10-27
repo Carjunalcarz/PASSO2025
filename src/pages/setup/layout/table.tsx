@@ -1,7 +1,7 @@
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import 'quill/dist/quill.snow.css';
 import Dropdown from '../../../components/Dropdown';
 import IconArchive from '../../../components/Icon/IconArchive';
 import IconInfoHexagon from '../../../components/Icon/IconInfoHexagon';

@@ -41,7 +41,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
     // TEMPORARILY DISABLED: Check if user email is verified
     // COMMENTED OUT TO ENABLE LOGIN - Email verification check disabled for testing
-    if (false && user && !user.emailVerification) {
+    /*
+    if (user && !user.emailVerification) {
         console.log('🛡️ ProtectedRoute: User email not verified, blocking access');
         console.log('🛡️ ProtectedRoute: User details:', {
             email: user.email,
@@ -52,7 +53,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         return (
             <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-800 to-blue-700 p-4">
                 <div className="max-w-lg w-full bg-white rounded-xl shadow-2xl overflow-hidden">
-                    {/* Header Section */}
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6 text-center">
                         <div className="mx-auto w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-4">
                             <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,11 +63,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
                         <p className="text-blue-100 text-sm">Provincial Assessment System</p>
                     </div>
 
-                    {/* Content Section */}
                     <div className="px-8 py-8 text-center">
                         <div className="mb-6">
                             <h2 className="text-xl font-semibold text-gray-800 mb-3">
-                                Welcome, {user.name || 'User'}! 👋
+                                Welcome, {user?.name || 'User'}! 👋
                             </h2>
                             <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 text-left rounded-r-lg">
                                 <div className="flex items-start">
@@ -136,6 +135,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
             </div>
         );
     }
+    */
 
     // Render children if authenticated and verified
     console.log('✅ ProtectedRoute: User authenticated and verified, rendering protected content');
