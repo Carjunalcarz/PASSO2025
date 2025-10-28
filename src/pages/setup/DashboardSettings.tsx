@@ -62,6 +62,8 @@ import Classifications from './pages/Classifications';
 import Kinds from './pages/Kinds';
 import SubKinds from './pages/SubKinds';
 import SubClassifications from './pages/SubClassifications';
+import Products from './pages/Products';
+import PropertyNature from './pages/PropertyNature';
 
 const DashboardSettings = () => {
     const dispatch = useDispatch();
@@ -585,6 +587,10 @@ const DashboardSettings = () => {
                 return <Kinds />;
             case 'sub-kinds':
                 return <SubKinds />;
+            case 'products':
+                return <Products />;
+            case 'property-nature':
+                return <PropertyNature />;
             default:
                 return <MainTable />;
         }

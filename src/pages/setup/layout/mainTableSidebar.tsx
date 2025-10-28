@@ -90,6 +90,16 @@ const MainTableSidebar = ({
                 { id: 'sub-kinds', label: 'Sub-Kinds', icon: IconTag },
             ]
         },
+        {
+            id: 'products',
+            label: 'Products',
+            icon: IconBox,
+        },
+        {
+            id: 'property-nature',
+            label: 'Property Nature',
+            icon: IconLayoutGrid,
+        },
     ];
 
     const filteredMenuItems = menuItems.filter(item => {
