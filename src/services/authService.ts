@@ -50,6 +50,13 @@ class AuthService {
             console.log('🔐 AuthService: Using endpoint:', appwriteConfig.endpoint);
             console.log('🔐 AuthService: Using project ID:', appwriteConfig.projectId);
             
+            // Clear any existing JWT before login to prevent expired token issues
+            console.log('🧹 AuthService: Clearing any existing JWT/session...');
+            localStorage.removeItem('appwrite_session');
+            const { client } = await import('../lib/appwrite');
+            client.setJWT('');
+            console.log('✅ AuthService: Cleared existing session');
+            
             const startTime = Date.now();
             const session = await account.createEmailPasswordSession(email, password);
             const endTime = Date.now();
@@ -107,6 +114,16 @@ class AuthService {
                 errorName: error.name
             });
             
+            // Handle JWT-related errors during login
+            if (error.message?.includes('JWT') || error.message?.includes('Expired') || error.message?.includes('Invalid token')) {
+                console.error('🔴 AuthService: JWT error during login - clearing session and retrying...');
+                localStorage.removeItem('appwrite_session');
+                const { client } = await import('../lib/appwrite');
+                client.setJWT('');
+                // Don't retry automatically, let user try again
+                throw new Error('Session expired. Please try logging in again.');
+            }
+            
             // Provide specific error guidance
             if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
                 console.error('🔴 AuthService: Network connectivity issue detected');
@@ -161,8 +178,24 @@ class AuthService {
                     console.log('✅ AuthService: Successfully got user after JWT refresh');
                     return user;
                 } catch (refreshError) {
-                    console.error('❌ AuthService: JWT refresh failed, clearing session');
+                    console.error('❌ AuthService: JWT refresh failed, session expired');
+                    console.log('🧹 AuthService: Deleting all sessions and clearing local data...');
+                    
+                    // Clear local storage
                     localStorage.removeItem('appwrite_session');
+                    
+                    // Clear JWT from client
+                    const { client } = await import('../lib/appwrite');
+                    client.setJWT('');
+                    
+                    // Delete all Appwrite sessions
+                    try {
+                        await account.deleteSessions();
+                        console.log('✅ AuthService: All sessions deleted');
+                    } catch (deleteError) {
+                        console.warn('⚠️ AuthService: Could not delete sessions (may already be expired)');
+                    }
+                    
                     return null;
                 }
             }
@@ -206,11 +239,16 @@ class AuthService {
             await account.deleteSessions();
             // Clear stored JWT
             localStorage.removeItem('appwrite_session');
-            console.log('✅ AuthService: JWT cleared from localStorage');
+            // Clear JWT from client
+            const { client } = await import('../lib/appwrite');
+            client.setJWT('');
+            console.log('✅ AuthService: JWT cleared from localStorage and client');
         } catch (error) {
             console.error('Logout error:', error);
             // Clear JWT anyway
             localStorage.removeItem('appwrite_session');
+            const { client } = await import('../lib/appwrite');
+            client.setJWT('');
             throw error;
         }
     }

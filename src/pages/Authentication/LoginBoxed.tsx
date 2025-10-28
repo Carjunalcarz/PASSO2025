@@ -32,25 +32,40 @@ const LoginBoxed = () => {
     const isDark = useSelector((state: IRootState) => state.themeConfig.theme === 'dark' || state.themeConfig.isDarkMode);
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl';
 
+    // Get remembered email from localStorage
+    const rememberedEmail = localStorage.getItem('last_login_email') || '';
+
     useEffect(() => {
         dispatch(setPageTitle('Login Boxed'));
-    }, [dispatch]);
+        
+        // Clear any expired JWT when login page loads
+        // This ensures a clean state for new login attempts
+        const storedSession = localStorage.getItem('appwrite_session');
+        if (storedSession && !isAuthenticated) {
+            console.log('🧹 LoginBoxed: Clearing expired session on login page load');
+            localStorage.removeItem('appwrite_session');
+        }
+    }, [dispatch, isAuthenticated]);
 
     // Redirect if user is authenticated
     useEffect(() => {
-        if (isAuthenticated) {
-            // navigate('/');
-            console.log("✅ User is authenticated");
+        if (isAuthenticated && !loading) {
+            console.log("✅ User is authenticated, redirecting to dashboard...");
+            navigate('/', { replace: true });
         }
-    }, [isAuthenticated, navigate]);
+    }, [isAuthenticated, loading, navigate]);
 
     // Appwrite Login mutation
     const loginMutation = useMutation({
         mutationFn: async (data: LoginFormInputs) => {
             await login(data.email, data.password);
+            return data; // Return data for onSuccess
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             console.log("✅ Appwrite Login Success");
+            // Save email to localStorage for next login
+            localStorage.setItem('last_login_email', data.email);
+            console.log('💾 Saved last login email:', data.email);
             setLoginError('');
             navigate('/');
         },
@@ -66,6 +81,10 @@ const LoginBoxed = () => {
         formState: { errors },
     } = useForm<LoginFormInputs>({
         resolver: yupResolver(loginSchema),
+        defaultValues: {
+            email: rememberedEmail,
+            password: '',
+        },
     });
 
     const submitForm = (data: LoginFormInputs) => {
