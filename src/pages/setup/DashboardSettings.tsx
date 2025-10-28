@@ -48,13 +48,20 @@ import IconFolder from '../../components/Icon/IconFolder';
 import IconZipFile from '../../components/Icon/IconZipFile';
 import IconDownload from '../../components/Icon/IconDownload';
 import IconTxtFile from '../../components/Icon/IconTxtFile';
-import SideBar from './layout/sideBar';
-import Table from './layout/table';
 import MainTable from './pages/main_table';
 import MainTableSidebar from './layout/mainTableSidebar';
 import BuildingComponent from './pages/BuildingComponent';
 import BuildingParts from './pages/BuildingParts';
 import BuildingPartsRate from './pages/BuildingPartsRate';
+import BuildingStructuralTypes from './pages/BuildingStructuralTypes';
+import BuildingCode from './pages/BuildingCode';
+import BuildingDepreciation from './pages/BuildingDepreciation';
+import MachineryTypes from './pages/MachineryTypes';
+import MachineryRates from './pages/MachineryRates';
+import Classifications from './pages/Classifications';
+import SubClassifications from './pages/subClassifications';
+import Kinds from './pages/Kinds';
+import SubKinds from './pages/SubKinds';
 
 const DashboardSettings = () => {
     const dispatch = useDispatch();
@@ -560,6 +567,24 @@ const DashboardSettings = () => {
                 return <BuildingParts />;
             case 'building-parts-rate':
                 return <BuildingPartsRate />;
+            case 'building-structural-types':
+                return <BuildingStructuralTypes />;
+            case 'building-code':
+                return <BuildingCode />;
+            case 'building-depreciation':
+                return <BuildingDepreciation />;
+            case 'machinery-types':
+                return <MachineryTypes />;
+            case 'machinery-rates':
+                return <MachineryRates />;
+            case 'classifications':
+                return <Classifications />;
+            case 'sub-classifications':
+                return <SubClassifications />;
+            case 'kinds':
+                return <Kinds />;
+            case 'sub-kinds':
+                return <SubKinds />;
             default:
                 return <MainTable />;
         }

@@ -1,21 +1,19 @@
 import { DataTable } from 'mantine-datatable';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import IconTrash from '../../../components/Icon/IconTrash';
 import IconEdit from '../../../components/Icon/IconEdit';
 import IconEye from '../../../components/Icon/IconEye';
 import IconPlus from '../../../components/Icon/IconPlus';
 import Swal from 'sweetalert2';
+import { BuildingPartResponse } from '../services/buildingPart';
+import { BuildingComponentResponse } from '../services/buildingComponent';
 import {
-  getAllBuildingParts,
-  createBuildingPart,
-  updateBuildingPart,
-  deleteBuildingPart,
-  BuildingPartResponse,
-} from '../services/buildingPart';
-import {
-  getAllBuildingComponents,
-  BuildingComponentResponse,
-} from '../services/buildingComponent';
+  useGetAllBuildingParts,
+  useCreateBuildingPart,
+  useUpdateBuildingPart,
+  useDeleteBuildingPart,
+} from '../hooks/useBuildingParts';
+import { useGetAllBuildingComponents } from '../hooks/useBuildingComponents';
 
 interface BuildingPartsData {
   $id?: string;
@@ -31,14 +29,9 @@ const BuildingParts = () => {
   const [page, setPage] = useState(1);
   const PAGE_SIZES = [10, 20, 30, 50, 100];
   const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
-  const [initialRecords, setInitialRecords] = useState<BuildingPartsData[]>([]);
-  const [recordsData, setRecordsData] = useState<BuildingPartsData[]>([]);
-  const [filteredRecords, setFilteredRecords] = useState<BuildingPartsData[]>([]);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [components, setComponents] = useState<BuildingComponentResponse[]>([]);
   const [formData, setFormData] = useState<Partial<BuildingPartsData>>({
     name: '',
     description: '',
@@ -46,35 +39,21 @@ const BuildingParts = () => {
     status: 'active',
   });
 
-  // Fetch building components for dropdown
-  const fetchBuildingComponents = async () => {
-    try {
-      const response = await getAllBuildingComponents();
-      if (response.success && response.data) {
-        setComponents(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching building components:', error);
-    }
-  };
+  // TanStack Query hooks
+  const { data: buildingParts = [], isLoading: isLoadingParts, isError: isPartsError, error: partsError } = useGetAllBuildingParts();
+  const { data: components = [], isLoading: isLoadingComponents } = useGetAllBuildingComponents();
+  const createMutation = useCreateBuildingPart();
+  const updateMutation = useUpdateBuildingPart();
+  const deleteMutation = useDeleteBuildingPart();
 
-  // Fetch data from Appwrite
-  const fetchBuildingParts = async () => {
-    setLoading(true);
-    try {
-      const response = await getAllBuildingParts();
-      if (response.success && response.data) {
-        setInitialRecords(response.data as BuildingPartsData[]);
-      } else {
-        Swal.fire('Error', response.error || 'Failed to fetch building parts', 'error');
-      }
-    } catch (error) {
-      console.error('Error fetching building parts:', error);
-      Swal.fire('Error', 'An unexpected error occurred', 'error');
-    } finally {
-      setLoading(false);
+  const isLoading = isLoadingParts || isLoadingComponents;
+
+  // Show error toast if query fails
+  useEffect(() => {
+    if (isPartsError) {
+      Swal.fire('Error', partsError?.message || 'Failed to fetch building parts', 'error');
     }
-  };
+  }, [isPartsError, partsError]);
 
   // Helper function to get component name by ID
   const getComponentName = (componentId: string) => {
@@ -139,38 +118,31 @@ const BuildingParts = () => {
     },
   ];
 
-  useEffect(() => {
-    fetchBuildingComponents();
-    fetchBuildingParts();
-  }, []);
+  // Filter and paginate data
+  const filteredRecords = useMemo(() => {
+    if (!search) return buildingParts;
+    
+    return buildingParts.filter((item) => {
+      const componentName = getComponentName(item.building_components_id).toLowerCase();
+      const searchLower = search.toLowerCase();
+      return (
+        item.name.toLowerCase().includes(searchLower) ||
+        (item.description && item.description.toLowerCase().includes(searchLower)) ||
+        componentName.includes(searchLower) ||
+        item.status.toLowerCase().includes(searchLower)
+      );
+    });
+  }, [buildingParts, search, components]);
+
+  const recordsData = useMemo(() => {
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize;
+    return filteredRecords.slice(from, to);
+  }, [filteredRecords, page, pageSize]);
 
   useEffect(() => {
     setPage(1);
   }, [pageSize, search]);
-
-  useEffect(() => {
-    if (!search) {
-      setFilteredRecords(initialRecords);
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize;
-      setRecordsData(initialRecords.slice(from, to));
-    } else {
-      const filtered = initialRecords.filter((item) => {
-        const componentName = getComponentName(item.building_components_id).toLowerCase();
-        const searchLower = search.toLowerCase();
-        return (
-          item.name.toLowerCase().includes(searchLower) ||
-          (item.description && item.description.toLowerCase().includes(searchLower)) ||
-          componentName.includes(searchLower) ||
-          item.status.toLowerCase().includes(searchLower)
-        );
-      });
-      setFilteredRecords(filtered);
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize;
-      setRecordsData(filtered.slice(from, to));
-    }
-  }, [search, initialRecords, page, pageSize, components]);
 
   const handleAdd = () => {
     setIsEdit(false);
@@ -264,61 +236,98 @@ const BuildingParts = () => {
 
   const handleDelete = async (id: string) => {
     const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
-      icon: 'warning',
+      title: '<span style="color: #dc2626; font-size: 20px; font-weight: 600;">Delete Building Part?</span>',
+      html: `
+        <div style="text-align: center;">
+          <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: #fee2e2; border-radius: 50%; margin-bottom: 16px;">
+            <svg style="width: 32px; height: 32px; color: #dc2626;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+          </div>
+          <p style="color: #6b7280; font-size: 14px; margin-top: 8px;">This action cannot be undone. The part will be permanently removed.</p>
+        </div>
+      `,
+      icon: undefined,
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, delete it!',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: '<span style="font-weight: 500;">Delete</span>',
+      cancelButtonText: '<span style="font-weight: 500;">Cancel</span>',
+      width: '400px',
+      padding: '20px',
+      backdrop: 'rgba(0, 0, 0, 0.4)',
+      customClass: {
+        popup: 'rounded-xl shadow-2xl',
+        title: 'text-lg',
+        htmlContainer: 'text-sm',
+        confirmButton: 'px-6 py-2.5 rounded-lg font-medium',
+        cancelButton: 'px-6 py-2.5 rounded-lg font-medium',
+      },
+      buttonsStyling: true,
     });
     if (result.isConfirmed) {
-      setLoading(true);
-      const response = await deleteBuildingPart(id);
-      if (response.success) {
-        Swal.fire('Deleted!', 'Building part has been deleted.', 'success');
-        fetchBuildingParts();
-      } else {
-        Swal.fire('Error', response.error || 'Failed to delete building part', 'error');
+      try {
+        await deleteMutation.mutateAsync(id);
+        Swal.fire({
+          title: '<span style="color: #059669; font-size: 18px; font-weight: 600;">Deleted!</span>',
+          html: '<p style="color: #6b7280; font-size: 14px;">Building part has been deleted successfully.</p>',
+          icon: 'success',
+          confirmButtonColor: '#059669',
+          confirmButtonText: 'OK',
+          width: '380px',
+          padding: '20px',
+          timer: 2000,
+          customClass: {
+            popup: 'rounded-xl shadow-2xl',
+            confirmButton: 'px-6 py-2.5 rounded-lg font-medium',
+          },
+        });
+      } catch (error: any) {
+        Swal.fire({
+          title: '<span style="color: #dc2626; font-size: 18px; font-weight: 600;">Error!</span>',
+          html: `<p style="color: #6b7280; font-size: 14px;">${error?.message || 'Failed to delete building part'}</p>`,
+          icon: 'error',
+          confirmButtonColor: '#dc2626',
+          confirmButtonText: 'OK',
+          width: '380px',
+          padding: '20px',
+          customClass: {
+            popup: 'rounded-xl shadow-2xl',
+            confirmButton: 'px-6 py-2.5 rounded-lg font-medium',
+          },
+        });
       }
-      setLoading(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    
-    if (isEdit && formData.$id) {
-      const response = await updateBuildingPart(formData.$id, {
-        name: formData.name,
-        description: formData.description,
-        status: formData.status,
-        building_components_id: formData.building_components_id,
-      });
-      if (response.success) {
+
+    try {
+      if (isEdit && formData.$id) {
+        await updateMutation.mutateAsync({
+          id: formData.$id,
+          data: {
+            name: formData.name!,
+            description: formData.description,
+            status: formData.status!,
+            building_components_id: formData.building_components_id!,
+          },
+        });
         Swal.fire('Updated!', 'Building part has been updated.', 'success');
-        fetchBuildingParts();
-        setShowModal(false);
       } else {
-        Swal.fire('Error', response.error || 'Failed to update building part', 'error');
-      }
-    } else {
-      const response = await createBuildingPart({
-        name: formData.name!,
-        description: formData.description,
-        status: formData.status!,
-        building_components_id: formData.building_components_id!,
-      });
-      if (response.success) {
+        await createMutation.mutateAsync({
+          name: formData.name!,
+          description: formData.description,
+          status: formData.status!,
+          building_components_id: formData.building_components_id!,
+        });
         Swal.fire('Created!', 'Building part has been created.', 'success');
-        fetchBuildingParts();
-        setShowModal(false);
-      } else {
-        Swal.fire('Error', response.error || 'Failed to create building part', 'error');
       }
+      setShowModal(false);
+    } catch (error: any) {
+      Swal.fire('Error', error?.message || 'Failed to save building part', 'error');
     }
-    setLoading(false);
   };
 
   return (
@@ -340,25 +349,20 @@ const BuildingParts = () => {
         </div>
       </div>
       <div className="datatables">
-        {loading ? (
-          <div className="flex items-center justify-center min-h-[200px]">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          </div>
-        ) : (
-          <DataTable
-            className="whitespace-nowrap table-hover"
-            records={recordsData}
-            columns={columns}
-            totalRecords={filteredRecords.length}
-            recordsPerPage={pageSize}
-            page={page}
-            onPageChange={(p) => setPage(p)}
-            recordsPerPageOptions={PAGE_SIZES}
-            onRecordsPerPageChange={setPageSize}
-            minHeight={200}
-            paginationText={({ from, to, totalRecords }) => `Showing ${from} to ${to} of ${totalRecords} entries`}
-          />
-        )}
+        <DataTable
+          className="whitespace-nowrap table-hover"
+          records={recordsData}
+          columns={columns}
+          totalRecords={filteredRecords.length}
+          recordsPerPage={pageSize}
+          page={page}
+          onPageChange={(p) => setPage(p)}
+          recordsPerPageOptions={PAGE_SIZES}
+          onRecordsPerPageChange={setPageSize}
+          minHeight={200}
+          paginationText={({ from, to, totalRecords }) => `Showing ${from} to ${to} of ${totalRecords} entries`}
+          fetching={isLoading}
+        />
       </div>
 
       {/* Modal */}
@@ -430,8 +434,12 @@ const BuildingParts = () => {
                 <button type="button" className="btn btn-outline-danger" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary">
-                  {isEdit ? 'Update' : 'Create'}
+                <button 
+                  type="submit" 
+                  className="btn btn-primary"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                >
+                  {(createMutation.isPending || updateMutation.isPending) ? 'Saving...' : (isEdit ? 'Update' : 'Create')}
                 </button>
               </div>
             </form>

@@ -151,6 +151,22 @@ class AuthService {
                 response: error.response,
             });
             
+            // Handle expired JWT token
+            if (error.message?.includes('Expired') || error.message?.includes('Invalid token')) {
+                console.log('🔄 AuthService: JWT expired, attempting to refresh...');
+                try {
+                    await this.refreshJWT();
+                    // Retry getting user after JWT refresh
+                    const user = await account.get();
+                    console.log('✅ AuthService: Successfully got user after JWT refresh');
+                    return user;
+                } catch (refreshError) {
+                    console.error('❌ AuthService: JWT refresh failed, clearing session');
+                    localStorage.removeItem('appwrite_session');
+                    return null;
+                }
+            }
+            
             // Detailed error analysis
             if (error.code === 401 || error.type === 'general_unauthorized_scope') {
                 console.log('🟡 AuthService: No active session found (this is normal for new users)');
@@ -163,6 +179,24 @@ class AuthService {
             }
             
             return null;
+        }
+    }
+
+    // Refresh JWT token
+    async refreshJWT(): Promise<void> {
+        try {
+            console.log('🔄 AuthService: Refreshing JWT...');
+            const jwt = await account.createJWT();
+            localStorage.setItem('appwrite_session', jwt.jwt);
+            
+            // Update client with new JWT
+            const { client } = await import('../lib/appwrite');
+            client.setJWT(jwt.jwt);
+            
+            console.log('✅ AuthService: JWT refreshed successfully');
+        } catch (error) {
+            console.error('❌ AuthService: JWT refresh failed:', error);
+            throw error;
         }
     }
 

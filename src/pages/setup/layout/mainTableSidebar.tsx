@@ -4,6 +4,13 @@ import IconLayoutGrid from '../../../components/Icon/IconLayoutGrid';
 import IconChartSquare from '../../../components/Icon/IconChartSquare';
 import IconSearch from '../../../components/Icon/IconSearch';
 import IconCaretDown from '../../../components/Icon/IconCaretDown';
+import IconBuilding from '../../../components/Icon/IconBuilding';
+import IconCode from '../../../components/Icon/IconCode';
+import IconBox from '../../../components/Icon/IconBox';
+import IconDollarSign from '../../../components/Icon/IconDollarSign';
+import IconCalendar from '../../../components/Icon/IconCalendar';
+import IconCpuBolt from '../../../components/Icon/IconCpuBolt';
+import IconTag from '../../../components/Icon/IconTag';
 import { Dispatch, SetStateAction, useState } from 'react';
 
 interface SubMenuItem {
@@ -36,21 +43,58 @@ const MainTableSidebar = ({
     const [expandedMenus, setExpandedMenus] = useState<string[]>(['building-parts-rate']);
 
     const menuItems = [
-        { 
-            id: 'building-parts-rate', 
-            label: 'Building Parts Rate', 
-            icon: IconChartSquare,
+        {
+            id: 'building-parts-rate',
+            label: 'Building Parts Rate',
+            icon: IconDollarSign,
             subItems: [
-                { id: 'building-parts-rate', label: 'Building Parts Rate', icon: IconChartSquare },
+                { id: 'building-parts-rate', label: 'Building Parts Rate', icon: IconDollarSign },
                 { id: 'building-component', label: 'Building Component', icon: IconLayoutGrid },
-                { id: 'building-parts', label: 'Building Parts', icon: IconUsers },
+                { id: 'building-parts', label: 'Building Parts', icon: IconBox },
+            ]
+        },
+        {
+            id: 'building-structural-types',
+            label: 'Structural Types',
+            icon: IconBuilding,
+            subItems: [
+                { id: 'building-structural-types', label: 'Structural Types', icon: IconBuilding },
+                { id: 'building-code', label: 'Building Code', icon: IconCode },
+                { id: 'building-depreciation', label: 'Building Depreciation', icon: IconCalendar },
+            ]
+        },
+        {
+            id: 'machinery',
+            label: 'Machinery',
+            icon: IconCpuBolt,
+            subItems: [
+                { id: 'machinery-types', label: 'Machinery Types', icon: IconCpuBolt },
+                { id: 'machinery-rates', label: 'Machinery Rates', icon: IconDollarSign },
+            ]
+        },
+        {
+            id: 'classifications',
+            label: 'Classifications',
+            icon: IconTag,
+            subItems: [
+                { id: 'classifications', label: 'Classifications', icon: IconTag },
+                { id: 'sub-classifications', label: 'Sub-Classifications', icon: IconTag },
+            ]
+        },
+        {
+            id: 'kinds',
+            label: 'Kinds',
+            icon: IconTag,
+            subItems: [
+                { id: 'kinds', label: 'Kinds', icon: IconTag },
+                { id: 'sub-kinds', label: 'Sub-Kinds', icon: IconTag },
             ]
         },
     ];
 
     const filteredMenuItems = menuItems.filter(item => {
         const matchesParent = item.label.toLowerCase().includes(searchMenu.toLowerCase());
-        const matchesChild = item.subItems?.some(subItem => 
+        const matchesChild = item.subItems?.some(subItem =>
             subItem.label.toLowerCase().includes(searchMenu.toLowerCase())
         );
         return matchesParent || matchesChild;
@@ -83,7 +127,7 @@ const MainTableSidebar = ({
                                 const IconComponent = item.icon;
                                 const isExpanded = expandedMenus.includes(item.id);
                                 const hasSubItems = item.subItems && item.subItems.length > 0;
-                                
+
                                 return (
                                     <div key={item.id}>
                                         <button
@@ -92,8 +136,8 @@ const MainTableSidebar = ({
                                                 }`}
                                             onClick={() => {
                                                 if (hasSubItems) {
-                                                    setExpandedMenus(prev => 
-                                                        prev.includes(item.id) 
+                                                    setExpandedMenus(prev =>
+                                                        prev.includes(item.id)
                                                             ? prev.filter(id => id !== item.id)
                                                             : [...prev, item.id]
                                                     );
@@ -107,12 +151,12 @@ const MainTableSidebar = ({
                                                 <div className="ltr:ml-3 rtl:mr-3">{item.label}</div>
                                             </div>
                                             {hasSubItems && (
-                                                <IconCaretDown 
+                                                <IconCaretDown
                                                     className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
                                                 />
                                             )}
                                         </button>
-                                        
+
                                         {hasSubItems && isExpanded && (
                                             <div className="ltr:ml-4 rtl:mr-4 mt-1 space-y-1">
                                                 {item.subItems.map((subItem) => {
