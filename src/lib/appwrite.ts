@@ -1,4 +1,7 @@
 import { Client, Account, Databases, Storage, Teams, Functions } from 'appwrite';
+// Note: Tables API is available in newer Appwrite versions
+// Uncomment below if you want to use Tables API instead of Databases
+// import { Tables } from 'appwrite';
 
 // Appwrite configuration
 export const appwriteConfig = {

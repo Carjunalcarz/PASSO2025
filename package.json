@@ -15,7 +15,9 @@
         "setup:depreciation": "node scripts/setup-depreciation.js",
         "setup:machinery": "node scripts/setup-machinery-rates.js",
         "setup:classifications": "node scripts/setup-classifications.js",
-        "setup:kinds": "node scripts/setup-kinds.js"
+        "setup:kinds": "node scripts/setup-kinds.js",
+        "setup:products": "node scripts/setup-products.js",
+        "setup:property-nature": "node scripts/setup-property-nature.js"
     },
     "dependencies": {
         "@emotion/react": "^11.10.6",
