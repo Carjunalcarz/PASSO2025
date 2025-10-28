@@ -11,7 +11,11 @@
         "lint:fix": "eslint . --ext .ts,.tsx --fix",
         "format": "prettier --write \"src/**/*.{ts,tsx,css,scss}\"",
         "setup": "node scripts/setup-admin.js",
-        "setup:building-part-rate": "node scripts/setup-building-part-rate.js"
+        "setup:building-part-rate": "node scripts/setup-building-part-rate.js",
+        "setup:depreciation": "node scripts/setup-depreciation.js",
+        "setup:machinery": "node scripts/setup-machinery-rates.js",
+        "setup:classifications": "node scripts/setup-classifications.js",
+        "setup:kinds": "node scripts/setup-kinds.js"
     },
     "dependencies": {
         "@emotion/react": "^11.10.6",

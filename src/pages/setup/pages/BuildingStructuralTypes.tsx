@@ -5,39 +5,39 @@ import IconEdit from '../../../components/Icon/IconEdit';
 import IconEye from '../../../components/Icon/IconEye';
 import IconPlus from '../../../components/Icon/IconPlus';
 import Swal from 'sweetalert2';
-import { type BuildingComponentResponse } from '../services/buildingComponent';
+import { type BuildingStructuralTypeResponse } from '../services/buildingStructuralType';
 import {
-  useGetAllBuildingComponents,
-  useCreateBuildingComponent,
-  useUpdateBuildingComponent,
-  useDeleteBuildingComponent,
-} from '../hooks/useBuildingComponents';
+  useGetAllBuildingStructuralTypes,
+  useCreateBuildingStructuralType,
+  useUpdateBuildingStructuralType,
+  useDeleteBuildingStructuralType,
+} from '../hooks/useBuildingStructuralTypes';
 
-type BuildingComponentData = BuildingComponentResponse;
+type BuildingStructuralTypeData = BuildingStructuralTypeResponse;
 
-const BuildingComponent = () => {
+const BuildingStructuralTypes = () => {
   const [page, setPage] = useState(1);
   const PAGE_SIZES = [10, 20, 30, 50, 100];
   const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
-  const [formData, setFormData] = useState<Partial<BuildingComponentData>>({
+  const [formData, setFormData] = useState<Partial<BuildingStructuralTypeData>>({
     name: '',
     description: '',
     status: 'active',
   });
 
   // TanStack Query hooks
-  const { data: buildingComponents = [], isLoading, isError, error } = useGetAllBuildingComponents();
-  const createMutation = useCreateBuildingComponent();
-  const updateMutation = useUpdateBuildingComponent();
-  const deleteMutation = useDeleteBuildingComponent();
+  const { data: buildingStructuralTypes = [], isLoading, isError, error } = useGetAllBuildingStructuralTypes();
+  const createMutation = useCreateBuildingStructuralType();
+  const updateMutation = useUpdateBuildingStructuralType();
+  const deleteMutation = useDeleteBuildingStructuralType();
 
   // Show error toast if query fails
   useEffect(() => {
     if (isError) {
-      Swal.fire('Error', error?.message || 'Failed to fetch building components', 'error');
+      Swal.fire('Error', error?.message || 'Failed to fetch building structural types', 'error');
     }
   }, [isError, error]);
 
@@ -47,7 +47,7 @@ const BuildingComponent = () => {
       title: 'ID',
       sortable: true,
       width: 100,
-      render: ({ $id }: BuildingComponentData) => (
+      render: ({ $id }: BuildingStructuralTypeData) => (
         <span className="text-xs">{$id.substring(0, 8)}...</span>
       ),
     },
@@ -65,7 +65,7 @@ const BuildingComponent = () => {
       accessor: 'status',
       title: 'Status',
       sortable: true,
-      render: ({ status }: BuildingComponentData) => (
+      render: ({ status }: BuildingStructuralTypeData) => (
         <span className={`badge ${status === 'active' ? 'badge-outline-success' : 'badge-outline-danger'}`}>
           {status}
         </span>
@@ -75,7 +75,7 @@ const BuildingComponent = () => {
       accessor: '$createdAt',
       title: 'Created At',
       sortable: true,
-      render: ({ $createdAt }: BuildingComponentData) => (
+      render: ({ $createdAt }: BuildingStructuralTypeData) => (
         <span>{new Date($createdAt).toLocaleDateString()}</span>
       ),
     },
@@ -83,7 +83,7 @@ const BuildingComponent = () => {
       accessor: 'actions',
       title: 'Actions',
       titleClassName: '!text-center',
-      render: (record: BuildingComponentData) => (
+      render: (record: BuildingStructuralTypeData) => (
         <div className="flex items-center justify-center gap-2">
           <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => handleView(record)}>
             <IconEye />
@@ -102,14 +102,14 @@ const BuildingComponent = () => {
 
   // Filter and paginate data
   const filteredRecords = useMemo(() => {
-    if (!search) return buildingComponents;
+    if (!search) return buildingStructuralTypes;
     
-    return buildingComponents.filter((item) => {
+    return buildingStructuralTypes.filter((item) => {
       return Object.keys(item).some((key) => {
-        return String(item[key as keyof BuildingComponentData]).toLowerCase().includes(search.toLowerCase());
+        return String(item[key as keyof BuildingStructuralTypeData]).toLowerCase().includes(search.toLowerCase());
       });
     });
-  }, [buildingComponents, search]);
+  }, [buildingStructuralTypes, search]);
 
   const recordsData = useMemo(() => {
     const from = (page - 1) * pageSize;
@@ -127,15 +127,15 @@ const BuildingComponent = () => {
     setShowModal(true);
   };
 
-  const handleEdit = (record: BuildingComponentData) => {
+  const handleEdit = (record: BuildingStructuralTypeData) => {
     setIsEdit(true);
     setFormData(record);
     setShowModal(true);
   };
 
-  const handleView = (record: BuildingComponentData) => {
+  const handleView = (record: BuildingStructuralTypeData) => {
     Swal.fire({
-      title: '<strong style="color: #4361ee;">Building Component Details</strong>',
+      title: '<strong style="color: #4361ee;">Building Structural Type Details</strong>',
       html: `
         <div class="overflow-x-auto" style="margin-top: 20px;">
           <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
@@ -146,7 +146,7 @@ const BuildingComponent = () => {
                     <svg style="width: 18px; height: 18px; margin-right: 8px; color: #6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                     </svg>
-                    Component Name
+                    Structural Type Name
                   </span>
                 </td>
                 <td style="padding: 14px 16px; color: #111827; border-bottom: 1px solid #e5e7eb; font-weight: 500;">${record.name}</td>
@@ -213,7 +213,7 @@ const BuildingComponent = () => {
 
   const handleDelete = async (id: string) => {
     Swal.fire({
-      title: '<span style="color: #dc2626; font-size: 20px; font-weight: 600;">Delete Building Component?</span>',
+      title: '<span style="color: #dc2626; font-size: 20px; font-weight: 600;">Delete Building Structural Type?</span>',
       html: `
         <div style="text-align: center;">
           <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: #fee2e2; border-radius: 50%; margin-bottom: 16px;">
@@ -221,7 +221,7 @@ const BuildingComponent = () => {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
             </svg>
           </div>
-          <p style="color: #6b7280; font-size: 14px; margin-top: 8px;">This action cannot be undone. The component will be permanently removed.</p>
+          <p style="color: #6b7280; font-size: 14px; margin-top: 8px;">This action cannot be undone. The structural type will be permanently removed.</p>
         </div>
       `,
       icon: undefined,
@@ -247,7 +247,7 @@ const BuildingComponent = () => {
           await deleteMutation.mutateAsync(id);
           Swal.fire({
             title: '<span style="color: #059669; font-size: 18px; font-weight: 600;">Deleted!</span>',
-            html: '<p style="color: #6b7280; font-size: 14px;">Building component has been deleted successfully.</p>',
+            html: '<p style="color: #6b7280; font-size: 14px;">Building structural type has been deleted successfully.</p>',
             icon: 'success',
             confirmButtonColor: '#059669',
             confirmButtonText: 'OK',
@@ -291,14 +291,14 @@ const BuildingComponent = () => {
             status: formData.status,
           },
         });
-        Swal.fire('Updated!', 'Building component has been updated.', 'success');
+        Swal.fire('Updated!', 'Building structural type has been updated.', 'success');
       } else {
         await createMutation.mutateAsync({
           name: formData.name || '',
           description: formData.description || '',
           status: formData.status || 'active',
         });
-        Swal.fire('Created!', 'Building component has been created.', 'success');
+        Swal.fire('Created!', 'Building structural type has been created.', 'success');
       }
       setShowModal(false);
     } catch (error: any) {
@@ -309,7 +309,7 @@ const BuildingComponent = () => {
   return (
     <div className="panel">
       <div className="flex md:items-center md:flex-row flex-col mb-5 gap-5">
-        <h5 className="font-semibold text-lg dark:text-white-light">Building Components</h5>
+        <h5 className="font-semibold text-lg dark:text-white-light">Building Structural Types</h5>
         <div className="ltr:ml-auto rtl:mr-auto flex gap-2">
           <input
             type="text"
@@ -347,7 +347,7 @@ const BuildingComponent = () => {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[75vh] overflow-hidden">
             {/* Modal Header */}
             <div className="bg-primary px-6 py-3 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-white">{isEdit ? 'Edit' : 'Add'} Building Component</h3>
+              <h3 className="text-lg font-semibold text-white">{isEdit ? 'Edit' : 'Add'} Building Structural Type</h3>
             </div>
 
             {/* Modal Body */}
@@ -408,4 +408,4 @@ const BuildingComponent = () => {
   );
 };
 
-export default BuildingComponent;
+export default BuildingStructuralTypes;
