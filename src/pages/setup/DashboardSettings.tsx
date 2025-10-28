@@ -59,9 +59,9 @@ import BuildingDepreciation from './pages/BuildingDepreciation';
 import MachineryTypes from './pages/MachineryTypes';
 import MachineryRates from './pages/MachineryRates';
 import Classifications from './pages/Classifications';
-import SubClassifications from './pages/subClassifications';
 import Kinds from './pages/Kinds';
 import SubKinds from './pages/SubKinds';
+import SubClassifications from './pages/SubClassifications';
 
 const DashboardSettings = () => {
     const dispatch = useDispatch();
