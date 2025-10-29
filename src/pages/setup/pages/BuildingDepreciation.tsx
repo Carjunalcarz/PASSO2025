@@ -5,6 +5,8 @@ import IconEdit from '../../../components/Icon/IconEdit';
 import IconEye from '../../../components/Icon/IconEye';
 import IconPlus from '../../../components/Icon/IconPlus';
 import Swal from 'sweetalert2';
+import { useSelector } from 'react-redux';
+import { IRootState } from '../../../store';
 import { type BuildingDepreciationResponse } from '../services/buildingDepreciation';
 import {
     useGetAllBuildingDepreciations,
@@ -18,6 +20,7 @@ import { useGetAllBuildingCodes } from '../hooks/useBuildingCodes';
 type BuildingDepreciationData = BuildingDepreciationResponse;
 
 const BuildingDepreciation = () => {
+    const isDark = useSelector((state: IRootState) => state.themeConfig.theme === 'dark' || state.themeConfig.isDarkMode);
     const [page, setPage] = useState(1);
     const PAGE_SIZES = [10, 20, 30, 50, 100];
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
@@ -180,49 +183,57 @@ const BuildingDepreciation = () => {
     };
 
     const handleView = (record: BuildingDepreciationData) => {
+        const bgPrimary = isDark ? 'linear-gradient(to right, #1f2937, #111827)' : 'linear-gradient(to right, #f9fafb, #ffffff)';
+        const bgSecondary = isDark ? '#111827' : '#ffffff';
+        const borderColor = isDark ? '#374151' : '#e5e7eb';
+        const labelColor = isDark ? '#9ca3af' : '#374151';
+        const valueColor = isDark ? '#d1d5db' : '#111827';
+        const secondaryTextColor = isDark ? '#9ca3af' : '#6b7280';
+        const popupBg = isDark ? '#1f2937' : '#ffffff';
+        
         Swal.fire({
-            title: '<strong style="color: #4361ee;">Building Depreciation Details</strong>',
+            title: `<strong style="color: ${isDark ? '#60a5fa' : '#4361ee'};">Building Depreciation Details</strong>`,
             html: `
         <div class="overflow-x-auto" style="margin-top: 20px;">
-          <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+          <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid ${borderColor}; border-radius: 8px; overflow: hidden;">
             <tbody>
-              <tr style="background: linear-gradient(to right, #f9fafb, #ffffff);">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; width: 40%;">Name</td>
-                <td style="padding: 14px 16px; color: #111827; border-bottom: 1px solid #e5e7eb; font-weight: 500;">${record.name}</td>
+              <tr style="background: ${bgPrimary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor}; width: 40%;">Name</td>
+                <td style="padding: 14px 16px; color: ${valueColor}; border-bottom: 1px solid ${borderColor}; font-weight: 500;">${record.name}</td>
               </tr>
-              <tr style="background: #ffffff;">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Age</td>
-                <td style="padding: 14px 16px; color: #6b7280; border-bottom: 1px solid #e5e7eb;">${record.age}</td>
+              <tr style="background: ${bgSecondary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">Age</td>
+                <td style="padding: 14px 16px; color: ${secondaryTextColor}; border-bottom: 1px solid ${borderColor};">${record.age}</td>
               </tr>
-              <tr style="background: linear-gradient(to right, #f9fafb, #ffffff);">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Rate</td>
-                <td style="padding: 14px 16px; color: #6b7280; border-bottom: 1px solid #e5e7eb;">${record.rate.toFixed(2)}%</td>
+              <tr style="background: ${bgPrimary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">Rate</td>
+                <td style="padding: 14px 16px; color: ${secondaryTextColor}; border-bottom: 1px solid ${borderColor};">${record.rate.toFixed(2)}%</td>
               </tr>
-              <tr style="background: #ffffff;">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Effectivity Date</td>
-                <td style="padding: 14px 16px; color: #6b7280; border-bottom: 1px solid #e5e7eb;">${new Date(record.effectivity_date).toLocaleDateString('en-US', { dateStyle: 'medium' })}</td>
+              <tr style="background: ${bgSecondary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">Effectivity Date</td>
+                <td style="padding: 14px 16px; color: ${secondaryTextColor}; border-bottom: 1px solid ${borderColor};">${new Date(record.effectivity_date).toLocaleDateString('en-US', { dateStyle: 'medium' })}</td>
               </tr>
-              <tr style="background: linear-gradient(to right, #f9fafb, #ffffff);">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Structural Type</td>
-                <td style="padding: 14px 16px; color: #6b7280; border-bottom: 1px solid #e5e7eb;">${getStructuralTypeName(record.building_structural_types_id)}</td>
+              <tr style="background: ${bgPrimary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">Structural Type</td>
+                <td style="padding: 14px 16px; color: ${secondaryTextColor}; border-bottom: 1px solid ${borderColor};">${getStructuralTypeName(record.building_structural_types_id)}</td>
               </tr>
-              <tr style="background: #ffffff;">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Building Code</td>
-                <td style="padding: 14px 16px; color: #6b7280; border-bottom: 1px solid #e5e7eb;">${getBuildingCodeName(record.building_code_id)}</td>
+              <tr style="background: ${bgSecondary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">Building Code</td>
+                <td style="padding: 14px 16px; color: ${secondaryTextColor}; border-bottom: 1px solid ${borderColor};">${getBuildingCodeName(record.building_code_id)}</td>
               </tr>
-              <tr style="background: linear-gradient(to right, #f9fafb, #ffffff);">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Status</td>
-                <td style="padding: 14px 16px; border-bottom: 1px solid #e5e7eb;">
+              <tr style="background: ${bgPrimary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">Status</td>
+                <td style="padding: 14px 16px; border-bottom: 1px solid ${borderColor};">
                   <span style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; ${record.status === 'active' ? 'background: #d1fae5; color: #065f46;' : 'background: #fee2e2; color: #991b1b;'}">${record.status.toUpperCase()}</span>
                 </td>
               </tr>
-              <tr style="background: #ffffff;">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Document ID</td>
-                <td style="padding: 14px 16px; color: #6b7280; font-family: monospace; font-size: 12px; border-bottom: 1px solid #e5e7eb;">${record.$id}</td>
+              <tr style="background: ${bgSecondary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">Document ID</td>
+                <td style="padding: 14px 16px; color: ${secondaryTextColor}; font-family: monospace; font-size: 12px; border-bottom: 1px solid ${borderColor};">${record.$id}</td>
               </tr>
-              <tr style="background: linear-gradient(to right, #f9fafb, #ffffff);">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151;">Created At</td>
-                <td style="padding: 14px 16px; color: #6b7280;">${new Date(record.$createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</td>
+              <tr style="background: ${bgPrimary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor};">Created At</td>
+                <td style="padding: 14px 16px; color: ${secondaryTextColor};">${new Date(record.$createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</td>
               </tr>
             </tbody>
           </table>
@@ -231,9 +242,11 @@ const BuildingDepreciation = () => {
             width: '600px',
             showCloseButton: true,
             showConfirmButton: false,
+            background: popupBg,
             customClass: {
                 popup: 'swal2-rounded',
-                title: 'swal2-title-custom'
+                title: 'swal2-title-custom',
+                closeButton: isDark ? 'swal2-close-dark' : ''
             }
         });
     };
