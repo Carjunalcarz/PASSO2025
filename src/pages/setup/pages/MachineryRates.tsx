@@ -5,6 +5,8 @@ import IconEdit from '../../../components/Icon/IconEdit';
 import IconEye from '../../../components/Icon/IconEye';
 import IconPlus from '../../../components/Icon/IconPlus';
 import Swal from 'sweetalert2';
+import { useSelector } from 'react-redux';
+import { IRootState } from '../../../store';
 import { type MachineryRateResponse } from '../services/machineryRates';
 import {
     useGetAllMachineryRates,
@@ -17,6 +19,7 @@ import { useGetAllMachineryTypes } from '../hooks/useMachineryTypes';
 type MachineryRateData = MachineryRateResponse;
 
 const MachineryRates = () => {
+    const isDark = useSelector((state: IRootState) => state.themeConfig.theme === 'dark' || state.themeConfig.isDarkMode);
     const [page, setPage] = useState(1);
     const PAGE_SIZES = [10, 20, 30, 50, 100];
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
@@ -168,90 +171,99 @@ const MachineryRates = () => {
 
     const handleView = (record: MachineryRateData) => {
         const typeName = getMachineryTypeName(record.machinery_type_id);
+        const bgPrimary = isDark ? 'linear-gradient(to right, #1f2937, #111827)' : 'linear-gradient(to right, #f9fafb, #ffffff)';
+        const bgSecondary = isDark ? '#111827' : '#ffffff';
+        const borderColor = isDark ? '#374151' : '#e5e7eb';
+        const labelColor = isDark ? '#9ca3af' : '#374151';
+        const valueColor = isDark ? '#d1d5db' : '#111827';
+        const secondaryTextColor = isDark ? '#9ca3af' : '#6b7280';
+        const popupBg = isDark ? '#1f2937' : '#ffffff';
+        const iconColor = isDark ? '#9ca3af' : '#6b7280';
+        
         Swal.fire({
-            title: '<strong style="color: #4361ee;">Machinery Rate Details</strong>',
+            title: `<strong style="color: ${isDark ? '#60a5fa' : '#4361ee'};">Machinery Rate Details</strong>`,
             html: `
         <div class="overflow-x-auto" style="margin-top: 20px;">
-          <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+          <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid ${borderColor}; border-radius: 8px; overflow: hidden;">
             <tbody>
-              <tr style="background: linear-gradient(to right, #f9fafb, #ffffff);">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; width: 40%;">
+              <tr style="background: ${bgPrimary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor}; width: 40%;">
                   <span style="display: flex; align-items: center;">
-                    <svg style="width: 18px; height: 18px; margin-right: 8px; color: #6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg style="width: 18px; height: 18px; margin-right: 8px; color: ${iconColor};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                     </svg>
                     Rate Name
                   </span>
                 </td>
-                <td style="padding: 14px 16px; color: #111827; border-bottom: 1px solid #e5e7eb; font-weight: 500;">${record.name}</td>
+                <td style="padding: 14px 16px; color: ${valueColor}; border-bottom: 1px solid ${borderColor}; font-weight: 500;">${record.name}</td>
               </tr>
-              <tr style="background: #ffffff;">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">
+              <tr style="background: ${bgSecondary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">
                   <span style="display: flex; align-items: center;">
-                    <svg style="width: 18px; height: 18px; margin-right: 8px; color: #6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg style="width: 18px; height: 18px; margin-right: 8px; color: ${iconColor};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                     </svg>
                     Machinery Type
                   </span>
                 </td>
-                <td style="padding: 14px 16px; color: #6b7280; border-bottom: 1px solid #e5e7eb;">${typeName}</td>
+                <td style="padding: 14px 16px; color: ${secondaryTextColor}; border-bottom: 1px solid ${borderColor};">${typeName}</td>
               </tr>
-              <tr style="background: linear-gradient(to right, #f9fafb, #ffffff);">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">
+              <tr style="background: ${bgPrimary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">
                   <span style="display: flex; align-items: center;">
-                    <svg style="width: 18px; height: 18px; margin-right: 8px; color: #6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg style="width: 18px; height: 18px; margin-right: 8px; color: ${iconColor};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     Rate
                   </span>
                 </td>
-                <td style="padding: 14px 16px; color: #059669; border-bottom: 1px solid #e5e7eb; font-weight: 600; font-size: 16px;">₱${record.rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td style="padding: 14px 16px; color: #059669; border-bottom: 1px solid ${borderColor}; font-weight: 600; font-size: 16px;">₱${record.rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
-              <tr style="background: #ffffff;">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">
+              <tr style="background: ${bgSecondary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">
                   <span style="display: flex; align-items: center;">
-                    <svg style="width: 18px; height: 18px; margin-right: 8px; color: #6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg style="width: 18px; height: 18px; margin-right: 8px; color: ${iconColor};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
                     Effectivity Date
                   </span>
                 </td>
-                <td style="padding: 14px 16px; color: #6b7280; border-bottom: 1px solid #e5e7eb;">${new Date(record.effectivity_date).toLocaleDateString('en-US', { dateStyle: 'medium' })}</td>
+                <td style="padding: 14px 16px; color: ${secondaryTextColor}; border-bottom: 1px solid ${borderColor};">${new Date(record.effectivity_date).toLocaleDateString('en-US', { dateStyle: 'medium' })}</td>
               </tr>
-              <tr style="background: linear-gradient(to right, #f9fafb, #ffffff);">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">
+              <tr style="background: ${bgPrimary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">
                   <span style="display: flex; align-items: center;">
-                    <svg style="width: 18px; height: 18px; margin-right: 8px; color: #6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg style="width: 18px; height: 18px; margin-right: 8px; color: ${iconColor};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     Status
                   </span>
                 </td>
-                <td style="padding: 14px 16px; border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 14px 16px; border-bottom: 1px solid ${borderColor};">
                   <span style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; ${record.status === 'active' ? 'background: #d1fae5; color: #065f46;' : 'background: #fee2e2; color: #991b1b;'}">${record.status.toUpperCase()}</span>
                 </td>
               </tr>
-              <tr style="background: #ffffff;">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">
+              <tr style="background: ${bgSecondary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">
                   <span style="display: flex; align-items: center;">
-                    <svg style="width: 18px; height: 18px; margin-right: 8px; color: #6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg style="width: 18px; height: 18px; margin-right: 8px; color: ${iconColor};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
                     </svg>
                     Document ID
                   </span>
                 </td>
-                <td style="padding: 14px 16px; color: #6b7280; font-family: monospace; font-size: 12px; border-bottom: 1px solid #e5e7eb;">${record.$id}</td>
+                <td style="padding: 14px 16px; color: ${secondaryTextColor}; font-family: monospace; font-size: 12px; border-bottom: 1px solid ${borderColor};">${record.$id}</td>
               </tr>
-              <tr style="background: linear-gradient(to right, #f9fafb, #ffffff);">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151;">
+              <tr style="background: ${bgPrimary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor};">
                   <span style="display: flex; align-items: center;">
-                    <svg style="width: 18px; height: 18px; margin-right: 8px; color: #6b7280;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg style="width: 18px; height: 18px; margin-right: 8px; color: ${iconColor};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
                     Created At
                   </span>
                 </td>
-                <td style="padding: 14px 16px; color: #6b7280;">${new Date(record.$createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</td>
+                <td style="padding: 14px 16px; color: ${secondaryTextColor};">${new Date(record.$createdAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</td>
               </tr>
             </tbody>
           </table>
@@ -260,9 +272,11 @@ const MachineryRates = () => {
             width: '600px',
             showCloseButton: true,
             showConfirmButton: false,
+            background: popupBg,
             customClass: {
                 popup: 'swal2-rounded',
-                title: 'swal2-title-custom'
+                title: 'swal2-title-custom',
+                closeButton: isDark ? 'swal2-close-dark' : ''
             }
         });
     };

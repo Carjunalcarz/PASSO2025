@@ -5,6 +5,8 @@ import IconEdit from '../../../components/Icon/IconEdit';
 import IconEye from '../../../components/Icon/IconEye';
 import IconPlus from '../../../components/Icon/IconPlus';
 import Swal from 'sweetalert2';
+import { useSelector } from 'react-redux';
+import { IRootState } from '../../../store';
 import { type PropertyNatureResponse } from '../services/propertyNature';
 import {
     useGetAllPropertyNatures,
@@ -25,6 +27,7 @@ import { useGetAllKinds } from '../hooks/useKinds';
 type PropertyNatureData = PropertyNatureResponse;
 
 const PropertyNature = () => {
+    const isDark = useSelector((state: IRootState) => state.themeConfig.theme === 'dark' || state.themeConfig.isDarkMode);
     const [page, setPage] = useState(1);
     const PAGE_SIZES = [10, 20, 30, 50, 100];
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
@@ -88,53 +91,7 @@ const PropertyNature = () => {
         return kind?.name || '-';
     };
 
-    // DataTable columns
-    const columns = [
-        {
-            accessor: 'name',
-            title: 'Name',
-            sortable: true,
-            render: (record: PropertyNatureData) => <div className="font-semibold text-primary">{record.name}</div>,
-        },
-        {
-            accessor: 'building_part_rate_id',
-            title: 'Building Part Rate',
-            render: (record: PropertyNatureData) => <div>{getBuildingPartRateName(record.building_part_rate_id)}</div>,
-        },
-        {
-            accessor: 'product_id',
-            title: 'Product',
-            render: (record: PropertyNatureData) => <div>{getProductName(record.product_id)}</div>,
-        },
-        {
-            accessor: 'status',
-            title: 'Status',
-            sortable: true,
-            render: (record: PropertyNatureData) => (
-                <span className={`badge ${record.status === 'active' ? 'badge-outline-success' : 'badge-outline-danger'}`}>
-                    {record.status}
-                </span>
-            ),
-        },
-        {
-            accessor: 'actions',
-            title: 'Actions',
-            titleClassName: '!text-center',
-            render: (record: PropertyNatureData) => (
-                <div className="flex items-center justify-center gap-2">
-                    <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => handleView(record)}>
-                        <IconEye />
-                    </button>
-                    <button type="button" className="btn btn-sm btn-outline-warning" onClick={() => handleEdit(record)}>
-                        <IconEdit />
-                    </button>
-                    <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(record.$id)}>
-                        <IconTrash />
-                    </button>
-                </div>
-            ),
-        },
-    ];
+    // Define DataTable columns inline (like Products)
 
     const filteredRecords = useMemo(() => {
         if (!search) return propertyNatures;
@@ -229,51 +186,59 @@ const PropertyNature = () => {
     };
 
     const handleView = (record: PropertyNatureData) => {
+        const bgPrimary = isDark ? 'linear-gradient(to right, #1f2937, #111827)' : 'linear-gradient(to right, #f9fafb, #ffffff)';
+        const bgSecondary = isDark ? '#111827' : '#ffffff';
+        const borderColor = isDark ? '#374151' : '#e5e7eb';
+        const labelColor = isDark ? '#9ca3af' : '#374151';
+        const valueColor = isDark ? '#d1d5db' : '#111827';
+        const secondaryTextColor = isDark ? '#9ca3af' : '#6b7280';
+        const popupBg = isDark ? '#1f2937' : '#ffffff';
+        
         Swal.fire({
-            title: `<span style="color: #1e40af; font-size: 22px; font-weight: 700;">Property Nature Details</span>`,
+            title: `<span style="color: ${isDark ? '#60a5fa' : '#1e40af'}; font-size: 22px; font-weight: 700;">Property Nature Details</span>`,
             html: `
         <div style="text-align: left; padding: 8px;">
-          <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
+          <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid ${borderColor}; border-radius: 12px; overflow: hidden;">
             <tbody>
-              <tr style="background: linear-gradient(to right, #f9fafb, #ffffff);">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; width: 40%; border-bottom: 1px solid #e5e7eb;">Name</td>
-                <td style="padding: 14px 16px; color: #111827; border-bottom: 1px solid #e5e7eb;">${record.name}</td>
+              <tr style="background: ${bgPrimary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; width: 40%; border-bottom: 1px solid ${borderColor};">Name</td>
+                <td style="padding: 14px 16px; color: ${valueColor}; border-bottom: 1px solid ${borderColor};">${record.name}</td>
               </tr>
-              <tr style="background: #ffffff;">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Building Part Rate</td>
-                <td style="padding: 14px 16px; color: #6b7280; border-bottom: 1px solid #e5e7eb;">
+              <tr style="background: ${bgSecondary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">Building Part Rate</td>
+                <td style="padding: 14px 16px; color: ${secondaryTextColor}; border-bottom: 1px solid ${borderColor};">
                   ${getBuildingPartRateName(record.building_part_rate_id)}
                   <div style="font-size: 12px; color: #059669; font-weight: 600; margin-top: 4px;">Unit Value: ${getBuildingPartRateValue(record.building_part_rate_id)}</div>
                 </td>
               </tr>
-              <tr style="background: linear-gradient(to right, #f9fafb, #ffffff);">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Building Depreciation</td>
-                <td style="padding: 14px 16px; color: #6b7280; border-bottom: 1px solid #e5e7eb;">
+              <tr style="background: ${bgPrimary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">Building Depreciation</td>
+                <td style="padding: 14px 16px; color: ${secondaryTextColor}; border-bottom: 1px solid ${borderColor};">
                   ${getBuildingDepreciationName(record.building_depreciation_id)}
                   <div style="font-size: 12px; color: #059669; font-weight: 600; margin-top: 4px;">Rate: ${getBuildingDepreciationRate(record.building_depreciation_id)}</div>
                 </td>
               </tr>
-              <tr style="background: #ffffff;">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Machinery Type</td>
-                <td style="padding: 14px 16px; color: #6b7280; border-bottom: 1px solid #e5e7eb;">
+              <tr style="background: ${bgSecondary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">Machinery Type</td>
+                <td style="padding: 14px 16px; color: ${secondaryTextColor}; border-bottom: 1px solid ${borderColor};">
                   ${getMachineryTypeName(record.machinery_type_id)}
                   <div style="font-size: 12px; color: #059669; font-weight: 600; margin-top: 4px;">Rate: ${getMachineryRate(record.machinery_type_id)}</div>
                 </td>
               </tr>
-              <tr style="background: linear-gradient(to right, #f9fafb, #ffffff);">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Product</td>
-                <td style="padding: 14px 16px; color: #6b7280; border-bottom: 1px solid #e5e7eb;">${getProductName(record.product_id)}</td>
+              <tr style="background: ${bgPrimary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">Product</td>
+                <td style="padding: 14px 16px; color: ${secondaryTextColor}; border-bottom: 1px solid ${borderColor};">${getProductName(record.product_id)}</td>
               </tr>
-              <tr style="background: #ffffff;">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Sub-Classification</td>
-                <td style="padding: 14px 16px; color: #6b7280; border-bottom: 1px solid #e5e7eb;">${getSubClassificationName(record.subclass_id)}</td>
+              <tr style="background: ${bgSecondary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">Sub-Classification</td>
+                <td style="padding: 14px 16px; color: ${secondaryTextColor}; border-bottom: 1px solid ${borderColor};">${getSubClassificationName(record.subclass_id)}</td>
               </tr>
-              <tr style="background: linear-gradient(to right, #f9fafb, #ffffff);">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Sub-Kind</td>
-                <td style="padding: 14px 16px; color: #6b7280; border-bottom: 1px solid #e5e7eb;">${getSubKindName(record.subkind_id)}</td>
+              <tr style="background: ${bgPrimary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor}; border-bottom: 1px solid ${borderColor};">Sub-Kind</td>
+                <td style="padding: 14px 16px; color: ${secondaryTextColor}; border-bottom: 1px solid ${borderColor};">${getSubKindName(record.subkind_id)}</td>
               </tr>
-              <tr style="background: #ffffff;">
-                <td style="padding: 14px 16px; font-weight: 600; color: #374151;">Status</td>
+              <tr style="background: ${bgSecondary};">
+                <td style="padding: 14px 16px; font-weight: 600; color: ${labelColor};">Status</td>
                 <td style="padding: 14px 16px;">
                   <span style="padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; ${record.status === 'active' ? 'background: #d1fae5; color: #065f46;' : 'background: #fee2e2; color: #991b1b;'}">${record.status.toUpperCase()}</span>
                 </td>
@@ -285,6 +250,12 @@ const PropertyNature = () => {
             width: '600px',
             showCloseButton: true,
             showConfirmButton: false,
+            background: popupBg,
+            customClass: {
+                popup: 'swal2-rounded',
+                title: 'swal2-title-custom',
+                closeButton: isDark ? 'swal2-close-dark' : ''
+            }
         });
     };
 
@@ -314,42 +285,122 @@ const PropertyNature = () => {
         <div className="panel">
             <div className="mb-5 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
                 <h5 className="text-lg font-semibold dark:text-white-light">Property Nature</h5>
-                <div className="ltr:ml-auto rtl:mr-auto flex gap-2">
-                    <input type="text" className="form-input w-auto" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
-                    <button type="button" className="btn btn-primary" onClick={handleAdd}>
-                        <IconPlus className="w-5 h-5 ltr:mr-2 rtl:ml-2" />
-                        Add New
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <input 
+                        type="text" 
+                        className="form-input w-full sm:w-auto" 
+                        placeholder="Search property nature..." 
+                        value={search} 
+                        onChange={(e) => setSearch(e.target.value)} 
+                    />
+                    <button type="button" className="btn btn-primary gap-2" onClick={handleAdd}>
+                        <IconPlus />
+                        Add Property Nature
                     </button>
                 </div>
             </div>
-            <DataTable
-                className="whitespace-nowrap table-hover"
-                records={recordsData}
-                columns={columns}
-                totalRecords={filteredRecords.length}
-                recordsPerPage={pageSize}
-                page={page}
-                onPageChange={setPage}
-                recordsPerPageOptions={PAGE_SIZES}
-                onRecordsPerPageChange={setPageSize}
-                minHeight={200}
-                fetching={isLoading}
-            />
+
+            <div className="datatables">
+                <DataTable
+                    className="table-hover whitespace-nowrap"
+                    records={recordsData}
+                    columns={[
+                        {
+                            accessor: '$id',
+                            title: 'ID',
+                            sortable: true,
+                            render: (row) => (
+                                <div className="font-mono text-xs">{row.$id.slice(0, 8)}...</div>
+                            ),
+                        },
+                        {
+                            accessor: 'name',
+                            title: 'Name',
+                            sortable: true,
+                            render: (row) => (
+                                <div className="font-semibold">{row.name}</div>
+                            ),
+                        },
+                        {
+                            accessor: 'building_part_rate_id',
+                            title: 'Building Part Rate',
+                            render: (row) => (
+                                <div className="max-w-md truncate">{getBuildingPartRateName(row.building_part_rate_id)}</div>
+                            ),
+                        },
+                        {
+                            accessor: 'product_id',
+                            title: 'Product',
+                            render: (row) => (
+                                <div>{getProductName(row.product_id)}</div>
+                            ),
+                        },
+                        {
+                            accessor: 'status',
+                            title: 'Status',
+                            sortable: true,
+                            render: (row) => (
+                                <span className={`badge ${row.status === 'active' ? 'badge-outline-success' : 'badge-outline-danger'}`}>
+                                    {row.status}
+                                </span>
+                            ),
+                        },
+                        {
+                            accessor: '$createdAt',
+                            title: 'Created At',
+                            sortable: true,
+                            render: (row) => (
+                                <div className="text-xs">
+                                    {new Date(row.$createdAt).toLocaleDateString()}
+                                </div>
+                            ),
+                        },
+                        {
+                            accessor: 'actions',
+                            title: 'Actions',
+                            titleClassName: '!text-center',
+                            render: (row) => (
+                                <div className="flex items-center justify-center gap-2">
+                                    <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => handleView(row)}>
+                                        <IconEye />
+                                    </button>
+                                    <button type="button" className="btn btn-sm btn-outline-warning" onClick={() => handleEdit(row)}>
+                                        <IconEdit />
+                                    </button>
+                                    <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(row.$id)}>
+                                        <IconTrash />
+                                    </button>
+                                </div>
+                            ),
+                        },
+                    ]}
+                    totalRecords={filteredRecords.length}
+                    recordsPerPage={pageSize}
+                    page={page}
+                    onPageChange={setPage}
+                    recordsPerPageOptions={PAGE_SIZES}
+                    onRecordsPerPageChange={setPageSize}
+                    minHeight={200}
+                    fetching={isLoading}
+                    loaderVariant="dots"
+                    loaderSize="lg"
+                />
+            </div>
 
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[75vh] overflow-hidden">
-                        <div className="bg-primary px-6 py-3 border-b">
+                        <div className="bg-primary px-6 py-3 border-b border-gray-200 dark:border-gray-700">
                             <h3 className="text-lg font-semibold text-white">{isEdit ? 'Edit' : 'Add'} Property Nature</h3>
                         </div>
                         <form onSubmit={handleSubmit}>
                             <div className="p-4 space-y-1 max-h-[calc(75vh-140px)] overflow-y-auto">
-                                <div className="flex items-center gap-4 py-3 border-b hover:bg-gray-50 px-2 rounded">
-                                    <label className="w-48 font-semibold">Name:</label>
+                                <div className="flex items-center gap-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 px-2 rounded">
+                                    <label className="w-48 font-semibold text-gray-700 dark:text-gray-300">Name:</label>
                                     <input type="text" className="form-input flex-1" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
                                 </div>
-                                <div className="flex items-center gap-4 py-3 border-b hover:bg-gray-50 px-2 rounded">
-                                    <label className="w-48 font-semibold">Building Part Rate:</label>
+                                <div className="flex items-center gap-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 px-2 rounded">
+                                    <label className="w-48 font-semibold text-gray-700 dark:text-gray-300">Building Part Rate:</label>
                                     <select className="form-select flex-1" value={formData.building_part_rate_id} onChange={(e) => setFormData({ ...formData, building_part_rate_id: e.target.value })}>
                                         <option value="">Select</option>
                                         {buildingPartRates.filter((r: any) => r.status === 'active').map((r: any) => {
@@ -358,36 +409,36 @@ const PropertyNature = () => {
                                         })}
                                     </select>
                                 </div>
-                                <div className="flex items-center gap-4 py-3 border-b hover:bg-gray-50 px-2 rounded">
-                                    <label className="w-48 font-semibold">Building Depreciation:</label>
+                                <div className="flex items-center gap-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 px-2 rounded">
+                                    <label className="w-48 font-semibold text-gray-700 dark:text-gray-300">Building Depreciation:</label>
                                     <select className="form-select flex-1" value={formData.building_depreciation_id} onChange={(e) => setFormData({ ...formData, building_depreciation_id: e.target.value })}>
                                         <option value="">Select</option>
                                         {buildingDepreciations.filter((r: any) => r.status === 'active').map((r: any) => <option key={r.$id} value={r.$id}>{r.name}</option>)}
                                     </select>
                                 </div>
-                                <div className="flex items-center gap-4 py-3 border-b hover:bg-gray-50 px-2 rounded">
-                                    <label className="w-48 font-semibold">Machinery Type:</label>
+                                <div className="flex items-center gap-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 px-2 rounded">
+                                    <label className="w-48 font-semibold text-gray-700 dark:text-gray-300">Machinery Type:</label>
                                     <select className="form-select flex-1" value={formData.machinery_type_id} onChange={(e) => setFormData({ ...formData, machinery_type_id: e.target.value })}>
                                         <option value="">Select</option>
                                         {machineryTypes.filter((r: any) => r.status === 'active').map((r: any) => <option key={r.$id} value={r.$id}>{r.name}</option>)}
                                     </select>
                                 </div>
-                                <div className="flex items-center gap-4 py-3 border-b hover:bg-gray-50 px-2 rounded">
-                                    <label className="w-48 font-semibold">Product:</label>
+                                <div className="flex items-center gap-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 px-2 rounded">
+                                    <label className="w-48 font-semibold text-gray-700 dark:text-gray-300">Product:</label>
                                     <select className="form-select flex-1" value={formData.product_id} onChange={(e) => setFormData({ ...formData, product_id: e.target.value })}>
                                         <option value="">Select</option>
                                         {products.filter((r: any) => r.status === 'active').map((r: any) => <option key={r.$id} value={r.$id}>{r.name}</option>)}
                                     </select>
                                 </div>
-                                <div className="flex items-center gap-4 py-3 border-b hover:bg-gray-50 px-2 rounded">
-                                    <label className="w-48 font-semibold">Sub-Classification:</label>
+                                <div className="flex items-center gap-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 px-2 rounded">
+                                    <label className="w-48 font-semibold text-gray-700 dark:text-gray-300">Sub-Classification:</label>
                                     <select className="form-select flex-1" value={formData.subclass_id} onChange={(e) => setFormData({ ...formData, subclass_id: e.target.value })}>
                                         <option value="">Select</option>
                                         {subClassifications.filter((r: any) => r.status === 'active').map((r: any) => <option key={r.$id} value={r.$id}>{r.name}</option>)}
                                     </select>
                                 </div>
-                                <div className="flex items-center gap-4 py-3 border-b hover:bg-gray-50 px-2 rounded">
-                                    <label className="w-48 font-semibold">Sub-Kind:</label>
+                                <div className="flex items-center gap-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 px-2 rounded">
+                                    <label className="w-48 font-semibold text-gray-700 dark:text-gray-300">Sub-Kind:</label>
                                     <select className="form-select flex-1" value={formData.subkind_id} onChange={(e) => setFormData({ ...formData, subkind_id: e.target.value })}>
                                         <option value="">Select</option>
                                         {subKinds.filter((r: any) => r.status === 'active').map((r: any) => {
@@ -396,15 +447,15 @@ const PropertyNature = () => {
                                         })}
                                     </select>
                                 </div>
-                                <div className="flex items-center gap-4 py-3 hover:bg-gray-50 px-2 rounded">
-                                    <label className="w-48 font-semibold">Status:</label>
+                                <div className="flex items-center gap-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 px-2 rounded">
+                                    <label className="w-48 font-semibold text-gray-700 dark:text-gray-300">Status:</label>
                                     <select className="form-select flex-1" value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
                                         <option value="active">Active</option>
                                         <option value="inactive">Inactive</option>
                                     </select>
                                 </div>
                             </div>
-                            <div className="bg-gray-50 px-6 py-4 border-t flex justify-end gap-3">
+                            <div className="bg-gray-50 dark:bg-gray-900 px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
                                 <button type="button" className="btn btn-outline-danger" onClick={() => setShowModal(false)}>Cancel</button>
                                 <button type="submit" className="btn btn-primary" disabled={createMutation.isPending || updateMutation.isPending}>
                                     {(createMutation.isPending || updateMutation.isPending) ? 'Saving...' : (isEdit ? 'Update' : 'Create')}
