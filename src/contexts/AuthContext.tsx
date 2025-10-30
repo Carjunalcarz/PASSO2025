@@ -28,26 +28,41 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
     const [loading, setLoading] = useState(true);
+    const lastRefreshRef = React.useRef<number>(0);
 
     useEffect(() => {
         checkAuth();
+    }, []);
+
+    // Separate effect for JWT refresh to avoid recreating interval on user state change
+    useEffect(() => {
+        if (!user) return; // Only set up interval if user is logged in
+        
+        console.log('🔄 AuthContext: Setting up JWT auto-refresh interval');
         
         // Set up automatic JWT refresh every 10 minutes (before 15 min expiry)
         const refreshInterval = setInterval(async () => {
-            if (user) {
-                console.log('🔄 AuthContext: Auto-refreshing JWT...');
-                try {
-                    await authService.refreshJWT();
-                    console.log('✅ AuthContext: JWT auto-refresh successful');
-                } catch (error) {
-                    console.error('❌ AuthContext: JWT auto-refresh failed, logging out:', error);
-                    setUser(null);
-                    window.location.href = '/auth/boxed-signin';
+            console.log('🔄 AuthContext: Auto-refreshing JWT...');
+            try {
+                await authService.refreshJWT();
+                lastRefreshRef.current = Date.now();
+                console.log('✅ AuthContext: JWT auto-refresh successful');
+            } catch (error: any) {
+                // If rate limited, skip this refresh cycle
+                if (error?.message?.includes('Rate limit')) {
+                    console.warn('⚠️ AuthContext: Rate limited, will retry on next interval');
+                    return;
                 }
+                console.error('❌ AuthContext: JWT auto-refresh failed, logging out:', error);
+                setUser(null);
+                window.location.href = '/auth/boxed-signin';
             }
         }, 10 * 60 * 1000); // 10 minutes
 
-        return () => clearInterval(refreshInterval);
+        return () => {
+            console.log('🧹 AuthContext: Cleaning up JWT refresh interval');
+            clearInterval(refreshInterval);
+        };
     }, [user]);
 
     const checkAuth = async () => {
@@ -57,14 +72,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             
             // Check if JWT exists in localStorage
             const storedJWT = localStorage.getItem('appwrite_session');
-            if (storedJWT) {
-                console.log('🔑 AuthContext: Found stored JWT, attempting to refresh before check...');
+            const lastRefreshTime = lastRefreshRef.current;
+            const timeSinceLastRefresh = Date.now() - lastRefreshTime;
+            const MIN_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+            
+            if (storedJWT && timeSinceLastRefresh > MIN_REFRESH_INTERVAL) {
+                console.log('🔑 AuthContext: Found stored JWT, checking if refresh needed...');
                 try {
                     await authService.refreshJWT();
+                    lastRefreshRef.current = Date.now();
                     console.log('✅ AuthContext: JWT refreshed on page load');
-                } catch (refreshError) {
-                    console.warn('⚠️ AuthContext: JWT refresh failed on load, will try to get user anyway:', refreshError);
+                } catch (refreshError: any) {
+                    // If rate limited, just skip refresh and try to use existing token
+                    if (refreshError?.message?.includes('Rate limit')) {
+                        console.warn('⚠️ AuthContext: Rate limited, skipping refresh');
+                    } else {
+                        console.warn('⚠️ AuthContext: JWT refresh failed on load, will try to get user anyway:', refreshError);
+                    }
                 }
+            } else if (storedJWT) {
+                console.log(`⏭️ AuthContext: Skipping refresh, last refresh was ${Math.floor(timeSinceLastRefresh / 1000)}s ago`);
             }
             
             // Set timeout to prevent infinite loading

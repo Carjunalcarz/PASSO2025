@@ -88,13 +88,13 @@ const BuildingComponent = () => {
       titleClassName: '!text-center',
       render: (record: BuildingComponentData) => (
         <div className="flex items-center justify-center gap-2">
-          <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => handleView(record)}>
+          <button key={`view-${record.$id}`} type="button" className="btn btn-sm btn-outline-primary" onClick={() => handleView(record)}>
             <IconEye />
           </button>
-          <button type="button" className="btn btn-sm btn-outline-warning" onClick={() => handleEdit(record)}>
+          <button key={`edit-${record.$id}`} type="button" className="btn btn-sm btn-outline-warning" onClick={() => handleEdit(record)}>
             <IconEdit />
           </button>
-          <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(record.$id)}>
+          <button key={`delete-${record.$id}`} type="button" className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(record.$id)}>
             <IconTrash />
           </button>
         </div>
@@ -352,6 +352,7 @@ const BuildingComponent = () => {
           minHeight={200}
           paginationText={({ from, to, totalRecords }) => `Showing ${from} to ${to} of ${totalRecords} entries`}
           fetching={isLoading}
+          idAccessor="$id"
         />
       </div>
 
