@@ -31,19 +31,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     useEffect(() => {
         checkAuth();
-    }, []);
+        
+        // Set up automatic JWT refresh every 10 minutes (before 15 min expiry)
+        const refreshInterval = setInterval(async () => {
+            if (user) {
+                console.log('🔄 AuthContext: Auto-refreshing JWT...');
+                try {
+                    await authService.refreshJWT();
+                    console.log('✅ AuthContext: JWT auto-refresh successful');
+                } catch (error) {
+                    console.error('❌ AuthContext: JWT auto-refresh failed, logging out:', error);
+                    setUser(null);
+                    window.location.href = '/auth/boxed-signin';
+                }
+            }
+        }, 10 * 60 * 1000); // 10 minutes
+
+        return () => clearInterval(refreshInterval);
+    }, [user]);
 
     const checkAuth = async () => {
         try {
             setLoading(true);
             console.log('🚀 AuthContext: Starting authentication check...');
             
+            // Check if JWT exists in localStorage
+            const storedJWT = localStorage.getItem('appwrite_session');
+            if (storedJWT) {
+                console.log('🔑 AuthContext: Found stored JWT, attempting to refresh before check...');
+                try {
+                    await authService.refreshJWT();
+                    console.log('✅ AuthContext: JWT refreshed on page load');
+                } catch (refreshError) {
+                    console.warn('⚠️ AuthContext: JWT refresh failed on load, will try to get user anyway:', refreshError);
+                }
+            }
+            
             // Set timeout to prevent infinite loading
             const timeoutPromise = new Promise((_, reject) => 
                 setTimeout(() => {
-                    console.log('⏰ AuthContext: Auth check timeout after 3 seconds');
+                    console.log('⏰ AuthContext: Auth check timeout after 5 seconds');
                     reject(new Error('Auth timeout'));
-                }, 3000)
+                }, 5000)
             );
             
             console.log('🔍 AuthContext: Calling authService.getCurrentUser()...');
