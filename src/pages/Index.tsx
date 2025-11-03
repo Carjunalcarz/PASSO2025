@@ -4,7 +4,8 @@ import { setPageTitle } from '../store/themeConfigSlice';
 import TableauDashboard from './TableauDashboard';
 import FoodDeliveryForm from './test';
 import Finance from './Finance';
-
+import ComingSoonBoxed from './Pages/ComingSoonBoxed';
+import Maintenence from './Pages/Maintenence';
 const Index = () => {
     const dispatch = useDispatch();
     useEffect(() => {
@@ -20,7 +21,7 @@ const Index = () => {
                 width="100%"    // or a specific width like "1200px" or 1200
             /> */}
 
-            <Finance />
+            <Maintenence />
 
             {/* <FoodDeliveryForm /> */}
         </div>

@@ -63,13 +63,13 @@ const Sidebar = () => {
     const dispatch = useDispatch();
     const { t } = useTranslation();
     const { user, logout } = useAuth();
-    
+
     // Filter municipalities based on user's municipality
     const userMunicipality = (user?.prefs as any)?.municipality?.toLowerCase();
     const filteredMunicipalities = !userMunicipality || userMunicipality === 'province agusan del norte'
         ? MUNICIPALITIES // Show all if no municipality set (admin) or if province level
         : MUNICIPALITIES.filter(mun => mun.key.toLowerCase() === userMunicipality); // Show only user's municipality
-    
+
     const toggleMenu = (value: string) => {
         setCurrentMenu((oldValue) => {
             return oldValue === value ? '' : value;
@@ -122,151 +122,150 @@ const Sidebar = () => {
                     </div>
                     <div className="flex-1 min-h-0">
                         <PerfectScrollbar className="h-full">
-                        <ul className="relative font-semibold space-y-0.5 p-4 py-0">
-                            <li className="menu nav-item">
-                                <button type="button" className={`${currentMenu === 'dashboard' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('dashboard')}>
-                                    <div className="flex items-center">
-                                        <IconMenuDashboard
-                                            className="group-hover:!text-primary shrink-0" />
-                                        <span className="ltr:pl-3 rtl:pr-3 text-gray-900 dark:text-slate-400 dark:group-hover:text-slate-200">{t('dashboard')}</span>
-                                    </div>
+                            <ul className="relative font-semibold space-y-0.5 p-4 py-0">
+                                <li className="menu nav-item">
+                                    <button type="button" className={`${currentMenu === 'dashboard' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('dashboard')}>
+                                        <div className="flex items-center">
+                                            <IconMenuDashboard
+                                                className="group-hover:!text-primary shrink-0" />
+                                            <span className="ltr:pl-3 rtl:pr-3 text-gray-900 dark:text-slate-400 dark:group-hover:text-slate-200">{t('dashboard')}</span>
+                                        </div>
 
-                                    <div className={currentMenu !== 'dashboard' ? 'rtl:rotate-90 -rotate-90' : ''}>
-                                        <IconCaretDown />
-                                    </div>
-                                </button>
+                                        <div className={currentMenu !== 'dashboard' ? 'rtl:rotate-90 -rotate-90' : ''}>
+                                            <IconCaretDown />
+                                        </div>
+                                    </button>
 
-                                <AnimateHeight duration={300} height={currentMenu === 'dashboard' ? 'auto' : 0}>
-                                    <ul className="sub-menu text-slate-500">
-                                        <li>
-                                            <NavLink to="/adn-data">{t('Agusan del Norte')}</NavLink>
-                                        </li>
-                                        <li>
-                                            <NavLink to="/map">{t('MAP')}</NavLink>
-                                        </li>
-                                        <li>
-                                            <NavLink to="/unit_value">{t('Unit Value')}</NavLink>
-                                        </li>
-                                        {/* <li>
-                                            <NavLink to="/analytics">{t('analytics')}</NavLink>
-                                        </li>
+                                    <AnimateHeight duration={300} height={currentMenu === 'dashboard' ? 'auto' : 0}>
+                                        <ul className="sub-menu text-slate-500">
+                                            <li>
+                                                <NavLink to="/adn-data">{t('Agusan del Norte')}</NavLink>
+                                            </li>
+                                            <li>
+                                                <NavLink to="/map">{t('MAP')}</NavLink>
+                                            </li>
+                                            <li>
+                                                <NavLink to="/unit_value">{t('Unit Value')}</NavLink>
+                                            </li>
+                                            <li>
+                                                <NavLink to="/analytics">{t('analytics')}</NavLink>
+                                            </li>
 
-                                        <li>
-                                            <NavLink to="/crypto">{t('crypto')}</NavLink>
-                                        </li> */}
-                                    </ul>
-                                </AnimateHeight>
-                            </li>
+                                            <li>
+                                                <NavLink to="/crypto">{t('crypto')}</NavLink>
+                                            </li>
+                                        </ul>
+                                    </AnimateHeight>
+                                </li>
 
-                            <h2 className="py-3 px-7 flex items-center uppercase font-extrabold bg-slate-100/50 dark:bg-slate-800/30 -mx-4 mb-1">
-                                <IconMinus className="w-4 h-5 flex-none hidden" />
-                                <span>{t('apps')}</span>
-                            </h2>
+                                <h2 className="py-3 px-7 flex items-center uppercase font-extrabold bg-slate-100/50 dark:bg-slate-800/30 -mx-4 mb-1">
+                                    <IconMinus className="w-4 h-5 flex-none hidden" />
+                                    <span>{t('apps')}</span>
+                                </h2>
 
-                            <li className="menu nav-item">
-                                <button type="button" className={`${currentMenu === 'Municipality' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('Municipality')}>
-                                    <div className="flex items-center">
-                                        <IconMunicipality
-                                            className="group-hover:!text-primary shrink-0" />
-                                        <span className="ltr:pl-3 rtl:pr-3 text-gray-900 dark:text-slate-400 dark:group-hover:text-slate-200">{t('Municipality')}</span>
-                                    </div>
+                                <li className="menu nav-item">
+                                    <button type="button" className={`${currentMenu === 'Municipality' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('Municipality')}>
+                                        <div className="flex items-center">
+                                            <IconMunicipality
+                                                className="group-hover:!text-primary shrink-0" />
+                                            <span className="ltr:pl-3 rtl:pr-3 text-gray-900 dark:text-slate-400 dark:group-hover:text-slate-200">{t('Municipality')}</span>
+                                        </div>
 
-                                    <div className={currentMenu !== 'Tables' ? 'rtl:rotate-90 -rotate-90' : ''}>
-                                        <IconCaretDown />
-                                    </div>
-                                </button>
+                                        <div className={currentMenu !== 'Tables' ? 'rtl:rotate-90 -rotate-90' : ''}>
+                                            <IconCaretDown />
+                                        </div>
+                                    </button>
 
-                                <AnimateHeight duration={300} height={currentMenu === 'Municipality' ? 'auto' : 0}>
-                                    <div className="sub-menu text-slate-500 px-4 ml-4">
-                                        {filteredMunicipalities.map((municipality) => (
-                                            <div key={municipality.key} className="py-2">
-                                                <NavLink 
-                                                    to={municipality.path} 
+                                    <AnimateHeight duration={300} height={currentMenu === 'Municipality' ? 'auto' : 0}>
+                                        <div className="sub-menu text-slate-500 px-4 ml-4">
+                                            {filteredMunicipalities.map((municipality) => (
+                                                <div key={municipality.key} className="py-2">
+                                                    <NavLink
+                                                        to={municipality.path}
+                                                        className={({ isActive }) =>
+                                                            `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-primary font-bold' : ''
+                                                            }`
+                                                        }
+                                                    >
+                                                        <img src={municipality.logo} alt={`${municipality.name} Logo`} className="w-5 h-5" />
+                                                        {t(municipality.name)}
+                                                    </NavLink>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </AnimateHeight>
+                                </li>
+
+
+                                <li className="menu nav-item">
+                                    <button type="button" className={`${currentMenu === 'Assessment' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('Assessment')}>
+                                        <div className="flex items-center">
+                                            <IconAssessment
+                                                className="group-hover:!text-primary shrink-0" />
+                                            <span className="ltr:pl-3 rtl:pr-3 text-gray-900 dark:text-slate-400 dark:group-hover:text-slate-200">{t('Assessment')}</span>
+                                        </div>
+
+                                        <div className={currentMenu !== 'Tables' ? 'rtl:rotate-90 -rotate-90' : ''}>
+                                            <IconCaretDown />
+                                        </div>
+                                    </button>
+
+                                    <AnimateHeight duration={300} height={currentMenu === 'Assessment' ? 'auto' : 0}>
+                                        <div className="sub-menu text-slate-500 px-4 ml-4">
+                                            <div className="py-2 -mx-4">
+                                                <NavLink
+                                                    to="/assessment/add_assessment"
                                                     className={({ isActive }) =>
-                                                        `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${
-                                                            isActive ? 'bg-slate-100 dark:bg-slate-800 text-primary font-bold' : ''
+                                                        `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-primary font-bold' : ''
                                                         }`
                                                     }
                                                 >
-                                                    <img src={municipality.logo} alt={`${municipality.name} Logo`} className="w-5 h-5" />
-                                                    {t(municipality.name)}
+                                                    <IconPlus className="w-5 h-5" />
+                                                    {t('Add Assessment')}
                                                 </NavLink>
                                             </div>
-                                        ))}
-                                    </div>
-                                </AnimateHeight>
-                            </li>
-
-
-                            <li className="menu nav-item">
-                                <button type="button" className={`${currentMenu === 'Assessment' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('Assessment')}>
-                                    <div className="flex items-center">
-                                        <IconAssessment
-                                            className="group-hover:!text-primary shrink-0" />
-                                        <span className="ltr:pl-3 rtl:pr-3 text-gray-900 dark:text-slate-400 dark:group-hover:text-slate-200">{t('Assessment')}</span>
-                                    </div>
-
-                                    <div className={currentMenu !== 'Tables' ? 'rtl:rotate-90 -rotate-90' : ''}>
-                                        <IconCaretDown />
-                                    </div>
-                                </button>
-
-                                <AnimateHeight duration={300} height={currentMenu === 'Assessment' ? 'auto' : 0}>
-                                    <div className="sub-menu text-slate-500 px-4 ml-4">
-                                        <div className="py-2 -mx-4">
-                                            <NavLink
-                                                to="/assessment/add_assessment"
-                                                className={({ isActive }) =>
+                                        </div>
+                                    </AnimateHeight>
+                                    <AnimateHeight duration={300} height={currentMenu === 'Assessment' ? 'auto' : 0}>
+                                        <div className="sub-menu text-slate-500 px-4 ml-4">
+                                            <div className="py-2 -mx-4">
+                                                <NavLink to="/assessment/building_assessment" className={({ isActive }) =>
                                                     `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-primary font-bold' : ''
                                                     }`
-                                                }
-                                            >
-                                                <IconPlus className="w-5 h-5" />
-                                                {t('Add Assessment')}
-                                            </NavLink>
+                                                }>
+                                                    <IconBuilding className="w-5 h-5" />
+                                                    {t('Building Assessment')}
+                                                </NavLink>
+                                            </div>
                                         </div>
-                                    </div>
-                                </AnimateHeight>
-                                <AnimateHeight duration={300} height={currentMenu === 'Assessment' ? 'auto' : 0}>
-                                    <div className="sub-menu text-slate-500 px-4 ml-4">
-                                        <div className="py-2 -mx-4">
-                                            <NavLink to="/assessment/building_assessment" className={({ isActive }) =>
-                                                `nav-link group w-full flex items-center gap-2 px-2 py-2 rounded-md ${isActive ? 'bg-slate-100 dark:bg-slate-800 text-primary font-bold' : ''
-                                                }`
-                                            }>
-                                                <IconBuilding className="w-5 h-5" />
-                                                {t('Building Assessment')}
-                                            </NavLink>
+                                    </AnimateHeight>
+                                </li>
+                                <li className="menu nav-item">
+                                    <button type="button" className={`${currentMenu === 'setup' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('setup')}>
+                                        <div className="flex items-center">
+                                            <IconSettings
+                                                className="group-hover:!text-primary shrink-0" />
+                                            <span className="ltr:pl-3 rtl:pr-3 text-gray-900 dark:text-slate-400 dark:group-hover:text-slate-200">{t('Setup')}</span>
                                         </div>
-                                    </div>
-                                </AnimateHeight>
-                            </li>
-                            <li className="menu nav-item">
-                                <button type="button" className={`${currentMenu === 'setup' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('setup')}>
-                                    <div className="flex items-center">
-                                        <IconSettings
-                                            className="group-hover:!text-primary shrink-0" />
-                                        <span className="ltr:pl-3 rtl:pr-3 text-gray-900 dark:text-slate-400 dark:group-hover:text-slate-200">{t('Setup')}</span>
-                                    </div>
 
-                                    <div className={currentMenu !== 'setup' ? 'rtl:rotate-90 -rotate-90' : ''}>
-                                        <IconCaretDown />
-                                    </div>
-                                </button>
+                                        <div className={currentMenu !== 'setup' ? 'rtl:rotate-90 -rotate-90' : ''}>
+                                            <IconCaretDown />
+                                        </div>
+                                    </button>
 
-                                <AnimateHeight duration={300} height={currentMenu === 'setup' ? 'auto' : 0}>
-                                    <ul className="sub-menu text-gray-500">
-                                        <li>
-                                            <NavLink to="/dashboard-settings">{t('Dashboard Settings')}</NavLink>
-                                        </li>
-                                    </ul>
-                                </AnimateHeight>
-                            </li>
-                            
+                                    <AnimateHeight duration={300} height={currentMenu === 'setup' ? 'auto' : 0}>
+                                        <ul className="sub-menu text-gray-500">
+                                            <li>
+                                                <NavLink to="/dashboard-settings">{t('Dashboard Settings')}</NavLink>
+                                            </li>
+                                        </ul>
+                                    </AnimateHeight>
+                                </li>
+
 
                             </ul>
                         </PerfectScrollbar>
-                        
+
                     </div>
 
                     {/* Sidebar Footer with User Info and Logout */}
@@ -274,7 +273,7 @@ const Sidebar = () => {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3 min-w-0 flex-1">
                                 <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
-                                    {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                                    {user?.email.charAt(0)?.toUpperCase() || 'U'}
                                 </div>
                                 <div className="min-w-0 flex-1">
                                     <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">

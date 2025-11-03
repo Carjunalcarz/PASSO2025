@@ -37,9 +37,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Separate effect for JWT refresh to avoid recreating interval on user state change
     useEffect(() => {
         if (!user) return; // Only set up interval if user is logged in
-        
+
         console.log('🔄 AuthContext: Setting up JWT auto-refresh interval');
-        
+
         // Set up automatic JWT refresh every 10 minutes (before 15 min expiry)
         const refreshInterval = setInterval(async () => {
             console.log('🔄 AuthContext: Auto-refreshing JWT...');
@@ -69,13 +69,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             setLoading(true);
             console.log('🚀 AuthContext: Starting authentication check...');
-            
+
             // Check if JWT exists in localStorage
             const storedJWT = localStorage.getItem('appwrite_session');
             const lastRefreshTime = lastRefreshRef.current;
             const timeSinceLastRefresh = Date.now() - lastRefreshTime;
             const MIN_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
-            
+
             if (storedJWT && timeSinceLastRefresh > MIN_REFRESH_INTERVAL) {
                 console.log('🔑 AuthContext: Found stored JWT, checking if refresh needed...');
                 try {
@@ -93,39 +93,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             } else if (storedJWT) {
                 console.log(`⏭️ AuthContext: Skipping refresh, last refresh was ${Math.floor(timeSinceLastRefresh / 1000)}s ago`);
             }
-            
+
             // Set timeout to prevent infinite loading
-            const timeoutPromise = new Promise((_, reject) => 
+            const timeoutPromise = new Promise((_, reject) =>
                 setTimeout(() => {
                     console.log('⏰ AuthContext: Auth check timeout after 5 seconds');
                     reject(new Error('Auth timeout'));
                 }, 5000)
             );
-            
+
             console.log('🔍 AuthContext: Calling authService.getCurrentUser()...');
             const authPromise = authService.getCurrentUser();
             const currentUser = await Promise.race([authPromise, timeoutPromise]) as Models.User<Models.Preferences> | null;
-            
+
             if (currentUser) {
                 console.log('✅ AuthContext: User is authenticated:', {
                     id: currentUser.$id,
                     email: currentUser.email,
-                    name: currentUser.name
+                    name: currentUser.name,
+                    status: currentUser.status,
                 });
             } else {
                 console.log('🟡 AuthContext: No authenticated user found');
             }
-            
+
             setUser(currentUser);
         } catch (error: any) {
             console.error('❌ AuthContext: Auth check failed:', error);
-            
+
             if (error.message === 'Auth timeout') {
                 console.error('⏰ AuthContext: Authentication check timed out');
             } else {
                 console.error('❌ AuthContext: Error details:', error);
             }
-            
+
             setUser(null);
         } finally {
             setLoading(false);
