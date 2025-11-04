@@ -37,7 +37,7 @@ const LoginBoxed = () => {
 
     useEffect(() => {
         dispatch(setPageTitle('Login Boxed'));
-        
+
         // Clear any expired JWT when login page loads
         // This ensures a clean state for new login attempts
         const storedSession = localStorage.getItem('appwrite_session');
@@ -190,17 +190,6 @@ const LoginBoxed = () => {
                                     )}
                                 </button>
                             </form>
-
-                            <div className="relative my-7 text-center md:mb-9">
-                                <span className="absolute inset-x-0 top-1/2 h-px w-full -translate-y-1/2 bg-white-light dark:bg-white-dark"></span>
-                            </div>
-
-                            <div className="text-center dark:text-white">
-                                Don't have an account ?&nbsp;
-                                <Link to="/auth/boxed-signup" className="uppercase text-primary underline transition hover:text-black dark:hover:text-white">
-                                    SIGN UP
-                                </Link>
-                            </div>
                         </div>
                     </div>
                 </div>
