@@ -9,15 +9,34 @@ const COLLECTION_ID = import.meta.env.VITE_APPWRITE_PERSONS_COLLECTION_ID || 'pe
  * Handles all CRUD operations for persons
  */
 
+// Mapper functions to convert between database (snake_case) and frontend (camelCase)
+const mapDbToFrontend = (dbData: any): PersonResponse => {
+    return {
+        $id: dbData.$id,
+        firstName: dbData.first_name || dbData.firstName || '',
+        lastName: dbData.last_name || dbData.lastName || '',
+        middleName: dbData.middle_name || dbData.middleName || '',
+        status: dbData.status || 'active',
+        ownerTypeId: dbData.owner_type_id || dbData.ownerTypeId || '',
+        barangayId: dbData.barangay_id || dbData.barangayId || '',
+        street: dbData.street || '',
+        tin: dbData.tin || '',
+        contactNo: dbData.contact_no || dbData.contactNo || '',
+        uid: dbData.uid || '',
+        teamIds: Array.isArray(dbData.team_ids) ? dbData.team_ids : (Array.isArray(dbData.teamIds) ? dbData.teamIds : (dbData.team_id || dbData.teamId ? [dbData.team_id || dbData.teamId] : [])),
+        userAccountId: dbData.user_account_id || dbData.userAccountId || '',
+        accountVerified: dbData.account_verified || dbData.accountVerified || false,
+        email: dbData.email || '',
+        $createdAt: dbData.$createdAt,
+        $updatedAt: dbData.$updatedAt,
+    };
+};
+
 // Types
 export interface PersonData {
     firstName: string;
     lastName: string;
     middleName?: string;
-    email?: string;
-    phone?: string;
-    address?: string;
-    dateOfBirth?: string;
     status: string;
     ownerTypeId?: string;
     barangayId?: string;
@@ -25,6 +44,9 @@ export interface PersonData {
     tin?: string;
     contactNo?: string;
     uid?: string;
+    teamIds?: string[];
+    userAccountId?: string;
+    accountVerified?: boolean;
 }
 
 export interface PersonResponse {
@@ -32,10 +54,6 @@ export interface PersonResponse {
     firstName: string;
     lastName: string;
     middleName?: string;
-    email?: string;
-    phone?: string;
-    address?: string;
-    dateOfBirth?: string;
     status: string;
     ownerTypeId?: string;
     barangayId?: string;
@@ -43,6 +61,10 @@ export interface PersonResponse {
     tin?: string;
     contactNo?: string;
     uid?: string;
+    teamIds?: string[];
+    userAccountId?: string;
+    accountVerified?: boolean;
+    email?: string;
     $createdAt: string;
     $updatedAt: string;
 }
@@ -61,23 +83,21 @@ export const createPerson = async (data: PersonData): Promise<ServiceResponse<Pe
             COLLECTION_ID,
             ID.unique(),
             {
-                firstName: data.firstName,
-                lastName: data.lastName,
-                middleName: data.middleName || '',
-                email: data.email || '',
-                phone: data.phone || '',
-                address: data.address || '',
-                dateOfBirth: data.dateOfBirth || '',
+                first_name: data.firstName,
+                last_name: data.lastName,
+                middle_name: data.middleName || '',
                 status: data.status || 'active',
-                ownerTypeId: data.ownerTypeId || '',
-                barangayId: data.barangayId || '',
+                owner_type_id: data.ownerTypeId || '',
+                barangay_id: data.barangayId || '',
                 street: data.street || '',
                 tin: data.tin || '',
-                contactNo: data.contactNo || '',
+                contact_no: data.contactNo || '',
                 uid: data.uid || '',
+                team_ids: data.teamIds || [],
+                user_account_id: data.userAccountId || '',
             }
         );
-        return { success: true, data: response as unknown as PersonResponse };
+        return { success: true, data: mapDbToFrontend(response) };
     } catch (error: any) {
         console.error('Error creating person:', error);
         return { success: false, error: error.message };
@@ -95,7 +115,42 @@ export const getAllPersons = async (): Promise<ServiceResponse<PersonResponse[]>
                 Query.limit(100) // Adjust limit as needed
             ]
         );
-        return { success: true, data: response.documents as unknown as PersonResponse[] };
+        
+        // Fetch emails and verification status from user accounts for persons with userAccountId
+        const USER_ACCOUNTS_COLLECTION_ID = import.meta.env.VITE_APPWRITE_USER_ACCOUNTS_COLLECTION_ID || 'user_accounts';
+        
+        const personsWithEmails = await Promise.all(
+            response.documents.map(async (doc) => {
+                const person = mapDbToFrontend(doc);
+                
+                if (person.userAccountId) {
+                    try {
+                        // Query user account by appwrite_user_id
+                        const userAccountResponse = await databases.listDocuments(
+                            appwriteConfig.databaseId,
+                            USER_ACCOUNTS_COLLECTION_ID,
+                            [
+                                Query.equal('appwrite_user_id', person.userAccountId),
+                                Query.limit(1)
+                            ]
+                        );
+                        
+                        if (userAccountResponse.documents.length > 0) {
+                            const userAccount = userAccountResponse.documents[0];
+                            person.email = userAccount.email;
+                            // Check if status is 'verified' in user account
+                            person.accountVerified = userAccount.status === 'verified';
+                        }
+                    } catch (error) {
+                        console.warn(`Failed to fetch email for person ${person.$id}:`, error);
+                    }
+                }
+                
+                return person;
+            })
+        );
+        
+        return { success: true, data: personsWithEmails };
     } catch (error: any) {
         console.error('Error fetching persons:', error);
         return { success: false, error: error.message };
@@ -110,7 +165,7 @@ export const getPersonById = async (id: string): Promise<ServiceResponse<PersonR
             COLLECTION_ID,
             id
         );
-        return { success: true, data: response as unknown as PersonResponse };
+        return { success: true, data: mapDbToFrontend(response) };
     } catch (error: any) {
         console.error('Error fetching person:', error);
         return { success: false, error: error.message };
@@ -121,20 +176,19 @@ export const getPersonById = async (id: string): Promise<ServiceResponse<PersonR
 export const updatePerson = async (id: string, data: Partial<PersonData>): Promise<ServiceResponse<PersonResponse>> => {
     try {
         const updateData: any = {};
-        if (data.firstName !== undefined) updateData.firstName = data.firstName;
-        if (data.lastName !== undefined) updateData.lastName = data.lastName;
-        if (data.middleName !== undefined) updateData.middleName = data.middleName;
-        if (data.email !== undefined) updateData.email = data.email;
-        if (data.phone !== undefined) updateData.phone = data.phone;
-        if (data.address !== undefined) updateData.address = data.address;
-        if (data.dateOfBirth !== undefined) updateData.dateOfBirth = data.dateOfBirth;
+        if (data.firstName !== undefined) updateData.first_name = data.firstName;
+        if (data.lastName !== undefined) updateData.last_name = data.lastName;
+        if (data.middleName !== undefined) updateData.middle_name = data.middleName;
         if (data.status !== undefined) updateData.status = data.status;
-        if (data.ownerTypeId !== undefined) updateData.ownerTypeId = data.ownerTypeId;
-        if (data.barangayId !== undefined) updateData.barangayId = data.barangayId;
+        if (data.ownerTypeId !== undefined) updateData.owner_type_id = data.ownerTypeId;
+        if (data.barangayId !== undefined) updateData.barangay_id = data.barangayId;
         if (data.street !== undefined) updateData.street = data.street;
         if (data.tin !== undefined) updateData.tin = data.tin;
-        if (data.contactNo !== undefined) updateData.contactNo = data.contactNo;
+        if (data.contactNo !== undefined) updateData.contact_no = data.contactNo;
         if (data.uid !== undefined) updateData.uid = data.uid;
+        if (data.teamIds !== undefined) updateData.team_ids = data.teamIds;
+        if (data.userAccountId !== undefined) updateData.user_account_id = data.userAccountId;
+        if (data.accountVerified !== undefined) updateData.account_verified = data.accountVerified;
 
         const response = await databases.updateDocument(
             appwriteConfig.databaseId,
@@ -142,7 +196,7 @@ export const updatePerson = async (id: string, data: Partial<PersonData>): Promi
             id,
             updateData
         );
-        return { success: true, data: response as unknown as PersonResponse };
+        return { success: true, data: mapDbToFrontend(response) };
     } catch (error: any) {
         console.error('Error updating person:', error);
         return { success: false, error: error.message };
@@ -175,7 +229,7 @@ export const getPersonsByStatus = async (status: string): Promise<ServiceRespons
                 Query.orderDesc('$createdAt')
             ]
         );
-        return { success: true, data: response.documents as unknown as PersonResponse[] };
+        return { success: true, data: response.documents.map(mapDbToFrontend) };
     } catch (error: any) {
         console.error('Error fetching persons by status:', error);
         return { success: false, error: error.message };
@@ -189,11 +243,11 @@ export const searchPersons = async (searchTerm: string): Promise<ServiceResponse
             appwriteConfig.databaseId,
             COLLECTION_ID,
             [
-                Query.search('firstName', searchTerm),
+                Query.search('first_name', searchTerm),
                 Query.orderDesc('$createdAt')
             ]
         );
-        return { success: true, data: response.documents as unknown as PersonResponse[] };
+        return { success: true, data: response.documents.map(mapDbToFrontend) };
     } catch (error: any) {
         console.error('Error searching persons:', error);
         return { success: false, error: error.message };

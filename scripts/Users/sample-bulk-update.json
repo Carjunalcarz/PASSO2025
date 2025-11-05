@@ -1,0 +1,17 @@
+[
+  {
+    "personId": "person_id_1",
+    "teamId": "team_id_1",
+    "userAccountId": "account_id_1"
+  },
+  {
+    "personId": "person_id_2",
+    "teamId": "team_id_2",
+    "userAccountId": "account_id_2"
+  },
+  {
+    "personId": "person_id_3",
+    "teamId": "team_id_1",
+    "userAccountId": "account_id_3"
+  }
+]

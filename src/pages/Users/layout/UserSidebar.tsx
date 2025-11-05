@@ -1,5 +1,7 @@
 import PerfectScrollbar from 'react-perfect-scrollbar';
+import { useNavigate, useLocation } from 'react-router-dom';
 import IconUsers from '../../../components/Icon/IconUsers';
+import IconUserPlus from '../../../components/Icon/IconUserPlus';
 import IconLayoutGrid from '../../../components/Icon/IconLayoutGrid';
 import IconChartSquare from '../../../components/Icon/IconChartSquare';
 import IconSearch from '../../../components/Icon/IconSearch';
@@ -11,12 +13,21 @@ import IconDollarSign from '../../../components/Icon/IconDollarSign';
 import IconCalendar from '../../../components/Icon/IconCalendar';
 import IconCpuBolt from '../../../components/Icon/IconCpuBolt';
 import IconTag from '../../../components/Icon/IconTag';
-import { Dispatch, SetStateAction, useState } from 'react';
+import IconUsersGroup from '../../../components/Icon/IconUsersGroup';
+import { useState, useEffect } from 'react';
+
+interface UserSidebarProps {
+    isShowMenu: boolean;
+    setIsShowMenu: (v: boolean) => void;
+    selectedTab: string;
+    setSelectedTab: (v: string) => void;
+}
 
 interface SubMenuItem {
     id: string;
     label: string;
     icon: React.ComponentType<{ className?: string }>;
+    route?: string;
 }
 
 interface MenuItem {
@@ -26,79 +37,66 @@ interface MenuItem {
     subItems?: SubMenuItem[];
 }
 
-interface MainTableSidebarProps {
-    isShowMenu: boolean;
-    setIsShowMenu: Dispatch<SetStateAction<boolean>>;
-    selectedTab: string;
-    setSelectedTab: Dispatch<SetStateAction<string>>;
-}
-
-const MainTableSidebar = ({
-    isShowMenu,
-    setIsShowMenu,
-    selectedTab,
-    setSelectedTab,
-}: MainTableSidebarProps) => {
+const UserSidebar = ({ isShowMenu, setIsShowMenu, selectedTab, setSelectedTab }: UserSidebarProps) => {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [searchMenu, setSearchMenu] = useState('');
-    const [expandedMenus, setExpandedMenus] = useState<string[]>(['building-parts-rate']);
+    const [expandedMenus, setExpandedMenus] = useState<string[]>(['person', 'team']);
+
+    // Update selectedTab based on current route
+    useEffect(() => {
+        const path = location.pathname;
+        
+        const routeConfig: Record<string, { tab: string; menus: string[]; matcher?: (path: string) => boolean }> = {
+            '/users/person': { tab: 'person', menus: ['person'] },
+            '/users/persons': { tab: 'person', menus: ['person'] },
+            '/users/person/add': { tab: 'add-person', menus: ['person'] },
+            '/users/person/edit': { 
+                tab: 'person', 
+                menus: ['person'],
+                matcher: (p) => p.startsWith('/users/person/edit/')
+            },
+            '/users/team': { tab: 'team', menus: ['team'] },
+            '/users/team/add': { tab: 'add-team', menus: ['team'] },
+            '/users/team/edit': { 
+                tab: 'team', 
+                menus: ['team'],
+                matcher: (p) => p.startsWith('/users/team/edit/')
+            },
+        };
+
+        const matchedRoute = Object.entries(routeConfig).find(([route, config]) => {
+            if (config.matcher) {
+                return config.matcher(path);
+            }
+            return path === route;
+        });
+
+        if (matchedRoute) {
+            const [, config] = matchedRoute;
+            setSelectedTab(config.tab);
+            setExpandedMenus(config.menus);
+        }
+    }, [location.pathname, setSelectedTab]);
 
     const menuItems = [
         {
-            id: 'building-parts-rate',
-            label: 'Building Parts Rate',
-            icon: IconDollarSign,
+            id: 'person',
+            label: 'Persons',
+            icon: IconUsers,
             subItems: [
-                { id: 'building-parts-rate', label: 'Building Parts Rate', icon: IconDollarSign },
-                { id: 'building-component', label: 'Building Component', icon: IconLayoutGrid },
-                { id: 'building-parts', label: 'Building Parts', icon: IconBox },
-            ]
+                { id: 'person', label: 'Manage Persons', icon: IconUsers, route: '/users/person' },
+                { id: 'add-person', label: 'Add Person', icon: IconUserPlus, route: '/users/person/add' },
+            ],
         },
         {
-            id: 'building-structural-types',
-            label: 'Structural Types',
-            icon: IconBuilding,
+            id: 'team',
+            label: 'Teams',
+            icon: IconUsersGroup,
             subItems: [
-                { id: 'building-structural-types', label: 'Structural Types', icon: IconBuilding },
-                { id: 'building-code', label: 'Building Code', icon: IconCode },
-                { id: 'building-depreciation', label: 'Building Depreciation', icon: IconCalendar },
-            ]
-        },
-        {
-            id: 'machinery',
-            label: 'Machinery',
-            icon: IconCpuBolt,
-            subItems: [
-                { id: 'machinery-types', label: 'Machinery Types', icon: IconCpuBolt },
-                { id: 'machinery-rates', label: 'Machinery Rates', icon: IconDollarSign },
-            ]
-        },
-        {
-            id: 'classifications',
-            label: 'Classifications',
-            icon: IconTag,
-            subItems: [
-                { id: 'classifications', label: 'Classifications', icon: IconTag },
-                { id: 'sub-classifications', label: 'Sub-Classifications', icon: IconTag },
-            ]
-        },
-        {
-            id: 'kinds',
-            label: 'Kinds',
-            icon: IconTag,
-            subItems: [
-                { id: 'kinds', label: 'Kinds', icon: IconTag },
-                { id: 'sub-kinds', label: 'Sub-Kinds', icon: IconTag },
-            ]
-        },
-        {
-            id: 'products',
-            label: 'Products',
-            icon: IconBox,
-        },
-        {
-            id: 'property-nature',
-            label: 'Property Nature',
-            icon: IconLayoutGrid,
+                { id: 'team', label: 'Manage Teams', icon: IconUsersGroup, route: '/users/team' },
+                { id: 'add-team', label: 'Add Team', icon: IconUserPlus, route: '/users/team/add' },
+            ],
         },
     ];
 
@@ -177,7 +175,12 @@ const MainTableSidebar = ({
                                                             type="button"
                                                             className={`w-full flex items-center p-2 hover:bg-white-dark/10 rounded-md dark:hover:text-primary hover:text-primary dark:hover:bg-[#181F32] font-medium h-10 ${selectedTab === subItem.id ? 'bg-gray-100 dark:text-primary text-primary dark:bg-[#181F32]' : ''
                                                                 }`}
-                                                            onClick={() => setSelectedTab(subItem.id)}
+                                                            onClick={() => {
+                                                                setSelectedTab(subItem.id);
+                                                                if (subItem.route) {
+                                                                    navigate(subItem.route);
+                                                                }
+                                                            }}
                                                         >
                                                             <SubIconComponent className="w-4 h-4 shrink-0" />
                                                             <div className="ltr:ml-3 rtl:mr-3 text-sm">{subItem.label}</div>
@@ -203,4 +206,4 @@ const MainTableSidebar = ({
     );
 };
 
-export default MainTableSidebar;
+export default UserSidebar;

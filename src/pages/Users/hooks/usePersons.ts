@@ -9,7 +9,7 @@ import {
   searchPersons,
   type PersonResponse,
   type PersonData,
-} from '../../setup/services/person';
+} from '../services/person';
 
 // Query keys
 export const personKeys = {

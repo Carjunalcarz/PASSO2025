@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGetAllPersons } from '../pages/Users/hooks/usePersons';
-import { type PersonResponse } from '../pages/setup/services/person';
+import { type PersonResponse } from '../pages/Users/services/person';
 
 interface PersonSelectorProps {
     value?: string; // Selected person ID

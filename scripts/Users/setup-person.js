@@ -1,12 +1,22 @@
 #!/usr/bin/env node
 
 /**
- * Persons Table Appwrite Setup Script
- * Creates the persons collection with all required fields
+ * Persons and User Accounts Table Appwrite Setup Script
+ * Creates the persons and user_accounts collections with all required fields
+ * 
+ * Note: This script uses Appwrite's built-in Teams feature instead of a custom teams table.
+ * Teams are managed through Appwrite's Teams API.
+ * 
+ * Usage:
+ * - Setup all collections: node scripts/Users/setup-person.js
+ * - Update single person: node scripts/Users/setup-person.js --update-person <id> --team-ids <team1,team2> --account-id <account>
+ * - Bulk update: node scripts/Users/setup-person.js --bulk-update <json-file>
+ * - List missing IDs: node scripts/Users/setup-person.js --list-missing
  * 
  * Schema:
+ * 
+ * PERSONS:
  * - person_id (PK - auto generated as $id)
- * - account_id (FK)
  * - first_name
  * - middle_name
  * - last_name
@@ -17,6 +27,22 @@
  * - contact_no
  * - status
  * - uid
+ * - team_ids (FK → Appwrite Teams) [array - supports multiple teams]
+ * - user_account_id (FK → user_accounts)
+ * 
+ * TEAMS:
+ * - Managed by Appwrite Teams API (not a custom table)
+ * - Use Appwrite SDK: teams.create(), teams.list(), teams.createMembership(), etc.
+ * 
+ * USER_ACCOUNTS:
+ * - account_id (PK - auto generated as $id)
+ * - person_id (FK → persons)
+ * - team_id (FK → teams)
+ * - appwrite_user_id (Appwrite Auth User ID)
+ * - email
+ * - role
+ * - status
+ * - last_login
  * 
  * Requires an API key with admin permissions
  */
@@ -165,15 +191,15 @@ class PersonsTableSetup {
         return collection;
     }
 
-    async createStringAttribute(collectionId, key, size, required = false) {
+    async createStringAttribute(collectionId, key, size, required = false, isArray = false) {
         const url = `${this.endpoint}/databases/${this.databaseId}/collections/${collectionId}/attributes/string`;
         
-        console.log(`  📝 Creating string attribute: ${key} (${size})`);
+        console.log(`  📝 Creating string attribute: ${key} (${size})${isArray ? ' [array]' : ''}`);
         await this.makeRequest(url, 'POST', {
             key,
             size,
             required,
-            array: false
+            array: isArray
         });
         
         console.log(`  ✅ Created: ${key}`);
@@ -190,6 +216,81 @@ class PersonsTableSetup {
         });
         
         console.log(`  ✅ Created index: ${key}`);
+    }
+
+    async setupTeams() {
+        console.log('\n👥 === TEAMS ===');
+        console.log('ℹ️  Using Appwrite\'s built-in Teams feature');
+        console.log('ℹ️  No custom teams table needed');
+        console.log('ℹ️  Manage teams via Appwrite Console or Teams API');
+        console.log('✅ Teams configuration complete!');
+    }
+
+    async setupUserAccounts() {
+        const collectionId = 'user_accounts';
+        
+        console.log('\n👤 === SETTING UP USER ACCOUNTS ===');
+        
+        // Delete existing collection
+        await this.deleteCollection(collectionId);
+        await this.delay(2000);
+
+        // Create collection
+        await this.createCollection(collectionId, 'User Accounts');
+        await this.delay(1000);
+
+        // Create attributes
+        console.log('\n📝 Creating attributes...');
+        
+        // Foreign keys
+        await this.createStringAttribute(collectionId, 'person_id', 100, true);
+        await this.delay(300);
+        
+        await this.createStringAttribute(collectionId, 'team_id', 100, false);
+        await this.delay(300);
+        
+        // Appwrite user reference
+        await this.createStringAttribute(collectionId, 'appwrite_user_id', 100, true);
+        await this.delay(300);
+        
+        // User details
+        await this.createStringAttribute(collectionId, 'email', 255, true);
+        await this.delay(300);
+        
+        await this.createStringAttribute(collectionId, 'role', 100, true);
+        await this.delay(300);
+        
+        await this.createStringAttribute(collectionId, 'status', 50, false);
+        await this.delay(300);
+        
+        await this.createStringAttribute(collectionId, 'last_login', 100, false);
+        await this.delay(300);
+
+        // Create indexes
+        console.log('\n📇 Creating indexes...');
+        
+        // Foreign key indexes
+        await this.createIndex(collectionId, 'person_id_fk_index', 'key', ['person_id']);
+        await this.delay(500);
+        
+        await this.createIndex(collectionId, 'team_id_fk_index', 'key', ['team_id']);
+        await this.delay(500);
+        
+        // Unique indexes
+        await this.createIndex(collectionId, 'appwrite_user_id_unique', 'unique', ['appwrite_user_id']);
+        await this.delay(500);
+        
+        await this.createIndex(collectionId, 'email_unique', 'unique', ['email']);
+        await this.delay(500);
+        
+        // Search indexes
+        await this.createIndex(collectionId, 'role_index', 'key', ['role']);
+        await this.delay(500);
+        
+        await this.createIndex(collectionId, 'status_index', 'key', ['status']);
+        await this.delay(500);
+
+        console.log('✅ User Accounts setup complete!');
     }
 
     async setupPersons() {
@@ -241,6 +342,13 @@ class PersonsTableSetup {
         
         await this.createStringAttribute(collectionId, 'uid', 100, false);
         await this.delay(300);
+        
+        // Team and User Account references (team_ids is an array for multiple teams)
+        await this.createStringAttribute(collectionId, 'team_ids', 100, false, true);
+        await this.delay(300);
+        
+        await this.createStringAttribute(collectionId, 'user_account_id', 100, false);
+        await this.delay(300);
 
         // Create indexes
         console.log('\n📇 Creating indexes...');
@@ -264,6 +372,12 @@ class PersonsTableSetup {
         
         await this.createIndex(collectionId, 'uid_index', 'key', ['uid']);
         await this.delay(500);
+        
+        await this.createIndex(collectionId, 'team_ids_fk_index', 'key', ['team_ids']);
+        await this.delay(500);
+        
+        await this.createIndex(collectionId, 'user_account_id_fk_index', 'key', ['user_account_id']);
+        await this.delay(500);
 
         console.log('✅ Persons setup complete!');
     }
@@ -277,13 +391,23 @@ class PersonsTableSetup {
                 process.exit(1);
             }
 
-            console.log('\n🎯 Starting setup of persons table...\n');
+            console.log('\n🎯 Starting setup of all user-related tables...\n');
 
+            // Setup tables in order (dependencies first)
+            await this.setupTeams();
             await this.setupPersons();
+            await this.setupUserAccounts();
 
-            console.log('\n🎉 PERSONS TABLE SETUP COMPLETED SUCCESSFULLY!');
+            console.log('\n🎉 ALL USER TABLES SETUP COMPLETED SUCCESSFULLY!');
             console.log('\n📋 Summary:');
-            console.log('✅ persons:');
+            
+            console.log('\n✅ teams:');
+            console.log('   - Using Appwrite\'s built-in Teams API');
+            console.log('   - No custom table created');
+            console.log('   - Manage via: Appwrite Console → Teams');
+            console.log('   - API: teams.create(), teams.list(), teams.createMembership()');
+            
+            console.log('\n✅ persons:');
             console.log('   - Attributes:');
             console.log('     • $id (PK - auto generated)');
             console.log('     • first_name (required)');
@@ -296,6 +420,8 @@ class PersonsTableSetup {
             console.log('     • contact_no');
             console.log('     • status');
             console.log('     • uid');
+            console.log('     • team_ids (FK - array for multiple teams)');
+            console.log('     • user_account_id (FK)');
             console.log('   - Indexes:');
             console.log('     • owner_type_id_fk_index');
             console.log('     • barangay_id_fk_index');
@@ -303,18 +429,47 @@ class PersonsTableSetup {
             console.log('     • first_name_index');
             console.log('     • status_index');
             console.log('     • uid_index');
+            console.log('     • team_ids_fk_index');
+            console.log('     • user_account_id_fk_index');
+            
+            console.log('\n✅ user_accounts:');
+            console.log('   - Attributes:');
+            console.log('     • $id (PK - auto generated)');
+            console.log('     • person_id (FK - required)');
+            console.log('     • team_id (FK)');
+            console.log('     • appwrite_user_id (required, unique)');
+            console.log('     • email (required, unique)');
+            console.log('     • role (required)');
+            console.log('     • status');
+            console.log('     • last_login');
+            console.log('   - Indexes:');
+            console.log('     • person_id_fk_index');
+            console.log('     • team_id_fk_index');
+            console.log('     • appwrite_user_id_unique (unique)');
+            console.log('     • email_unique (unique)');
+            console.log('     • role_index');
+            console.log('     • status_index');
+            
             console.log('\n🔗 Foreign Key Relationships:');
-            console.log('   • owner_type_id → owner_types table');
-            console.log('   • barangay_id → barangays table');
-            console.log('\n💡 Note: Accounts table should have person_id FK referencing this table');
+            console.log('   • persons.owner_type_id → owner_types table');
+            console.log('   • persons.barangay_id → barangays table');
+            console.log('   • persons.team_ids → Appwrite Teams (array - multiple teams)');
+            console.log('   • persons.user_account_id → user_accounts table');
+            console.log('   • user_accounts.person_id → persons table');
+            console.log('   • user_accounts.team_id → Appwrite Teams');
+            console.log('   • user_accounts.appwrite_user_id → Appwrite Auth Users');
             console.log('');
-            console.log('🚀 You can now start using the persons table!');
+            console.log('🚀 You can now start using all user-related tables!');
             console.log('\n💡 Next steps:');
             console.log('   1. Add to .env file:');
             console.log('      VITE_APPWRITE_PERSONS_COLLECTION_ID=persons');
-            console.log('   2. Create service layer: src/pages/Users/services/person.ts');
-            console.log('   3. Create hooks: src/pages/Users/hooks/usePersons.ts');
-            console.log('   4. Create component: src/pages/Users/Person.tsx');
+            console.log('      VITE_APPWRITE_USER_ACCOUNTS_COLLECTION_ID=user_accounts');
+            console.log('   2. Create service layers:');
+            console.log('      - src/pages/Users/services/team.ts (using Appwrite Teams API)');
+            console.log('      - src/pages/Users/services/person.ts (already exists)');
+            console.log('      - src/pages/Users/services/userAccount.ts');
+            console.log('   3. Create teams via Appwrite Console or Teams API');
+            console.log('   4. Update PersonForm.tsx to use Appwrite Teams');
 
         } catch (error) {
             console.error('❌ Setup failed:', error.message);
@@ -330,8 +485,183 @@ class PersonsTableSetup {
             process.exit(1);
         }
     }
+
+    async updatePersonRecord(personId, teamIds = null, userAccountId = null) {
+        const url = `${this.endpoint}/databases/${this.databaseId}/collections/persons/documents/${personId}`;
+        
+        console.log(`\n📝 Updating person ${personId}...`);
+        
+        const updateData = {};
+        if (teamIds) {
+            // Ensure teamIds is an array
+            updateData.team_ids = Array.isArray(teamIds) ? teamIds : [teamIds];
+        }
+        if (userAccountId) updateData.user_account_id = userAccountId;
+
+        if (Object.keys(updateData).length === 0) {
+            console.log('⚠️ No data to update');
+            return;
+        }
+
+        try {
+            const response = await this.makeRequest(url, 'PATCH', updateData);
+            console.log(`✅ Person updated successfully`);
+            console.log(`   Team IDs: ${teamIds ? JSON.stringify(updateData.team_ids) : 'not set'}`);
+            console.log(`   User Account ID: ${userAccountId || 'not set'}`);
+            return response;
+        } catch (error) {
+            console.error(`❌ Failed to update person ${personId}:`, error.message);
+            throw error;
+        }
+    }
+
+    async bulkUpdatePersons(updates) {
+        console.log(`\n🔄 === BULK UPDATING ${updates.length} PERSONS ===\n`);
+        
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const update of updates) {
+            try {
+                await this.updatePersonRecord(
+                    update.personId,
+                    update.teamIds || update.teamId, // Support both teamIds (array) and legacy teamId (string)
+                    update.userAccountId
+                );
+                successCount++;
+                await this.delay(200);
+            } catch (error) {
+                console.error(`Failed to update ${update.personId}`);
+                failCount++;
+            }
+        }
+
+        console.log('\n📊 Bulk Update Summary:');
+        console.log(`   ✅ Success: ${successCount}`);
+        console.log(`   ❌ Failed: ${failCount}`);
+        console.log(`   📝 Total: ${updates.length}`);
+    }
+
+    async getAllPersons() {
+        const url = `${this.endpoint}/databases/${this.databaseId}/collections/persons/documents?limit=100`;
+        
+        try {
+            const response = await this.makeRequest(url, 'GET');
+            return response.documents || [];
+        } catch (error) {
+            console.error('❌ Failed to fetch persons:', error.message);
+            throw error;
+        }
+    }
+
+    async listPersonsWithoutIds() {
+        console.log('\n📋 === PERSONS WITHOUT TEAM/ACCOUNT IDs ===\n');
+        
+        const persons = await this.getAllPersons();
+        const personsWithoutIds = persons.filter(p => !p.team_ids || p.team_ids.length === 0 || !p.user_account_id);
+
+        if (personsWithoutIds.length === 0) {
+            console.log('✅ All persons have team_ids and user_account_id set!');
+            return;
+        }
+
+        console.log(`Found ${personsWithoutIds.length} persons without IDs:\n`);
+        personsWithoutIds.forEach(person => {
+            console.log(`ID: ${person.$id}`);
+            console.log(`Name: ${person.first_name} ${person.last_name}`);
+            console.log(`Team IDs: ${person.team_ids && person.team_ids.length > 0 ? JSON.stringify(person.team_ids) : '❌ NOT SET'}`);
+            console.log(`User Account ID: ${person.user_account_id || '❌ NOT SET'}`);
+            console.log('---');
+        });
+    }
 }
 
-// Run the setup
-const setup = new PersonsTableSetup();
-setup.setupAllTables();
+// CLI Handler
+async function main() {
+    const args = process.argv.slice(2);
+    
+    if (!API_KEY) {
+        console.error('❌ Missing APPWRITE_API_KEY in .env file');
+        console.error('💡 To get an API key:');
+        console.error('   1. Go to your Appwrite console');
+        console.error('   2. Login as admin');
+        console.error('   3. Go to Overview → API Keys');
+        console.error('   4. Create a new API key with "Database" permissions');
+        console.error('   5. Add APPWRITE_API_KEY=your_key_here to your .env file');
+        process.exit(1);
+    }
+
+    const setup = new PersonsTableSetup();
+
+    try {
+        if (args.includes('--update-person')) {
+            const personIdIndex = args.indexOf('--update-person') + 1;
+            const teamIdsIndex = args.indexOf('--team-ids') + 1;
+            const accountIdIndex = args.indexOf('--account-id') + 1;
+
+            const personId = args[personIdIndex];
+            // Support comma-separated team IDs or single team ID
+            const teamIdsArg = teamIdsIndex > 0 ? args[teamIdsIndex] : null;
+            const teamIds = teamIdsArg ? teamIdsArg.split(',').map(id => id.trim()) : null;
+            const accountId = accountIdIndex > 0 ? args[accountIdIndex] : null;
+
+            if (!personId) {
+                console.error('❌ Person ID is required');
+                console.log('Usage: node scripts/Users/setup-person.js --update-person <person_id> --team-ids <team_id1,team_id2> --account-id <account_id>');
+                console.log('Example: node scripts/Users/setup-person.js --update-person abc123 --team-ids team1,team2,team3 --account-id acc456');
+                process.exit(1);
+            }
+
+            await setup.updatePersonRecord(personId, teamIds, accountId);
+        }
+        else if (args.includes('--bulk-update')) {
+            const fileIndex = args.indexOf('--bulk-update') + 1;
+            const filePath = args[fileIndex];
+
+            if (!filePath) {
+                console.error('❌ JSON file path is required');
+                console.log('Usage: node scripts/Users/setup-person.js --bulk-update <json_file>');
+                console.log('\nJSON format:');
+                console.log('[');
+                console.log('  { "personId": "123", "teamIds": ["team1", "team2"], "userAccountId": "acc1" },');
+                console.log('  { "personId": "456", "teamIds": ["team3"], "userAccountId": "acc2" }');
+                console.log(']');
+                console.log('\nNote: Use "teamIds" (array) for multiple teams, or "teamId" (string) for single team (legacy).');
+                process.exit(1);
+            }
+
+            const updates = JSON.parse(readFileSync(filePath, 'utf8'));
+            await setup.bulkUpdatePersons(updates);
+        }
+        else if (args.includes('--list-missing')) {
+            await setup.listPersonsWithoutIds();
+        }
+        else if (args.includes('--help') || args.includes('-h')) {
+            console.log('📚 Person Management Script - Usage:\n');
+            console.log('1. Setup all collections (run once):');
+            console.log('   node scripts/Users/setup-person.js\n');
+            console.log('2. Update a single person:');
+            console.log('   node scripts/Users/setup-person.js --update-person <person_id> --team-ids <team_id1,team_id2> --account-id <account_id>');
+            console.log('   Example: node scripts/Users/setup-person.js --update-person abc123 --team-ids team1,team2 --account-id acc456\n');
+            console.log('3. Bulk update from JSON file:');
+            console.log('   node scripts/Users/setup-person.js --bulk-update updates.json\n');
+            console.log('4. List persons without IDs:');
+            console.log('   node scripts/Users/setup-person.js --list-missing\n');
+            console.log('Example JSON format for bulk update:');
+            console.log('[');
+            console.log('  { "personId": "123abc", "teamIds": ["team_xyz", "team_abc"], "userAccountId": "acc_123" },');
+            console.log('  { "personId": "456def", "teamIds": ["team_def"], "userAccountId": "acc_456" }');
+            console.log(']');
+            console.log('\nNote: Use "teamIds" (array) for multiple teams. Legacy "teamId" (string) is also supported.');
+        }
+        else {
+            // Default: Run full setup
+            await setup.setupAllTables();
+        }
+    } catch (error) {
+        console.error('\n❌ Operation failed:', error.message);
+        process.exit(1);
+    }
+}
+
+main();

@@ -63,7 +63,10 @@ const Export = lazy(() => import('../pages/DataTables/Export'));
 const ColumnChooser = lazy(() => import('../pages/DataTables/ColumnChooser'));
 const Profile = lazy(() => import('../pages/Users/Profile'));
 const AccountSetting = lazy(() => import('../pages/Users/AccountSetting'));
-const Person = lazy(() => import('../pages/Users/Person'));
+const PersonList = lazy(() => import('../pages/Users/pages/person/Person'));
+const PersonForm = lazy(() => import('../pages/Users/pages/person/PersonForm'));
+const TeamList = lazy(() => import('../pages/Users/pages/team/team'));
+const TeamForm = lazy(() => import('../pages/Users/pages/team/TeamForm'));
 const KnowledgeBase = lazy(() => import('../pages/Pages/KnowledgeBase'));
 const ContactUsBoxed = lazy(() => import('../pages/Pages/ContactUsBoxed'));
 const ContactUsCover = lazy(() => import('../pages/Pages/ContactUsCover'));
@@ -123,7 +126,16 @@ import BuildingAssessment from '../pages/Assessment/BuildingAssessment';
 import AssessmentDetails from '../pages/Assessment/AssessmentDetails';
 import UnitValue from '../pages/Municipality/unit_value';
 import DashboardSettings from '../pages/setup/DashboardSettings';
+import UserDashboard from '../pages/Users/UserDashboard';
 const routes = [
+    {
+        path: '/user-dashboard',
+        element: (
+            <ProtectedRoute>
+                <UserDashboard />   
+            </ProtectedRoute>
+        ),
+    },
     // dashboard
     {
         path: '/',
@@ -469,9 +481,77 @@ const routes = [
         path: '/users/persons',
         element: (
             <ProtectedRoute>
-                <Person />
+                <PersonList />
             </ProtectedRoute>
         ),
+    },
+    {
+        path: '/users/person',
+        element: (
+            <ProtectedRoute>
+                <UserDashboard />
+            </ProtectedRoute>
+        ),
+        children: [
+            {
+                path: '',
+                element: (
+                    <ProtectedRoute>
+                        <PersonList />
+                    </ProtectedRoute>
+                )
+            },
+            {
+                path: 'add',
+                element: (
+                    <ProtectedRoute>
+                        <PersonForm />
+                    </ProtectedRoute>
+                )
+            },
+            {
+                path: 'edit/:id',
+                element: (
+                    <ProtectedRoute>
+                        <PersonForm />
+                    </ProtectedRoute>
+                )
+            }
+        ]
+    },
+    {
+        path: '/users/team',
+        element: (
+            <ProtectedRoute>
+                <UserDashboard />
+            </ProtectedRoute>
+        ),
+        children: [
+            {
+                path: '',
+                element: (
+                    <ProtectedRoute>
+                        <TeamList />
+                    </ProtectedRoute>
+                )
+            },
+            {
+                path: 'add',
+                element: (
+                    <ProtectedRoute>
+                        <TeamForm />
+                    </ProtectedRoute>
+                )
+            },
+            {
+                path: 'edit/:id',
+                element: (
+                    <ProtectedRoute>
+                        <TeamForm />
+                    </ProtectedRoute>
+                )
+            }
+        ]
     },
     // pages
     {
