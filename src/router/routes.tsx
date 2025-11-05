@@ -454,7 +454,11 @@ const routes = [
     // Users page
     {
         path: '/users/profile',
-        element: <Profile />,
+        element: (
+            <ProtectedRoute>
+                <Profile />
+            </ProtectedRoute>
+        ),
     },
     {
         path: '/users/user-account-settings',

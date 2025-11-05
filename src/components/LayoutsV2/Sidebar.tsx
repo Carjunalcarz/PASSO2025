@@ -66,7 +66,7 @@ const Sidebar = () => {
                         <NavLink to="/" className="main-logo flex items-center shrink-0">
                             {/* <img className="w-8 flex-none" src="/logo.png" alt="logo" /> */}
                             <span className="text-xl ltr:ml-1.5 rtl:mr-1.5 font-semibold align-middle lg:inline dark:text-slate-200">
-                                {t('App Name')}
+                                {t('Project-1')}
                             </span>
                         </NavLink>
 
@@ -137,7 +137,10 @@ const Sidebar = () => {
                                     <AnimateHeight duration={300} height={currentMenu === 'settings' ? 'auto' : 0}>
                                         <ul className="sub-menu text-gray-500">
                                             <li>
-                                                <NavLink to="">{t('General')}</NavLink>
+                                                <NavLink to="/users/profile">{t('profile')}</NavLink>
+                                            </li>
+                                            <li>
+                                                <NavLink to="/users/user-account-settings">{t('settings')}</NavLink>
                                             </li>
                                         </ul>
                                     </AnimateHeight>
