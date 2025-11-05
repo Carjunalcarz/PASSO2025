@@ -17,7 +17,8 @@
         "setup:classifications": "node scripts/setup-classifications.js",
         "setup:kinds": "node scripts/setup-kinds.js",
         "setup:products": "node scripts/setup-products.js",
-        "setup:property-nature": "node scripts/setup-property-nature.js"
+        "setup:property-nature": "node scripts/setup-property-nature.js",
+        "setup:persons": "node scripts/Users/setup-person.js"
     },
     "dependencies": {
         "@emotion/react": "^11.10.6",
