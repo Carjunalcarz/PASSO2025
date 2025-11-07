@@ -30,6 +30,7 @@ const TeamForm = () => {
         name: '',
     });
     const [memberSearch, setMemberSearch] = useState('');
+    const [selectedMembers, setSelectedMembers] = useState<Array<{ personId: string; roles: string[] }>>([]); // For create mode
 
     // TanStack Query hooks
     const { data: teamData, isLoading: isLoadingTeam } = useGetTeamById(id || '', isEdit);
@@ -68,10 +69,43 @@ const TeamForm = () => {
                 });
                 Swal.fire('Updated!', 'Team has been updated.', 'success');
             } else {
-                await createMutation.mutateAsync({
+                // Create team first
+                const createResult = await createMutation.mutateAsync({
                     name: formData.name || '',
                 });
-                Swal.fire('Created!', 'Team has been created.', 'success');
+                
+                // If members were selected, add them to the newly created team
+                if (selectedMembers.length > 0 && createResult) {
+                    const teamId = createResult.$id;
+                    let successCount = 0;
+                    let failCount = 0;
+                    
+                    for (const member of selectedMembers) {
+                        try {
+                            await addMemberMutation.mutateAsync({
+                                teamId,
+                                personId: member.personId,
+                                roles: member.roles,
+                            });
+                            successCount++;
+                        } catch (error) {
+                            console.error('Failed to add member:', error);
+                            failCount++;
+                        }
+                    }
+                    
+                    if (failCount > 0) {
+                        Swal.fire(
+                            'Partially Created!', 
+                            `Team created with ${successCount} members. ${failCount} member(s) failed to add.`, 
+                            'warning'
+                        );
+                    } else {
+                        Swal.fire('Created!', `Team has been created with ${successCount} member(s).`, 'success');
+                    }
+                } else {
+                    Swal.fire('Created!', 'Team has been created.', 'success');
+                }
             }
             navigate('/users/team');
         } catch (error: any) {
@@ -129,8 +163,8 @@ const TeamForm = () => {
                     </div>
                 </div>
 
-                {/* Team Members Section - Only show in edit mode */}
-                {isEdit && formData.$id && (
+                {/* Team Members Section - Show in both create and edit mode */}
+                {(isEdit && formData.$id) ? (
                     <div className="mt-6">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
@@ -143,23 +177,17 @@ const TeamForm = () => {
                                 type="button"
                                 className="btn btn-primary btn-sm"
                                 onClick={async () => {
-                                    // Filter out persons already in team AND persons without user accounts
+                                    // Filter out persons already in team
                                     const memberIds = teamMembers.map((m: any) => m.$id);
                                     const availablePersons = allPersons.filter(
-                                        (p: any) => !memberIds.includes(p.$id) && p.userAccountId
+                                        (p: any) => !memberIds.includes(p.$id)
                                     );
 
                                     if (availablePersons.length === 0) {
                                         Swal.fire({
                                             icon: 'info',
                                             title: 'No Available Persons',
-                                            html: `
-                                                <p>No persons available to add to this team.</p>
-                                                <p class="text-sm text-gray-600 mt-2">
-                                                    <strong>Note:</strong> Only persons with user accounts can be added to teams. 
-                                                    Create a user account for a person in the Person form first.
-                                                </p>
-                                            `,
+                                            text: 'All persons are already in this team.',
                                         });
                                         return;
                                     }
@@ -355,6 +383,152 @@ const TeamForm = () => {
                                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 font-medium">In Team</div>
                             </div>
                         </div>
+                    </div>
+                ) : (
+                    /* Create Mode: Member Selection */
+                    <div className="mt-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-base">Add Team Members (Optional)</h4>
+                            </div>
+                            <button
+                                type="button"
+                                className="btn btn-primary btn-sm"
+                                onClick={async () => {
+                                    // Filter out persons already selected
+                                    const selectedIds = selectedMembers.map(m => m.personId);
+                                    const availablePersons = allPersons.filter(
+                                        (p: any) => !selectedIds.includes(p.$id)
+                                    );
+
+                                    if (availablePersons.length === 0) {
+                                        Swal.fire({
+                                            icon: 'info',
+                                            title: 'No Available Persons',
+                                            text: 'All persons have been added to the list.',
+                                        });
+                                        return;
+                                    }
+
+                                    const personOptions = availablePersons
+                                        .map((p: any) => `<option value="${p.$id}">${p.firstName} ${p.lastName}</option>`)
+                                        .join('');
+
+                                    const result = await Swal.fire({
+                                        title: 'Add Team Member',
+                                        html: `
+                                            <div class="text-left">
+                                                <label class="block mb-2 text-sm font-medium">Select Person</label>
+                                                <select id="person-select" class="form-select w-full">
+                                                    <option value="">Choose a person...</option>
+                                                    ${personOptions}
+                                                </select>
+                                                <label class="block mt-4 mb-2 text-sm font-medium">Role in Team</label>
+                                                <select id="role-select" class="form-select w-full">
+                                                    <option value="member">Member</option>
+                                                    <option value="leader">Team Leader</option>
+                                                    <option value="admin">Admin</option>
+                                                </select>
+                                            </div>
+                                        `,
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Add Member',
+                                        preConfirm: () => {
+                                            const personId = (document.getElementById('person-select') as HTMLSelectElement)?.value;
+                                            const role = (document.getElementById('role-select') as HTMLSelectElement)?.value;
+                                            if (!personId) {
+                                                Swal.showValidationMessage('Please select a person');
+                                                return false;
+                                            }
+                                            return { personId, role };
+                                        }
+                                    });
+
+                                    if (result.isConfirmed && result.value) {
+                                        setSelectedMembers(prev => [
+                                            ...prev,
+                                            { personId: result.value.personId, roles: [result.value.role] }
+                                        ]);
+                                    }
+                                }}
+                            >
+                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Add Member
+                            </button>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Select people to add to this team when it's created</p>
+
+                        {/* Selected Members List */}
+                        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                            {selectedMembers.length === 0 ? (
+                                <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                                    <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                    <p className="font-medium">No members selected</p>
+                                    <p className="text-sm mt-1">Click "Add Member" to add people to this team</p>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                                    {selectedMembers.map((member) => {
+                                        const person = allPersons.find((p: any) => p.$id === member.personId);
+                                        if (!person) return null;
+                                        
+                                        return (
+                                            <div key={member.personId} className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                                <div className="flex items-center gap-3 flex-1">
+                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm">
+                                                        {(person.firstName?.[0] || '?').toUpperCase()}
+                                                        {(person.lastName?.[0] || '').toUpperCase()}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                                                            {person.firstName} {person.lastName}
+                                                        </div>
+                                                        {person.contactNo && (
+                                                            <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                                {person.contactNo}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                                        {member.roles[0]}
+                                                    </span>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-outline-danger ml-3"
+                                                    onClick={() => {
+                                                        setSelectedMembers(prev => prev.filter(m => m.personId !== member.personId));
+                                                    }}
+                                                >
+                                                    <IconTrash className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Quick Stats */}
+                        {selectedMembers.length > 0 && (
+                            <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                                <div className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span className="text-sm font-medium">
+                                        {selectedMembers.length} member{selectedMembers.length !== 1 ? 's' : ''} will be added to this team after creation
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 

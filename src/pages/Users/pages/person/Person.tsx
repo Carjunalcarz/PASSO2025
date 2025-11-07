@@ -12,6 +12,7 @@ import { IRootState } from '../../../../store';
 import { type PersonResponse } from '../../services/person';
 import { useGetAllPersons, useDeletePerson } from '../../hooks/usePersons';
 import { useVerifyUserAccount } from '../../hooks/useAccountVerification';
+import { useGetAllTeams } from '../../hooks/useTeams';
 
 type PersonData = PersonResponse;
 
@@ -39,10 +40,25 @@ const Person = () => {
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
     const [search, setSearch] = useState('');
 
-    // TanStack Query hooks
-    const { data: persons = [], isLoading, isError, error, refetch } = useGetAllPersons();
+    // TanStack Query hooks with pagination
+    const { data: personsData, isLoading, isError, error, refetch } = useGetAllPersons({
+        limit: 1000, // Fetch all for client-side pagination (or implement server-side)
+        offset: 0
+    });
+    const persons = personsData?.data || [];
+    const totalPersons = personsData?.total || 0;
+    const { data: teams = [] } = useGetAllTeams();
     const deleteMutation = useDeletePerson();
     const verifyMutation = useVerifyUserAccount();
+
+    // Helper function to get team names from teamIds
+    const getTeamNames = (teamIds?: string[]) => {
+        if (!teamIds || teamIds.length === 0) return null;
+        return teamIds
+            .map(teamId => teams.find((t: any) => t.$id === teamId)?.name)
+            .filter(Boolean)
+            .join(', ');
+    };
 
     // Show error toast if query fails
     useEffect(() => {
@@ -95,6 +111,29 @@ const Person = () => {
             accessor: 'tin',
             title: 'TIN',
             sortable: true,
+        },
+        {
+            accessor: 'teamIds',
+            title: 'Teams',
+            sortable: false,
+            render: (record: PersonData) => {
+                const teamNames = getTeamNames(record.teamIds);
+                if (!teamNames) {
+                    return <span className="text-gray-400 text-xs italic">No teams</span>;
+                }
+                return (
+                    <div className="flex flex-wrap gap-1">
+                        {record.teamIds?.map(teamId => {
+                            const team = teams.find((t: any) => t.$id === teamId);
+                            return team ? (
+                                <span key={teamId} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                    {team.name}
+                                </span>
+                            ) : null;
+                        })}
+                    </div>
+                );
+            },
         },
         {
             accessor: 'status',
@@ -219,6 +258,12 @@ const Person = () => {
             ? 'background: #d1fae5; color: #065f46;' 
             : 'background: #fee2e2; color: #991b1b;';
 
+        const teamNames = getTeamNames(record.teamIds);
+        const teamBadges = record.teamIds?.map(teamId => {
+            const team = teams.find((t: any) => t.$id === teamId);
+            return team ? `<span style="display: inline-block; margin: 2px 4px 2px 0; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: #dbeafe; color: #1e40af;">${team.name}</span>` : '';
+        }).join('') || `<em style="color: ${styles.emptyColor};">No teams</em>`;
+
         const tableRows = [
             { label: 'First Name', value: record.firstName, bg: styles.bgPrimary, weight: 500 },
             { label: 'Middle Name', value: formatFieldValue(record.middleName, styles.emptyColor), bg: styles.bgPrimary },
@@ -229,6 +274,7 @@ const Person = () => {
             { label: 'TIN', value: formatFieldValue(record.tin, styles.emptyColor), bg: styles.bgSecondary },
             { label: 'Contact No', value: formatFieldValue(record.contactNo, styles.emptyColor), bg: styles.bgPrimary },
             { label: 'UID', value: formatFieldValue(record.uid, styles.emptyColor), bg: styles.bgSecondary, mono: true },
+            { label: 'Teams', value: teamBadges, bg: styles.bgPrimary, html: true },
         ];
 
         const rowsHtml = tableRows.map(row => `

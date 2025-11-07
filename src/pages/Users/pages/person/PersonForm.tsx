@@ -11,10 +11,10 @@ import {
     useUpdatePerson,
 } from '../../hooks/usePersons';
 import { useGetActiveTeams } from '../../hooks/useTeams';
-import { 
-    usePersonHasUserAccount, 
+import {
+    usePersonHasUserAccount,
     useGetPersonWithUserAccount,
-    useBindUserAccountToPerson 
+    useBindUserAccountToPerson
 } from '../../hooks/usePersonUserBinding';
 import IconArrowLeft from '../../../../components/Icon/IconArrowLeft';
 
@@ -43,12 +43,13 @@ const PersonForm = () => {
     const [similarPersons, setSimilarPersons] = useState<PersonData[]>([]);
 
     // TanStack Query hooks
-    const { data: persons = [] } = useGetAllPersons();
+    const { data: personsData } = useGetAllPersons();
+    const persons = personsData?.data || [];
     const { data: personData, isLoading: isLoadingPerson } = useGetPersonById(id || '', isEdit);
     const { data: teams = [], isLoading: isLoadingTeams } = useGetActiveTeams();
     const createMutation = useCreatePerson();
     const updateMutation = useUpdatePerson();
-    
+
     // User account binding hooks
     const { data: hasUserAccount = false, isLoading: isLoadingUserAccount } = usePersonHasUserAccount(id || '', isEdit);
     const { data: personWithAccount, isLoading: isLoadingAccountDetails } = useGetPersonWithUserAccount(id || '', isEdit);
@@ -93,18 +94,20 @@ const PersonForm = () => {
                 Swal.fire('Updated!', 'Person has been updated.', 'success');
             } else {
                 await createMutation.mutateAsync({
-                    firstName: formData.firstName || '',
-                    middleName: formData.middleName,
-                    lastName: formData.lastName || '',
-                    ownerTypeId: formData.ownerTypeId,
-                    barangayId: formData.barangayId,
-                    street: formData.street,
-                    tin: formData.tin,
-                    contactNo: formData.contactNo,
-                    status: formData.status || 'active',
-                    uid: formData.uid,
-                    teamIds: formData.teamIds,
-                    userAccountId: formData.userAccountId,
+                    data: {
+                        firstName: formData.firstName || '',
+                        middleName: formData.middleName,
+                        lastName: formData.lastName || '',
+                        ownerTypeId: formData.ownerTypeId,
+                        barangayId: formData.barangayId,
+                        street: formData.street,
+                        tin: formData.tin,
+                        contactNo: formData.contactNo,
+                        status: formData.status || 'active',
+                        uid: formData.uid,
+                        teamIds: formData.teamIds,
+                        userAccountId: formData.userAccountId,
+                    },
                 });
                 Swal.fire('Created!', 'Person has been created.', 'success');
             }
@@ -351,11 +354,10 @@ const PersonForm = () => {
                                                 <td className="px-3 py-2 text-yellow-800 dark:text-yellow-200">{person.contactNo || 'N/A'}</td>
                                                 <td className="px-3 py-2 text-yellow-800 dark:text-yellow-200">{person.tin || 'N/A'}</td>
                                                 <td className="px-3 py-2">
-                                                    <span className={`px-2 py-1 text-xs rounded-full ${
-                                                        person.status === 'active' 
-                                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                                                    <span className={`px-2 py-1 text-xs rounded-full ${person.status === 'active'
+                                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                                                             : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                                                    }`}>
+                                                        }`}>
                                                         {person.status}
                                                     </span>
                                                 </td>
@@ -416,7 +418,7 @@ const PersonForm = () => {
                                                     </div>
                                                 `;
                                             }).join('');
-                                            
+
                                             Swal.fire({
                                                 title: 'Manage Team Assignments',
                                                 html: `
@@ -620,24 +622,24 @@ const PersonForm = () => {
                                                         const email = (document.getElementById('user-email') as HTMLInputElement)?.value.trim();
                                                         const password = (document.getElementById('user-password') as HTMLInputElement)?.value;
                                                         const role = (document.getElementById('user-role') as HTMLSelectElement)?.value;
-                                                        
+
                                                         if (!email || !password || !role) {
                                                             Swal.showValidationMessage('Please fill in all required fields');
                                                             return false;
                                                         }
-                                                        
+
                                                         if (password.length < 8) {
                                                             Swal.showValidationMessage('Password must be at least 8 characters');
                                                             return false;
                                                         }
-                                                        
+
                                                         // Validate email format
                                                         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                                                         if (!emailRegex.test(email)) {
                                                             Swal.showValidationMessage('Please enter a valid email address');
                                                             return false;
                                                         }
-                                                        
+
                                                         return { email, password, role };
                                                     }
                                                 });
@@ -650,7 +652,7 @@ const PersonForm = () => {
                                                             password: result.value.password,
                                                             role: result.value.role,
                                                         });
-                                                        
+
                                                         Swal.fire({
                                                             icon: 'success',
                                                             title: 'Account Created!',
@@ -660,7 +662,7 @@ const PersonForm = () => {
                                                             `,
                                                             confirmButtonColor: '#059669',
                                                         });
-                                                        
+
                                                         // Refresh person data
                                                         window.location.reload();
                                                     } catch (error: any) {
@@ -755,9 +757,9 @@ const PersonForm = () => {
 
                     {/* Form Actions */}
                     <div className="flex justify-end gap-3 mt-8 pt-5 border-t border-gray-200 dark:border-gray-700">
-                        <button 
-                            type="button" 
-                            className="btn btn-outline-danger" 
+                        <button
+                            type="button"
+                            className="btn btn-outline-danger"
                             onClick={() => navigate('/users/person')}
                         >
                             Cancel
@@ -773,7 +775,7 @@ const PersonForm = () => {
                 </div>
             </form>
         </div>
-        
+
     );
 };
 

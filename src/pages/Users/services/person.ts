@@ -1,5 +1,5 @@
 import { databases, appwriteConfig } from '../../../lib/appwrite';
-import { ID, Query } from 'appwrite';
+import { ID, Query, Permission, Role } from 'appwrite';
 
 // Collection ID for persons
 const COLLECTION_ID = import.meta.env.VITE_APPWRITE_PERSONS_COLLECTION_ID || 'persons';
@@ -73,11 +73,39 @@ export interface ServiceResponse<T = any> {
     success: boolean;
     data?: T;
     error?: string;
+    total?: number;  // For pagination
 }
 
-// Create a new person
-export const createPerson = async (data: PersonData): Promise<ServiceResponse<PersonResponse>> => {
+// Create a new person with permissions
+export const createPerson = async (
+    data: PersonData,
+    adminTeamId?: string
+): Promise<ServiceResponse<PersonResponse>> => {
     try {
+        // Define permissions
+        const permissions = [
+            // All authenticated users can read
+            Permission.read(Role.users()),
+        ];
+
+        // If person has user account, they can update their own data
+        if (data.userAccountId) {
+            permissions.push(Permission.update(Role.user(data.userAccountId)));
+        }
+
+        // If admin team ID provided, admins can update and delete
+        if (adminTeamId) {
+            permissions.push(Permission.update(Role.team(adminTeamId)));
+            permissions.push(Permission.delete(Role.team(adminTeamId)));
+        }
+
+        // Team members can read their team members
+        if (data.teamIds && data.teamIds.length > 0) {
+            data.teamIds.forEach(teamId => {
+                permissions.push(Permission.read(Role.team(teamId)));
+            });
+        }
+
         const response = await databases.createDocument(
             appwriteConfig.databaseId,
             COLLECTION_ID,
@@ -95,7 +123,8 @@ export const createPerson = async (data: PersonData): Promise<ServiceResponse<Pe
                 uid: data.uid || '',
                 team_ids: data.teamIds || [],
                 user_account_id: data.userAccountId || '',
-            }
+            },
+            permissions
         );
         return { success: true, data: mapDbToFrontend(response) };
     } catch (error: any) {
@@ -104,53 +133,92 @@ export const createPerson = async (data: PersonData): Promise<ServiceResponse<Pe
     }
 };
 
-// Get all persons
-export const getAllPersons = async (): Promise<ServiceResponse<PersonResponse[]>> => {
+// Get all persons with pagination and optimized queries
+export const getAllPersons = async (
+    limit: number = 25,
+    offset: number = 0,
+    orderBy: string = '$createdAt',
+    orderDirection: 'asc' | 'desc' = 'desc'
+): Promise<ServiceResponse<PersonResponse[]>> => {
     try {
+        // 1. Fetch persons with pagination
         const response = await databases.listDocuments(
             appwriteConfig.databaseId,
             COLLECTION_ID,
             [
-                Query.orderDesc('$createdAt'),
-                Query.limit(100) // Adjust limit as needed
+                orderDirection === 'desc' ? Query.orderDesc(orderBy) : Query.orderAsc(orderBy),
+                Query.limit(limit),
+                Query.offset(offset)
             ]
         );
         
-        // Fetch emails and verification status from user accounts for persons with userAccountId
+        // 2. Extract unique userAccountIds
+        const userAccountIds = response.documents
+            .map(doc => doc.user_account_id)
+            .filter(Boolean);
+        
+        // 3. If no user accounts linked, return persons as-is
+        if (userAccountIds.length === 0) {
+            return { 
+                success: true, 
+                data: response.documents.map(mapDbToFrontend),
+                total: response.total
+            };
+        }
+        
+        // 4. Fetch ALL user accounts in ONE query (fixes N+1 problem)
         const USER_ACCOUNTS_COLLECTION_ID = import.meta.env.VITE_APPWRITE_USER_ACCOUNTS_COLLECTION_ID || 'user_accounts';
         
-        const personsWithEmails = await Promise.all(
-            response.documents.map(async (doc) => {
+        try {
+            const userAccountsResponse = await databases.listDocuments(
+                appwriteConfig.databaseId,
+                USER_ACCOUNTS_COLLECTION_ID,
+                [
+                    Query.equal('appwrite_user_id', userAccountIds),
+                    Query.limit(userAccountIds.length)
+                ]
+            );
+            
+            // 5. Create a lookup map for O(1) access
+            const userAccountsMap = new Map(
+                userAccountsResponse.documents.map(ua => [
+                    ua.appwrite_user_id,
+                    {
+                        email: ua.email,
+                        verified: ua.status === 'verified'
+                    }
+                ])
+            );
+            
+            // 6. Map persons with user account data
+            const personsWithEmails = response.documents.map(doc => {
                 const person = mapDbToFrontend(doc);
                 
                 if (person.userAccountId) {
-                    try {
-                        // Query user account by appwrite_user_id
-                        const userAccountResponse = await databases.listDocuments(
-                            appwriteConfig.databaseId,
-                            USER_ACCOUNTS_COLLECTION_ID,
-                            [
-                                Query.equal('appwrite_user_id', person.userAccountId),
-                                Query.limit(1)
-                            ]
-                        );
-                        
-                        if (userAccountResponse.documents.length > 0) {
-                            const userAccount = userAccountResponse.documents[0];
-                            person.email = userAccount.email;
-                            // Check if status is 'verified' in user account
-                            person.accountVerified = userAccount.status === 'verified';
-                        }
-                    } catch (error) {
-                        console.warn(`Failed to fetch email for person ${person.$id}:`, error);
+                    const userAccount = userAccountsMap.get(person.userAccountId);
+                    if (userAccount) {
+                        person.email = userAccount.email;
+                        person.accountVerified = userAccount.verified;
                     }
                 }
                 
                 return person;
-            })
-        );
-        
-        return { success: true, data: personsWithEmails };
+            });
+            
+            return { 
+                success: true, 
+                data: personsWithEmails,
+                total: response.total
+            };
+        } catch (userAccountError) {
+            // If user accounts query fails, return persons without email data
+            console.warn('Failed to fetch user accounts:', userAccountError);
+            return { 
+                success: true, 
+                data: response.documents.map(mapDbToFrontend),
+                total: response.total
+            };
+        }
     } catch (error: any) {
         console.error('Error fetching persons:', error);
         return { success: false, error: error.message };

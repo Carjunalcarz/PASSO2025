@@ -160,29 +160,53 @@ export const getActiveTeams = async (): Promise<ServiceResponse<TeamResponse[]>>
     return await getAllTeams();
 };
 
-// Create team membership (add user to team)
-export const addTeamMember = async (
+// Create team membership (add user to team via email invitation)
+export const createTeamMembership = async (
     teamId: string,
     email: string,
     roles: string[] = ['member'],
-    url?: string
+    url?: string,
+    name?: string
 ): Promise<ServiceResponse> => {
     try {
-        await teams.createMembership(teamId, roles, email, undefined, undefined, url);
-        return { success: true };
+        const membership = await teams.createMembership(
+            teamId,
+            roles,
+            email,
+            undefined, // userId - leave undefined for email invitation
+            undefined, // phone - not used
+            url, // redirect URL after accepting invitation
+            name // optional name for the invitation
+        );
+        return { success: true, data: membership };
     } catch (error: any) {
-        console.error('Error adding team member:', error);
+        console.error('Error creating team membership:', error);
         return { success: false, error: error.message };
     }
 };
 
-// Remove team membership
-export const removeTeamMember = async (teamId: string, membershipId: string): Promise<ServiceResponse> => {
+// Update team membership roles
+export const updateTeamMembership = async (
+    teamId: string,
+    membershipId: string,
+    roles: string[]
+): Promise<ServiceResponse> => {
+    try {
+        const membership = await teams.updateMembershipRoles(teamId, membershipId, roles);
+        return { success: true, data: membership };
+    } catch (error: any) {
+        console.error('Error updating membership roles:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+// Delete team membership
+export const deleteTeamMembership = async (teamId: string, membershipId: string): Promise<ServiceResponse> => {
     try {
         await teams.deleteMembership(teamId, membershipId);
         return { success: true };
     } catch (error: any) {
-        console.error('Error removing team member:', error);
+        console.error('Error deleting team membership:', error);
         return { success: false, error: error.message };
     }
 };
@@ -205,7 +229,8 @@ export default {
     updateTeam,
     deleteTeam,
     getActiveTeams,
-    addTeamMember,
-    removeTeamMember,
+    createTeamMembership,
+    updateTeamMembership,
+    deleteTeamMembership,
     getTeamMemberships,
 };

@@ -15,23 +15,36 @@ import {
 export const personKeys = {
   all: ['persons'] as const,
   lists: () => [...personKeys.all, 'list'] as const,
-  list: (filters?: string) => [...personKeys.lists(), { filters }] as const,
+  list: (filters?: any) => [...personKeys.lists(), { filters }] as const,
   details: () => [...personKeys.all, 'detail'] as const,
   detail: (id: string) => [...personKeys.details(), id] as const,
   byStatus: (status: string) => [...personKeys.all, 'status', status] as const,
   search: (term: string) => [...personKeys.all, 'search', term] as const,
 };
 
-// Get all persons
-export const useGetAllPersons = () => {
+// Pagination params interface
+export interface PaginationParams {
+  limit?: number;
+  offset?: number;
+  orderBy?: string;
+  orderDirection?: 'asc' | 'desc';
+}
+
+// Get all persons with pagination
+export const useGetAllPersons = (params?: PaginationParams) => {
+  const { limit = 25, offset = 0, orderBy = '$createdAt', orderDirection = 'desc' } = params || {};
+  
   return useQuery({
-    queryKey: personKeys.lists(),
+    queryKey: personKeys.list({ limit, offset, orderBy, orderDirection }),
     queryFn: async () => {
-      const result = await getAllPersons();
+      const result = await getAllPersons(limit, offset, orderBy, orderDirection);
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch persons');
       }
-      return result.data || [];
+      return {
+        data: result.data || [],
+        total: result.total || 0
+      };
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -84,13 +97,13 @@ export const useSearchPersons = (searchTerm: string, enabled = true) => {
   });
 };
 
-// Create person mutation
+// Create person mutation with permissions
 export const useCreatePerson = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: PersonData) => {
-      const result = await createPerson(data);
+    mutationFn: async ({ data, adminTeamId }: { data: PersonData; adminTeamId?: string }) => {
+      const result = await createPerson(data, adminTeamId);
       if (!result.success) {
         throw new Error(result.error || 'Failed to create person');
       }
